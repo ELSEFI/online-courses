@@ -2,7 +2,7 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 
 const createToken = (id, role) => {
-  const payload = { id, role };
+  const payload = { user: { id, role } };
   return jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
@@ -55,5 +55,16 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
+  }
+};
+
+exports.profile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) return res.status(401).json({ message: "User no exist." });
+    res.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({message: "Server Error"})
   }
 };
