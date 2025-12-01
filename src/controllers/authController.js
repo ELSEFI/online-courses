@@ -35,20 +35,25 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user)
-    return res.status(400).json({ message: "Incorrect Email or Password" });
+  try {
+    const user = await User.findOne({ email });
+    if (!user)
+      return res.status(400).json({ message: "Incorrect Email or Password" });
 
-  const isMatch = await user.comparePassword(password);
-  if (!isMatch)
-    return res.status(400).json({ message: "Incorrect Email or Password" });
-  user.password = undefined;
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch)
+      return res.status(400).json({ message: "Incorrect Email or Password" });
+    user.password = undefined;
 
-  const token = createToken(user._id, user.role);
+    const token = createToken(user._id, user.role);
 
-  res.status(200).json({
-    message: "Login Successfully",
-    user,
-    token,
-  });
+    res.status(200).json({
+      message: "Login Successfully",
+      user,
+      token,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
 };
