@@ -19,7 +19,7 @@ connectDB();
 app.use(express.static("public"));
 
 // ROUTES
-app.use("api/v1/users", userRoutes);
+app.use("/api/v1/users", userRoutes);
 // ROUTES
 app.get("/", (req, res) => {
   res.send("Welcome To Online Courses");
