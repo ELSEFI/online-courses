@@ -2,6 +2,8 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const { verifyGoogleToken } = require("../services/googleAuthService");
 const { sendEmail } = require("../services/emailSender");
+const { sendResetPasswordEmail } = require("../services/resetPasswordEmail");
+const crypto = require("crypto");
 
 const createToken = (id, role, tokenV) => {
   const payload = { id, role, tokenV };
@@ -101,6 +103,33 @@ exports.loginGoogle = async (req, res) => {
     res.status(500).json({ message: "Google Login Error" });
   }
 };
+
+exports.forgetPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ message: "User Not Found!" });
+
+    const realToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(realToken)
+      .digest("hex");
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+    await user.save({ validateBeforeSave: false });
+
+    const resetURL = `${req.protocol}://${req.get(
+      "host"
+    )}/api/v1/auth/reset-password/${realToken}`;
+
+    await sendResetPasswordEmail(user.email, resetURL);
+
+    res
+      .status(201)
+      .json({ message: "Check your email for password reset link" });
+  } catch (error) {}
+};
+
 exports.profile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");

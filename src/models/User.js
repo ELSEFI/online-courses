@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
-const { verify } = require("jsonwebtoken");
 
 const userSchema = mongoose.Schema(
   {
@@ -52,11 +51,13 @@ const userSchema = mongoose.Schema(
     },
     verificationCode: {
       type: Number,
-      unique: true,
+      default: null,
     },
     verificationCodeExpire: {
       type: Date,
     },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
   },
   { timestamps: true }
 );
