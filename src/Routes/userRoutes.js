@@ -3,7 +3,7 @@ const authController = require("../controllers/authController");
 const { verifyEmail } = require("../Middleware/verifyEmail");
 const router = express.Router();
 const protected = require("../Middleware/jwtMiddleware");
-const {upload,resizeProfileImage} = require("../middleware/uploadImage");
+const {upload,resizeProfileImage} = require("../Middleware/uploadImage");
 
 // ROUTES
 router.post("/register", authController.register);
