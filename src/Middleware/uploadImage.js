@@ -2,7 +2,7 @@ const multer = require("multer");
 const sharp = require("sharp");
 
 const storage = multer.memoryStorage();
-const upload = multer({
+const uploadImage = multer({
   storage,
   fileFilter(req, file, cb) {
     if (!file.mimetype.startsWith("image/")) {
@@ -28,4 +28,4 @@ const resizeProfileImage = async (req, res, next) => {
   }
 };
 
-module.exports = { upload, resizeProfileImage };
+module.exports = { uploadImage, resizeProfileImage };

@@ -1,9 +1,14 @@
 const express = require("express");
 const authController = require("../controllers/authController");
+const userController = require("../controllers/userController");
 const { verifyEmail } = require("../Middleware/verifyEmail");
 const router = express.Router();
 const protected = require("../Middleware/jwtMiddleware");
-const { upload, resizeProfileImage } = require("../Middleware/uploadImage");
+const {
+  uploadImage,
+  resizeProfileImage,
+} = require("../Middleware/uploadImage");
+const uploadCvs = require("../Middleware/uploadCvs");
 
 // ROUTES
 router.post("/register", authController.register);
@@ -17,12 +22,19 @@ router.patch("/reset-password/:token", authController.resetPassword);
 router.patch(
   "/update-profile",
   protected,
-  upload.single("profileImage"),
+  uploadImage.single("profileImage"),
   resizeProfileImage,
   authController.updateProfile
 );
 router.patch("/update-password", protected, authController.updatePassword);
 router.post("/logout", protected, authController.logout);
 router.get("/me", protected, authController.profile);
+
+router.post(
+  "/be-instructor",
+  protected,
+  uploadCvs.single("cv"),
+  userController.beInstructor
+);
 
 module.exports = router;

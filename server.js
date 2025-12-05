@@ -1,5 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const path = require("path");
+
 const cors = require("cors");
 dotenv.config();
 const connectDB = require("./src/config/db");
@@ -16,6 +18,19 @@ const PORT = process.env.PORT || 5000;
 // CONNECT TO DATABASE
 connectDB();
 // CONNECT TO DATABASE
+
+app.use(
+  "/cvs",
+  (req, res, next) => {
+    // Only for PDF files
+    if (req.path.endsWith(".pdf")) {
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "inline");
+    }
+    next();
+  },
+  express.static(path.join(__dirname, "public/cvs"))
+);
 app.use(express.static("public"));
 
 // ROUTES
