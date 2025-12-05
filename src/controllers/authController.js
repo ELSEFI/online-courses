@@ -283,3 +283,16 @@ exports.logout = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
+exports.deleteMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(400).json({ message: "User Not Exist" });
+
+    await User.findByIdAndDelete(req.user._id);
+    res.status(200).json({ message: "Account deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
