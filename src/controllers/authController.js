@@ -221,6 +221,31 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+exports.updatePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword, confirmNewPassword } = req.body;
+    if (!oldPassword || !newPassword || !confirmNewPassword)
+      return res.status(400).json({ message: "Three Fields Required!" });
+    const user = await User.findById(req.user._id);
+
+    const isMatch = await user.comparePassword(oldPassword);
+    if (!isMatch)
+      return res.status(400).json({ message: "Wrong Old Password" });
+    if (newPassword !== confirmNewPassword)
+      return res
+        .status(400)
+        .json({ message: "Password and Confirm Password Must be Matching" });
+
+    user.password = newPassword;
+    user.tokenVersion += 1;
+    await user.save();
+    res.status(200).json({ message: "Updated Password Successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 exports.logout = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);

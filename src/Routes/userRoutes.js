@@ -3,7 +3,7 @@ const authController = require("../controllers/authController");
 const { verifyEmail } = require("../Middleware/verifyEmail");
 const router = express.Router();
 const protected = require("../Middleware/jwtMiddleware");
-const {upload,resizeProfileImage} = require("../Middleware/uploadImage");
+const { upload, resizeProfileImage } = require("../Middleware/uploadImage");
 
 // ROUTES
 router.post("/register", authController.register);
@@ -12,13 +12,14 @@ router.post("/login", authController.login);
 router.post("/google", authController.loginGoogle);
 router.post("/forget-password", authController.forgetPassword);
 router.patch("/reset-password/:token", authController.resetPassword);
-router.put(
+router.patch(
   "/update-profile",
   protected,
   upload.single("profileImage"),
   resizeProfileImage,
   authController.updateProfile
 );
+router.patch("/update-password", protected, authController.updatePassword);
 router.post("/logout", protected, authController.logout);
 router.get("/me", protected, authController.profile);
 
