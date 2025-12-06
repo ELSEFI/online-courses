@@ -11,7 +11,7 @@ const instructorProfileSchema = new mongoose.Schema(
       en: { type: String, required: true },
       ar: { type: String, required: true },
     },
-    experience: {
+    experienceYears: {
       type: Number,
       required: true,
     },
