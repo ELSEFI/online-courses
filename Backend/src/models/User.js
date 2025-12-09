@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
     },
     profileImage: {
       type: String,
-      default: "/profile/default-avatar.png",
+      default: "default-avatar_edu8jh",
     },
     googleId: {
       type: String,

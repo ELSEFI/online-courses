@@ -19,9 +19,7 @@ import Snackbar from "@mui/material/Snackbar";
 import { styled } from "@mui/material/styles";
 
 import AppTheme from "../components/helpers/shared-theme/AppTheme";
-import {
-  SitemarkIcon,
-} from "../components/helpers/shared-theme/CustomIcons";
+import { SitemarkIcon } from "../components/helpers/shared-theme/CustomIcons";
 
 // =============== Google ===============
 import { GoogleLogin } from "@react-oauth/google";
@@ -83,7 +81,10 @@ export default function Register(props) {
   const handleGoogleSignupSuccess = async (credentialResponse) => {
     const idToken = credentialResponse.credential;
     try {
-      const res = await axios.post("http://localhost:5000/api/v1/users/google", { token: idToken });
+      const res = await axios.post(
+        "http://localhost:5000/api/v1/users/google",
+        { token: idToken }
+      );
       localStorage.setItem("token", res.data.token);
       setShowGoogleSuccess(true);
       setTimeout(() => {
@@ -100,14 +101,11 @@ export default function Register(props) {
 
   const handleRegister = async (name, email, password) => {
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/v1/users/register",
-        {
-          name,
-          email,
-          password,
-        }
-      );
+      await axios.post("http://localhost:5000/api/v1/users/register", {
+        name,
+        email,
+        password,
+      });
 
       setShowSuccess(true);
       setTimeout(() => {
@@ -246,7 +244,14 @@ export default function Register(props) {
 
           <Divider>or</Divider>
 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              alignItems: "center",
+            }}
+          >
             <GoogleLogin
               onSuccess={handleGoogleSignupSuccess}
               onError={handleGoogleSignupFailure}
@@ -276,7 +281,10 @@ export default function Register(props) {
           },
         }}
       >
-        <Alert severity="success" sx={{ width: '100%', fontSize: "1rem", py: 2 }}>
+        <Alert
+          severity="success"
+          sx={{ width: "100%", fontSize: "1rem", py: 2 }}
+        >
           Welcome! You have signed up with Google successfully.
         </Alert>
       </Snackbar>

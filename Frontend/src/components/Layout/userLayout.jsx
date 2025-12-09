@@ -9,7 +9,7 @@ export const UserLayout = () => {
       {<NavbarDemo />}
 
       {/* MAIN CONTENT */}
-      <main className="relative w-full">
+      <main className="relative w-full pt-20">
         <Outlet />
       </main>
 

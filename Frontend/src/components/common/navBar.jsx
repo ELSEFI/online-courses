@@ -10,17 +10,13 @@ import {
   MobileNavToggle,
   MobileNavMenu,
 } from "@/components/ui/resizable-navbar";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export function NavbarDemo() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => !!localStorage.getItem("token")
+  );
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // تشيك على الـ token لما الصفحة تحمل
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-  }, []);
 
   const navItems = [
     {
@@ -56,32 +52,20 @@ export function NavbarDemo() {
             {isLoggedIn ? (
               <>
                 {/* لما يكون مسجل دخول */}
-                <NavbarButton 
-                  variant="secondary"
-                  onClick={handleLogout}
-                >
+                <NavbarButton variant="secondary" onClick={handleLogout}>
                   Logout
                 </NavbarButton>
-                <NavbarButton 
-                  variant="primary"
-                  href="/profile"
-                >
+                <NavbarButton variant="primary" href="/profile">
                   Profile
                 </NavbarButton>
               </>
             ) : (
               <>
                 {/* لما مش مسجل دخول */}
-                <NavbarButton 
-                  variant="secondary"
-                  href="/login"
-                >
+                <NavbarButton variant="secondary" href="/login">
                   Login
                 </NavbarButton>
-                <NavbarButton 
-                  variant="primary"
-                  href="/register"
-                >
+                <NavbarButton variant="primary" href="/register">
                   Register
                 </NavbarButton>
               </>

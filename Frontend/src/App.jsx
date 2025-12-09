@@ -5,6 +5,7 @@ import Register from "./Pages/Register";
 import VerifyEmail from "./Pages/VerifyEmail";
 import ResetPassword from "./pages/ResetPassword";
 import BeInstructor from "./Pages/beInstructor";
+import UserProfile from "./Pages/Profile";
 import { UserLayout } from "./components/Layout/userLayout";
 import { Home } from "./Pages/home";
 function App() {
@@ -18,6 +19,11 @@ function App() {
             <Route path="register" element={<Register />} />
             <Route path="verify-email" element={<VerifyEmail />} />
             <Route path="be-instructor" element={<BeInstructor />} />
+            {/* Profile Routes */}
+            <Route path="profile" element={<UserProfile />} />{" "}
+            {/* Own profile */}
+            <Route path="profile/:userId" element={<UserProfile />} />{" "}
+            {/* Other user's profile */}
             <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Route>
         </Routes>

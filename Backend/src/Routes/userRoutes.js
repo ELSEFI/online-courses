@@ -29,6 +29,7 @@ router.patch(
 router.patch("/update-password", protected, authController.updatePassword);
 router.post("/logout", protected, authController.logout);
 router.get("/me", protected, authController.profile);
+router.get("/:userId", authController.getUser);
 
 router.post(
   "/be-instructor",

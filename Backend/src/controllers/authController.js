@@ -183,12 +183,35 @@ exports.profile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
     if (!user) return res.status(404).json({ message: "User no exist." });
+
     const imageUrl = user.profileImage
       ? `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${user.profileImage}`
       : null;
-    res.status(200).json({ user, imageUrl });
+
+    // Important: Send imageUrl as part of user object OR separately
+    const userWithImage = user.toObject();
+    userWithImage.profileImage = imageUrl; // Override with full URL
+
+    res.status(200).json({ user: userWithImage, imageUrl });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+exports.getUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).select("-password");
+    if (!user) return res.status(404).json({ message: "No User Founded!" });
+
+    // Convert user to object and add full image URL
+    const userObject = user.toObject();
+    userObject.profileImage = user.profileImage
+      ? `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${user.profileImage}`
+      : null;
+
+    res.status(200).json(userObject);
+  } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }
 };
@@ -203,7 +226,7 @@ exports.updateProfile = async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(400).json({ message: "User Not found" });
 
-    const { name, email} = req.body;
+    const { name, email } = req.body;
     if (name) user.name = name;
     if (req.file) {
       const result = await uploadToCloudinary(req.file.buffer, "users");
