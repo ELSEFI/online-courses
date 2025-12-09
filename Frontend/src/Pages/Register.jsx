@@ -1,4 +1,6 @@
 import * as React from "react";
+import axios from "axios";
+import useAuthRedirect from "../hooks/useAuthRedirect";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
@@ -12,14 +14,17 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import MuiCard from "@mui/material/Card";
+import Alert from "@mui/material/Alert";
+import Snackbar from "@mui/material/Snackbar";
 import { styled } from "@mui/material/styles";
+
 import AppTheme from "../components/helpers/shared-theme/AppTheme";
-import ColorModeSelect from "../components/helpers/shared-theme/ColorModeSelect";
 import {
-  GoogleIcon,
-  FacebookIcon,
   SitemarkIcon,
 } from "../components/helpers/shared-theme/CustomIcons";
+
+// =============== Google ===============
+import { GoogleLogin } from "@react-oauth/google";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -29,11 +34,11 @@ const Card = styled(MuiCard)(({ theme }) => ({
   padding: theme.spacing(4),
   gap: theme.spacing(2),
   margin: "auto",
+  [theme.breakpoints.up("sm")]: {
+    maxWidth: "450px",
+  },
   boxShadow:
     "hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px",
-  [theme.breakpoints.up("sm")]: {
-    width: "450px",
-  },
   ...theme.applyStyles("dark", {
     boxShadow:
       "hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px",
@@ -64,12 +69,54 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function Register(props) {
+  useAuthRedirect();
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
   const [nameError, setNameError] = React.useState(false);
   const [nameErrorMessage, setNameErrorMessage] = React.useState("");
+  const [showSuccess, setShowSuccess] = React.useState(false);
+  const [showGoogleSuccess, setShowGoogleSuccess] = React.useState(false);
+
+  // Google Signup Success
+  const handleGoogleSignupSuccess = async (credentialResponse) => {
+    const idToken = credentialResponse.credential;
+    try {
+      const res = await axios.post("http://localhost:5000/api/v1/users/google", { token: idToken });
+      localStorage.setItem("token", res.data.token);
+      setShowGoogleSuccess(true);
+      setTimeout(() => {
+        window.location.replace("/");
+      }, 1200);
+    } catch (err) {
+      alert(err.response?.data?.message || "Google Signup failed");
+    }
+  };
+  // Google Signup Failed
+  const handleGoogleSignupFailure = () => {
+    alert("Google Signup Failed. Please try again.");
+  };
+
+  const handleRegister = async (name, email, password) => {
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/v1/users/register",
+        {
+          name,
+          email,
+          password,
+        }
+      );
+
+      setShowSuccess(true);
+      setTimeout(() => {
+        window.location.href = `/verify-email?email=${email}`;
+      }, 1500);
+    } catch (err) {
+      alert(err.response?.data?.message || "Registration failed");
+    }
+  };
 
   const validateInputs = () => {
     const email = document.getElementById("email");
@@ -109,24 +156,23 @@ export default function Register(props) {
   };
 
   const handleSubmit = (event) => {
-    if (nameError || emailError || passwordError) {
-      event.preventDefault();
-      return;
-    }
+    event.preventDefault();
+    if (!validateInputs()) return;
     const data = new FormData(event.currentTarget);
-    console.log({
-      name: data.get("name"),
-      lastName: data.get("lastName"),
-      email: data.get("email"),
-      password: data.get("password"),
-    });
+    const name = data.get("name");
+    const email = data.get("email");
+    const password = data.get("password");
+    handleRegister(name, email, password);
   };
 
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
-      <ColorModeSelect sx={{ position: "fixed", top: "1rem", right: "1rem" }} />
-      <SignUpContainer direction="column" justifyContent="space-between">
+      <SignUpContainer
+        direction="column"
+        justifyContent="space-between"
+        sx={{ position: "relative", zIndex: 10 }}
+      >
         <Card variant="outlined">
           <SitemarkIcon />
           <Typography
@@ -136,6 +182,13 @@ export default function Register(props) {
           >
             Sign up
           </Typography>
+
+          {showSuccess && (
+            <Alert severity="success">
+              Account created! Check your email for verification code.
+            </Alert>
+          )}
+
           <Box
             component="form"
             onSubmit={handleSubmit}
@@ -144,94 +197,89 @@ export default function Register(props) {
             <FormControl>
               <FormLabel htmlFor="name">Full name</FormLabel>
               <TextField
-                autoComplete="name"
+                id="name"
                 name="name"
+                placeholder="Jon Snow"
                 required
                 fullWidth
-                id="name"
-                placeholder="Jon Snow"
                 error={nameError}
                 helperText={nameErrorMessage}
-                color={nameError ? "error" : "primary"}
               />
             </FormControl>
+
             <FormControl>
               <FormLabel htmlFor="email">Email</FormLabel>
               <TextField
+                id="email"
+                name="email"
+                placeholder="your@email.com"
                 required
                 fullWidth
-                id="email"
-                placeholder="your@email.com"
-                name="email"
-                autoComplete="email"
-                variant="outlined"
                 error={emailError}
                 helperText={emailErrorMessage}
-                color={passwordError ? "error" : "primary"}
               />
             </FormControl>
+
             <FormControl>
               <FormLabel htmlFor="password">Password</FormLabel>
               <TextField
-                required
-                fullWidth
+                id="password"
                 name="password"
                 placeholder="••••••"
                 type="password"
-                id="password"
-                autoComplete="new-password"
-                variant="outlined"
+                required
+                fullWidth
                 error={passwordError}
                 helperText={passwordErrorMessage}
-                color={passwordError ? "error" : "primary"}
               />
             </FormControl>
+
             <FormControlLabel
               control={<Checkbox value="allowExtraEmails" color="primary" />}
               label="I want to receive updates via email."
             />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              onClick={validateInputs}
-            >
+
+            <Button type="submit" fullWidth variant="contained">
               Sign up
             </Button>
           </Box>
-          <Divider>
-            <Typography sx={{ color: "text.secondary" }}>or</Typography>
-          </Divider>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert("Sign up with Google")}
-              startIcon={<GoogleIcon />}
-            >
-              Sign up with Google
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert("Sign up with Facebook")}
-              startIcon={<FacebookIcon />}
-            >
-              Sign up with Facebook
-            </Button>
+
+          <Divider>or</Divider>
+
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
+            <GoogleLogin
+              onSuccess={handleGoogleSignupSuccess}
+              onError={handleGoogleSignupFailure}
+              width="100%"
+              theme="filled_blue"
+              text="signup_with"
+              locale="en"
+            />
             <Typography sx={{ textAlign: "center" }}>
-              Already have an account?{" "}
-              <Link
-                href="/login"
-                variant="body2"
-                sx={{ alignSelf: "center" }}
-              >
-                Sign in
-              </Link>
+              Already have an account? <Link href="/login">Sign in</Link>
             </Typography>
           </Box>
         </Card>
       </SignUpContainer>
+      {/* Google Signup Snackbar */}
+      <Snackbar
+        open={showGoogleSuccess}
+        anchorOrigin={{ vertical: "center", horizontal: "center" }}
+        autoHideDuration={1200}
+        onClose={() => setShowGoogleSuccess(false)}
+        sx={{
+          "& .MuiPaper-root": {
+            minWidth: 320,
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "1.1rem",
+          },
+        }}
+      >
+        <Alert severity="success" sx={{ width: '100%', fontSize: "1rem", py: 2 }}>
+          Welcome! You have signed up with Google successfully.
+        </Alert>
+      </Snackbar>
     </AppTheme>
   );
 }

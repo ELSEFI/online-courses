@@ -116,9 +116,7 @@ exports.forgetPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
     await user.save({ validateBeforeSave: false });
 
-    const resetURL = `${req.protocol}://${req.get(
-      "host"
-    )}/api/v1/auth/reset-password/${realToken}`;
+    const resetURL = `http://localhost:5173/reset-password/${realToken}`;
 
     await sendResetPasswordEmail(user.email, resetURL);
 

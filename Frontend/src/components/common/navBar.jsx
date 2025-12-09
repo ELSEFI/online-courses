@@ -10,9 +10,18 @@ import {
   MobileNavToggle,
   MobileNavMenu,
 } from "@/components/ui/resizable-navbar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function NavbarDemo() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // تشيك على الـ token لما الصفحة تحمل
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
+
   const navItems = [
     {
       name: "Pricing",
@@ -24,11 +33,17 @@ export function NavbarDemo() {
     },
     {
       name: "Be Instructor",
-      link: "#be-instructor",
+      link: "be-instructor",
     },
   ];
 
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // 🔥 دالة تسجيل الخروج
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    setIsMobileMenuOpen(false);
+    window.location.href = "/"; // توجيه للصفحة الرئيسية
+  };
 
   return (
     <div className="relative w-full">
@@ -38,8 +53,39 @@ export function NavbarDemo() {
           <NavbarLogo />
           <NavItems items={navItems} />
           <div className="flex items-center gap-4">
-            <NavbarButton variant="secondary">Login</NavbarButton>
-            <NavbarButton variant="primary">Register</NavbarButton>
+            {isLoggedIn ? (
+              <>
+                {/* لما يكون مسجل دخول */}
+                <NavbarButton 
+                  variant="secondary"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </NavbarButton>
+                <NavbarButton 
+                  variant="primary"
+                  href="/profile"
+                >
+                  Profile
+                </NavbarButton>
+              </>
+            ) : (
+              <>
+                {/* لما مش مسجل دخول */}
+                <NavbarButton 
+                  variant="secondary"
+                  href="/login"
+                >
+                  Login
+                </NavbarButton>
+                <NavbarButton 
+                  variant="primary"
+                  href="/register"
+                >
+                  Register
+                </NavbarButton>
+              </>
+            )}
           </div>
         </NavBody>
 
@@ -68,20 +114,46 @@ export function NavbarDemo() {
               </a>
             ))}
             <div className="flex w-full flex-col gap-4">
-              <NavbarButton
-                onClick={() => setIsMobileMenuOpen(false)}
-                variant="primary"
-                className="w-full"
-              >
-                Login
-              </NavbarButton>
-              <NavbarButton
-                onClick={() => setIsMobileMenuOpen(false)}
-                variant="primary"
-                className="w-full"
-              >
-                Register
-              </NavbarButton>
+              {isLoggedIn ? (
+                <>
+                  {/* Mobile - لما يكون مسجل دخول */}
+                  <NavbarButton
+                    onClick={handleLogout}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    Logout
+                  </NavbarButton>
+                  <NavbarButton
+                    href="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    variant="primary"
+                    className="w-full"
+                  >
+                    Profile
+                  </NavbarButton>
+                </>
+              ) : (
+                <>
+                  {/* Mobile - لما مش مسجل دخول */}
+                  <NavbarButton
+                    href="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    Login
+                  </NavbarButton>
+                  <NavbarButton
+                    href="/register"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    variant="primary"
+                    className="w-full"
+                  >
+                    Register
+                  </NavbarButton>
+                </>
+              )}
             </div>
           </MobileNavMenu>
         </MobileNav>

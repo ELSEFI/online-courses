@@ -1,4 +1,5 @@
 import * as React from "react";
+import axios from "axios";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
@@ -12,15 +13,19 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import MuiCard from "@mui/material/Card";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import Alert from "@mui/material/Alert";
+import Snackbar from "@mui/material/Snackbar";
+import { GoogleLogin } from "@react-oauth/google";
 import { styled } from "@mui/material/styles";
 import ForgotPassword from "./ForgotPassword";
 import AppTheme from "../components/helpers/shared-theme/AppTheme";
-import ColorModeSelect from "../components/helpers/shared-theme/ColorModeSelect";
-import {
-  GoogleIcon,
-  FacebookIcon,
-  SitemarkIcon,
-} from "../components/helpers/shared-theme/CustomIcons";
+import { useNavigate } from "react-router-dom";
+import { SitemarkIcon } from "../components/helpers/shared-theme/CustomIcons";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -30,9 +35,7 @@ const Card = styled(MuiCard)(({ theme }) => ({
   padding: theme.spacing(4),
   gap: theme.spacing(2),
   margin: "auto",
-  [theme.breakpoints.up("sm")]: {
-    maxWidth: "450px",
-  },
+  [theme.breakpoints.up("sm")]: { maxWidth: "450px" },
   boxShadow:
     "hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px",
   ...theme.applyStyles("dark", {
@@ -65,36 +68,39 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function Login(props) {
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (localStorage.getItem("token")) {
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
+
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
-  const [open, setOpen] = React.useState(false);
+  const [openForgotPassword, setOpenForgotPassword] = React.useState(false);
+  const [openVerifyEmail, setOpenVerifyEmail] = React.useState(false);
+  const [verifyEmail, setVerifyEmail] = React.useState("");
+  const [verifyEmailError, setVerifyEmailError] = React.useState("");
+  const [showUnverifiedAlert, setShowUnverifiedAlert] = React.useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = React.useState("");
+  const [showSuccessSnackbar, setShowSuccessSnackbar] = React.useState(false);
 
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
+  const handleClickOpenForgotPassword = () => setOpenForgotPassword(true);
+  const handleCloseForgotPassword = () => setOpenForgotPassword(false);
 
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleSubmit = (event) => {
-    if (emailError || passwordError) {
-      event.preventDefault();
-      return;
-    }
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
-    });
+  const handleClickOpenVerifyEmail = () => setOpenVerifyEmail(true);
+  const handleCloseVerifyEmail = () => {
+    setOpenVerifyEmail(false);
+    setVerifyEmail("");
+    setVerifyEmailError("");
   };
 
   const validateInputs = () => {
     const email = document.getElementById("email");
     const password = document.getElementById("password");
-
     let isValid = true;
 
     if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
@@ -118,12 +124,97 @@ export default function Login(props) {
     return isValid;
   };
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!validateInputs()) return;
+
+    const data = new FormData(event.currentTarget);
+    const email = data.get("email");
+    const password = data.get("password");
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/v1/users/login", {
+        email,
+        password,
+      });
+
+      if (!res.data.user.emailVerified) {
+        setUnverifiedEmail(email);
+        setShowUnverifiedAlert(true);
+        return;
+      }
+
+      localStorage.setItem("token", res.data.token);
+
+      setShowSuccessSnackbar(true);
+      setTimeout(() => {
+        window.location.replace("/");
+      }, 1000);
+    } catch (err) {
+      alert(err.response?.data?.message || "Login failed");
+    }
+  };
+
+  const handleVerifyEmailSubmit = async () => {
+    if (!verifyEmail || !/\S+@\S+\.\S+/.test(verifyEmail)) {
+      setVerifyEmailError("Please enter a valid email address.");
+      return;
+    }
+
+    try {
+      await axios.post(
+        "http://localhost:5000/api/v1/users/resend-verification",
+        { email: verifyEmail }
+      );
+
+      handleCloseVerifyEmail();
+      alert("Verification code sent! Check your email.");
+      window.location.href = `/verify-email?email=${verifyEmail}`;
+    } catch (err) {
+      setVerifyEmailError(
+        err.response?.data?.message || "Email not found or already verified"
+      );
+    }
+  };
+
+  const handleGoToVerification = () => {
+    window.location.href = `/verify-email?email=${unverifiedEmail}`;
+  };
+
+  // Google Sign In Success
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
+    const idToken = credentialResponse.credential;
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/v1/users/google",
+        { token: idToken }
+      );
+      localStorage.setItem("token", res.data.token);
+      setShowSuccessSnackbar(true);
+      setTimeout(() => {
+        window.location.replace("/");
+      }, 1000);
+    } catch (err) {
+      alert(err.response?.data?.message || "Google Login failed");
+    }
+  };
+  // Google Sign In Fail
+  const handleGoogleLoginFailure = () => {
+    alert("Google Login Failed. Please try again.");
+  };
+
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
-      <SignInContainer direction="column" justifyContent="space-between">
+
+      <SignInContainer
+        direction="column"
+        justifyContent="space-between"
+        sx={{ position: "relative", zIndex: 10 }}
+      >
         <Card variant="outlined">
           <SitemarkIcon />
+
           <Typography
             component="h1"
             variant="h4"
@@ -131,16 +222,30 @@ export default function Login(props) {
           >
             Sign in
           </Typography>
+
+          {showUnverifiedAlert && (
+            <Alert
+              severity="warning"
+              onClose={() => setShowUnverifiedAlert(false)}
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={handleGoToVerification}
+                >
+                  Verify Now
+                </Button>
+              }
+            >
+              Your account is not verified. Please verify your email.
+            </Alert>
+          )}
+
           <Box
             component="form"
             onSubmit={handleSubmit}
             noValidate
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              width: "100%",
-              gap: 2,
-            }}
+            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
           >
             <FormControl>
               <FormLabel htmlFor="email">Email</FormLabel>
@@ -150,86 +255,166 @@ export default function Login(props) {
                 id="email"
                 type="email"
                 name="email"
-                placeholder="your@email.com"
                 autoComplete="email"
                 autoFocus
                 required
                 fullWidth
-                variant="outlined"
-                color={emailError ? "error" : "primary"}
               />
             </FormControl>
+
             <FormControl>
               <FormLabel htmlFor="password">Password</FormLabel>
               <TextField
                 error={passwordError}
                 helperText={passwordErrorMessage}
                 name="password"
-                placeholder="••••••"
                 type="password"
                 id="password"
-                autoComplete="current-password"
-                autoFocus
                 required
                 fullWidth
-                variant="outlined"
-                color={passwordError ? "error" : "primary"}
               />
             </FormControl>
+
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
               label="Remember me"
             />
-            <ForgotPassword open={open} handleClose={handleClose} />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              onClick={validateInputs}
-            >
+
+            <Button type="submit" fullWidth variant="contained">
               Sign in
             </Button>
-            <Link
-              component="button"
-              type="button"
-              onClick={handleClickOpen}
-              variant="body2"
-              sx={{ alignSelf: "center" }}
+
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                gap: 2,
+                flexWrap: "wrap",
+              }}
             >
-              Forgot your password?
-            </Link>
+              <Link
+                component="button"
+                type="button"
+                onClick={handleClickOpenForgotPassword}
+                variant="body2"
+              >
+                Forgot your password?
+              </Link>
+
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                •
+              </Typography>
+
+              <Link
+                component="button"
+                type="button"
+                onClick={handleClickOpenVerifyEmail}
+                variant="body2"
+              >
+                Verify Email
+              </Link>
+            </Box>
           </Box>
+
+          <ForgotPassword
+            open={openForgotPassword}
+            handleClose={handleCloseForgotPassword}
+          />
+
           <Divider>or</Divider>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert("Sign in with Google")}
-              startIcon={<GoogleIcon />}
-            >
-              Sign in with Google
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert("Sign in with Facebook")}
-              startIcon={<FacebookIcon />}
-            >
-              Sign in with Facebook
-            </Button>
+
+          {/* زر تسجيل دخول جوجل الرسمي */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              alignItems: "center",
+            }}
+          >
+            <GoogleLogin
+              onSuccess={handleGoogleLoginSuccess}
+              onError={handleGoogleLoginFailure}
+              width="100%"
+              theme="filled_blue"
+              text="signin_with"
+              locale="en"
+              // shape="pill"
+            />
             <Typography sx={{ textAlign: "center" }}>
               Don&apos;t have an account?{" "}
-              <Link
-                href="/register"
-                variant="body2"
-                sx={{ alignSelf: "center" }}
-              >
+              <Link href="/register" variant="body2">
                 Sign up
               </Link>
             </Typography>
           </Box>
         </Card>
       </SignInContainer>
+
+      <Dialog
+        open={openVerifyEmail}
+        onClose={handleCloseVerifyEmail}
+        PaperProps={{
+          component: "form",
+          onSubmit: (event) => {
+            event.preventDefault();
+            handleVerifyEmailSubmit();
+          },
+        }}
+      >
+        <DialogTitle>Verify Your Email</DialogTitle>
+        <DialogContent
+          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+        >
+          <DialogContentText>
+            Enter your email address and we&apos;ll send a verification code.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            required
+            margin="dense"
+            id="verify-email"
+            label="Email Address"
+            type="email"
+            fullWidth
+            value={verifyEmail}
+            onChange={(e) => {
+              setVerifyEmail(e.target.value);
+              setVerifyEmailError("");
+            }}
+            error={!!verifyEmailError}
+            helperText={verifyEmailError}
+          />
+        </DialogContent>
+        <DialogActions sx={{ pb: 3, px: 3 }}>
+          <Button onClick={handleCloseVerifyEmail}>Cancel</Button>
+          <Button variant="contained" type="submit">
+            Send Code
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={showSuccessSnackbar}
+        anchorOrigin={{ vertical: "center", horizontal: "center" }}
+        autoHideDuration={1200}
+        onClose={() => setShowSuccessSnackbar(false)}
+        sx={{
+          "& .MuiPaper-root": {
+            minWidth: 320,
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "1.1rem",
+          },
+        }}
+      >
+        <Alert
+          severity="success"
+          sx={{ width: "100%", fontSize: "1rem", py: 2 }}
+        >
+          You have logged in successfully!
+        </Alert>
+      </Snackbar>
     </AppTheme>
   );
 }

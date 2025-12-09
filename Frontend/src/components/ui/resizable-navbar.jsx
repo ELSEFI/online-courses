@@ -8,8 +8,11 @@ import {
   useMotionValueEvent,
 } from "motion/react";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 
+// ========================================
+// 🔥 NAVBAR COMPONENT (Fixed للسكرول)
+// ========================================
 export const Navbar = ({ children, className }) => {
   const ref = useRef(null);
   const { scrollY } = useScroll({
@@ -29,9 +32,8 @@ export const Navbar = ({ children, className }) => {
   return (
     <motion.div
       ref={ref}
-      // IMPORTANT: Change this to class of `fixed` if you want the navbar to be fixed
       className={cn(
-        "sticky inset-x-0 top-4 z-40 w-fit mx-auto md:rounded-3xl md:border md:border-white/20 md:bg-white/10 md:backdrop-blur-xl md:shadow-lg",
+        "fixed inset-x-0 top-4 z-40 w-fit mx-auto md:rounded-3xl md:border md:border-white/20 md:bg-white/10 md:backdrop-blur-xl md:shadow-lg",
         className
       )}
     >
@@ -163,7 +165,7 @@ export const MobileNavToggle = ({ isOpen, onClick }) => {
 export const NavbarLogo = () => {
   return (
     <a
-      href="#"
+      href="/"
       className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
     >
       <img
@@ -172,7 +174,7 @@ export const NavbarLogo = () => {
         width={30}
         height={30}
       />
-      <span className="font-medium text-black dark:text-white">Startup</span>
+      <span className="font-medium text-black dark:text-white">Courses</span>
     </a>
   );
 };
@@ -183,6 +185,7 @@ export const NavbarButton = ({
   children,
   className,
   variant = "primary",
+  onClick,
   ...props
 }) => {
   const baseStyles =
@@ -200,6 +203,7 @@ export const NavbarButton = ({
   return (
     <Tag
       href={href || undefined}
+      onClick={onClick}
       className={cn(baseStyles, variantStyles[variant], className)}
       {...props}
     >
@@ -207,3 +211,144 @@ export const NavbarButton = ({
     </Tag>
   );
 };
+
+// ========================================
+// 🔥 NAVBAR DEMO WITH AUTH
+// ========================================
+export function NavbarDemo() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // تشيك على الـ token لما الصفحة تحمل
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
+
+  const navItems = [
+    {
+      name: "Pricing",
+      link: "#pricing",
+    },
+    {
+      name: "Contact",
+      link: "#contact",
+    },
+    {
+      name: "Be Instructor",
+      link: "#be-instructor",
+    },
+  ];
+
+  // 🔥 دالة تسجيل الخروج
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    setIsMobileMenuOpen(false);
+    window.location.href = "/"; // توجيه للصفحة الرئيسية
+  };
+
+  return (
+    <div className="relative w-full">
+      <Navbar>
+        {/* Desktop Navigation */}
+        <NavBody>
+          <NavbarLogo />
+          <NavItems items={navItems} />
+          <div className="flex items-center gap-4">
+            {isLoggedIn ? (
+              <>
+                {/* لما يكون مسجل دخول */}
+                <NavbarButton variant="secondary" onClick={handleLogout}>
+                  Logout
+                </NavbarButton>
+                <NavbarButton variant="primary" href="/profile">
+                  Profile
+                </NavbarButton>
+              </>
+            ) : (
+              <>
+                {/* لما مش مسجل دخول */}
+                <NavbarButton variant="secondary" href="/login">
+                  Login
+                </NavbarButton>
+                <NavbarButton variant="primary" href="/register">
+                  Register
+                </NavbarButton>
+              </>
+            )}
+          </div>
+        </NavBody>
+
+        {/* Mobile Navigation */}
+        <MobileNav>
+          <MobileNavHeader>
+            <NavbarLogo />
+            <MobileNavToggle
+              isOpen={isMobileMenuOpen}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            />
+          </MobileNavHeader>
+
+          <MobileNavMenu
+            isOpen={isMobileMenuOpen}
+            onClose={() => setIsMobileMenuOpen(false)}
+          >
+            {navItems.map((item, idx) => (
+              <a
+                key={`mobile-link-${idx}`}
+                href={item.link}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="relative text-neutral-600 dark:text-neutral-300"
+              >
+                <span className="block">{item.name}</span>
+              </a>
+            ))}
+            <div className="flex w-full flex-col gap-4">
+              {isLoggedIn ? (
+                <>
+                  {/* Mobile - لما يكون مسجل دخول */}
+                  <NavbarButton
+                    onClick={handleLogout}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    Logout
+                  </NavbarButton>
+                  <NavbarButton
+                    href="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    variant="primary"
+                    className="w-full"
+                  >
+                    Profile
+                  </NavbarButton>
+                </>
+              ) : (
+                <>
+                  {/* Mobile - لما مش مسجل دخول */}
+                  <NavbarButton
+                    href="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    Login
+                  </NavbarButton>
+                  <NavbarButton
+                    href="/register"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    variant="primary"
+                    className="w-full"
+                  >
+                    Register
+                  </NavbarButton>
+                </>
+              )}
+            </div>
+          </MobileNavMenu>
+        </MobileNav>
+      </Navbar>
+    </div>
+  );
+}

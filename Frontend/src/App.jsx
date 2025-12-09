@@ -2,6 +2,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import Login from "./Pages/Login";
 import Register from "./Pages/Register";
+import VerifyEmail from "./Pages/VerifyEmail";
+import ResetPassword from "./pages/ResetPassword";
+import BeInstructor from "./Pages/beInstructor";
 import { UserLayout } from "./components/Layout/userLayout";
 import { Home } from "./Pages/home";
 function App() {
@@ -13,6 +16,9 @@ function App() {
             <Route index element={<Home />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
+            <Route path="verify-email" element={<VerifyEmail />} />
+            <Route path="be-instructor" element={<BeInstructor />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Route>
         </Routes>
       </BrowserRouter>
