@@ -8,6 +8,7 @@ import BeInstructor from "./Pages/beInstructor";
 import UserProfile from "./Pages/Profile";
 import { UserLayout } from "./components/Layout/userLayout";
 import { Home } from "./Pages/home";
+import NotFound from "./Pages/404Page";
 function App() {
   return (
     <ThemeProvider>
@@ -19,13 +20,11 @@ function App() {
             <Route path="register" element={<Register />} />
             <Route path="verify-email" element={<VerifyEmail />} />
             <Route path="be-instructor" element={<BeInstructor />} />
-            {/* Profile Routes */}
             <Route path="profile" element={<UserProfile />} />{" "}
-            {/* Own profile */}
             <Route path="profile/:userId" element={<UserProfile />} />{" "}
-            {/* Other user's profile */}
             <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Route>
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

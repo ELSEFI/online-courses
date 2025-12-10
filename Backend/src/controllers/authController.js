@@ -181,16 +181,16 @@ exports.resendVerification = async (req, res) => {
 };
 exports.profile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("-password");
-    if (!user) return res.status(404).json({ message: "User no exist." });
+    if (!req.user)
+      return res.status(401).json({ message: "Your Not Logging in" });
 
+    const user = req.user;
     const imageUrl = user.profileImage
       ? `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${user.profileImage}`
       : null;
 
-    // Important: Send imageUrl as part of user object OR separately
     const userWithImage = user.toObject();
-    userWithImage.profileImage = imageUrl; // Override with full URL
+    userWithImage.profileImage = imageUrl;
 
     res.status(200).json({ user: userWithImage, imageUrl });
   } catch (error) {
@@ -227,6 +227,10 @@ exports.updateProfile = async (req, res) => {
     if (!user) return res.status(400).json({ message: "User Not found" });
 
     const { name, email } = req.body;
+    const userWithEmail = User.findOne({ email });
+    if (userWithEmail)
+      return res.status(400).json({ message: "Email Used Before" });
+
     if (name) user.name = name;
     if (req.file) {
       const result = await uploadToCloudinary(req.file.buffer, "users");

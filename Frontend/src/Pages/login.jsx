@@ -124,6 +124,16 @@ export default function Login(props) {
     return isValid;
   };
 
+  // دالة للتوجيه حسب دور المستخدم
+  const redirectUserByRole = (userRole) => {
+    if (userRole === "admin") {
+      window.location.replace("/admin");
+    } else {
+      // user أو instructor
+      window.location.replace("/");
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!validateInputs()) return;
@@ -148,7 +158,7 @@ export default function Login(props) {
 
       setShowSuccessSnackbar(true);
       setTimeout(() => {
-        window.location.replace("/");
+        redirectUserByRole(res.data.user.role); // استخدام الـ role من الـ response
       }, 1000);
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
@@ -192,12 +202,13 @@ export default function Login(props) {
       localStorage.setItem("token", res.data.token);
       setShowSuccessSnackbar(true);
       setTimeout(() => {
-        window.location.replace("/");
+        redirectUserByRole(res.data.user.role); // استخدام الـ role من الـ response
       }, 1000);
     } catch (err) {
       alert(err.response?.data?.message || "Google Login failed");
     }
   };
+
   // Google Sign In Fail
   const handleGoogleLoginFailure = () => {
     alert("Google Login Failed. Please try again.");
@@ -323,7 +334,6 @@ export default function Login(props) {
 
           <Divider>or</Divider>
 
-          {/* زر تسجيل دخول جوجل الرسمي */}
           <Box
             sx={{
               display: "flex",
@@ -339,7 +349,6 @@ export default function Login(props) {
               theme="filled_blue"
               text="signin_with"
               locale="en"
-              // shape="pill"
             />
             <Typography sx={{ textAlign: "center" }}>
               Don&apos;t have an account?{" "}
