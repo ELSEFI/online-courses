@@ -166,3 +166,27 @@ exports.getUser = async (req, res) => {
   }
 };
 
+exports.addUser = async (req, res) => {
+  const { name, email, password } = req.body;
+  if (name || email || password)
+    return res.status(400).json({ message: "All Inputs Required" });
+
+  try {
+    let user = await User.findOne({ email });
+    if (user)
+      return res.status(400).json({ message: "User Already Signed Up" });
+
+    user = new User({
+      name,
+      email,
+      password,
+      emailVerified: true,
+    });
+    await user.save();
+
+    res.status(200).json({ message: "User Created Successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
