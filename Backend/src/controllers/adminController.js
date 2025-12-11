@@ -45,6 +45,68 @@ exports.removeInstructor = async (req, res) => {
   }
 };
 
+exports.addInstructor = async (req, res) => {
+  const {
+    name,
+    email,
+    password,
+    bioEn,
+    bioAr,
+    jobTitleEn,
+    jobTitleAr,
+    experienceYears,
+  } = req.body;
+
+  if (
+    !name ||
+    !email ||
+    !password ||
+    !bioEn ||
+    !bioAr ||
+    !jobTitleEn ||
+    !jobTitleAr ||
+    !experienceYears
+  )
+    return res.status(400).json({ message: "All Inputs Required" });
+
+  if (!req.file) {
+    return res.status(400).json({
+      message: "CV file is required",
+    });
+  }
+  try {
+    let user = User.findOne({ email });
+    if (user) return res.status(400).json({ message: "User Already Exist" });
+
+    user = new User({
+      name,
+      email,
+      password,
+      role: "instructor",
+      emailVerified: true,
+    });
+    await user.save();
+    const instructor = await instructorProfile.create({
+      userId: user._id,
+      bio: {
+        en: bioEn,
+        ar: bioAr,
+      },
+      experienceYears: request.experienceYears,
+      jobTitle: {
+        en: jobTitleEn,
+        ar: jobTitleAr,
+      },
+      cvFile: req.file.filename,
+    });
+
+    res.status(200).json({ message: "Instructor Created Successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 exports.getAllRequests = async (req, res) => {
   try {
     const requests = await instructorRequest
