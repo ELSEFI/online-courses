@@ -85,6 +85,7 @@ exports.addInstructor = async (req, res) => {
       emailVerified: true,
     });
     await user.save();
+
     const instructor = await instructorProfile.create({
       userId: user._id,
       bio: {
@@ -270,17 +271,36 @@ exports.addUser = async (req, res) => {
   }
 };
 
-exports.deleteUser = async (req, res) => {
-  const user = await User.findById(req.params.userId);
-  if (!user) return res.status(400).json({ message: "User Not Founded" });
-  const instructor = await instructorProfile.findOne({ userId: user._id });
-  if (!instructor) {
-    await User.findByIdAndDelete(user._id);
-    return res.status(200).json({ message: "User Deleted Successfully" });
+exports.updateStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ message: "Not User Founded" });
+
+    user.status = !user.status;
+    await user.save();
+    res.status(200).json({ message: "User Updated Successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
   }
+};
 
-  await instructorProfile.findByIdAndDelete(instructor._id);
-  await User.findByIdAndDelete(user._id);
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(400).json({ message: "User Not Founded" });
+    const instructor = await instructorProfile.findOne({ userId: user._id });
+    if (!instructor) {
+      await User.findByIdAndDelete(user._id);
+      return res.status(200).json({ message: "User Deleted Successfully" });
+    }
 
-  res.status(200).json({ message: "User Deleted Successfully" });
+    await instructorProfile.findByIdAndDelete(instructor._id);
+    await User.findByIdAndDelete(user._id);
+
+    res.status(200).json({ message: "User Deleted Successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
 };
