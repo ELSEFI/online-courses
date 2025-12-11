@@ -2,6 +2,49 @@ const instructorRequest = require("../models/instructorRequest");
 const instructorProfile = require("../models/instructorProfile");
 const User = require("../models/User");
 
+exports.getAllInstructors = async (req, res) => {
+  const instructors = await instructorProfile.find();
+  if (instructors.length === 0)
+    return res.status(200).json({ message: "Not Instructors Founded!" });
+  await instructors.populate("userId", "name email profileImage");
+  res.status(200).json(instructors);
+};
+
+exports.getInstructor = async (req, res) => {
+  try {
+    const instructor = await instructorProfile.findById(
+      req.params.instructorId
+    );
+    if (!instructor)
+      return res.status(404).json({ message: "Not Instructor With That Id" });
+
+    await instructor.populate("userId", "name email profileImage");
+
+    res.status(200).json(instructor);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+exports.removeInstructor = async (req, res) => {
+  try {
+    const instructor = await instructorProfile.findById(
+      req.params.instructorId
+    );
+    if (!instructor)
+      return res.status(400).json({ message: "No Instructor Founded" });
+
+    await User.findByIdAndUpdate(instructor.userId, { role: "user" });
+    await instructorProfile.findByIdAndDelete(req.params.instructorId);
+
+    res.status(200).json({ message: "instructor Has Been Removed" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 exports.getAllRequests = async (req, res) => {
   try {
     const requests = await instructorRequest
@@ -107,31 +150,6 @@ exports.rejectInstructor = async (req, res) => {
       message: "Instructor rejected",
       profile: request,
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
-  }
-};
-
-exports.getAllInstructors = async (req, res) => {
-  const instructors = await instructorProfile.find();
-  if (instructors.length === 0)
-    return res.status(200).json({ message: "Not Instructors Founded!" });
-  await instructors.populate("userId", "name email profileImage");
-  res.status(200).json(instructors);
-};
-
-exports.getInstructor = async (req, res) => {
-  try {
-    const instructor = await instructorProfile.findById(
-      req.params.instructorId
-    );
-    if (!instructor)
-      return res.status(404).json({ message: "Not Instructor With That Id" });
-
-    await instructor.populate("userId", "name email profileImage");
-
-    res.status(200).json(instructor);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
