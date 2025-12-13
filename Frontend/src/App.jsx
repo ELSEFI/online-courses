@@ -9,8 +9,12 @@ import UserProfile from "./Pages/Profile";
 import { UserLayout } from "./components/Layout/userLayout";
 import { Home } from "./Pages/home";
 import NotFound from "./Pages/404Page";
+// Admin imports
 import DashboardLayout from "./Pages/Admin/AdminPage";
-import Overview from "./Pages/Admin/Overview";
+import Overview from "./features/overview/Overview";
+import UsersList from "./features/users/UsersList";
+import InstructorsList from "./features/instructors/InstructorsList";
+import MessagesList from "./features/messages/MessagesList";
 function App() {
   return (
     <ThemeProvider>
@@ -26,12 +30,12 @@ function App() {
             <Route path="profile/:userId" element={<UserProfile />} />{" "}
             <Route path="/reset-password/:token" element={<ResetPassword />} />
           </Route>
-          {/* Admin Routes */}
+          {/* Admin Pages */}
           <Route path="/admin" element={<DashboardLayout />}>
             <Route index element={<Overview />} />
-            {/* <Route path="users" element={<Users />} /> */}
-            {/* <Route path="instructors" element={<Instructors />} /> */}
-            {/* <Route path="courses" element={<Courses />} /> */}
+            <Route path="users" element={<UsersList />} />
+            <Route path="instructors" element={<InstructorsList />} />
+            <Route path="messages" element={<MessagesList />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

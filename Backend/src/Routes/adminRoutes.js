@@ -7,6 +7,7 @@ const uploadCvs = require("../Middleware/uploadCvs");
 const router = express.Router();
 router.use(protected, restrictTo("admin"));
 
+// ==================== INSTRUCTOR ROUTES ====================
 router.get("/instructors", adminController.getAllInstructors);
 router.post(
   "/instructors/add-instructor",
@@ -19,7 +20,7 @@ router.delete(
   adminController.removeInstructor
 );
 
-// Messages routes
+// ==================== MESSAGES ROUTES ====================
 router.get("/users/messages", adminController.getAllMessages);
 router.delete(
   "/users/messages/delete-messages",
@@ -35,13 +36,7 @@ router.delete(
   adminController.deleteMessage
 );
 
-// Users routes
-router.get("/users", adminController.getAllUsers);
-router.post("/users/add-user", adminController.addUser);
-router.get("/users/:userId", adminController.getUser);
-router.delete("/users/:userId", adminController.deleteUser);
-router.patch("/users/:userId/update-status", adminController.updateStatus);
-
+// ==================== REQUEST ROUTES ====================
 router.get("/users/requests", adminController.getAllRequests);
 router.get("/users/requests/:requestId", adminController.getRequest);
 router.patch(
@@ -52,5 +47,12 @@ router.patch(
   "/users/requests/:requestId/reject-request",
   adminController.rejectInstructor
 );
+
+// ==================== USERS ROUTES ====================
+router.get("/users", adminController.getAllUsers);
+router.post("/users/add-user", adminController.addUser);
+router.get("/users/:userId", adminController.getUser);
+router.delete("/users/:userId", adminController.deleteUser);
+router.patch("/users/:userId/update-status", adminController.updateStatus);
 
 module.exports = router;
