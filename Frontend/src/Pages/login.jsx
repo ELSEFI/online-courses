@@ -26,6 +26,7 @@ import ForgotPassword from "./ForgotPassword";
 import AppTheme from "../components/helpers/shared-theme/AppTheme";
 import { useNavigate } from "react-router-dom";
 import { SitemarkIcon } from "../components/helpers/shared-theme/CustomIcons";
+import { useToast } from "../components/ui/toast/ToastContext";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -69,6 +70,7 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 
 export default function Login(props) {
   const navigate = useNavigate();
+  const toast = useToast();
 
   React.useEffect(() => {
     if (localStorage.getItem("token")) {
@@ -161,7 +163,7 @@ export default function Login(props) {
         redirectUserByRole(res.data.user.role); // استخدام الـ role من الـ response
       }, 1000);
     } catch (err) {
-      alert(err.response?.data?.message || "Login failed");
+      toast.error(err.response?.data?.message || "Login failed");
     }
   };
 
@@ -178,7 +180,7 @@ export default function Login(props) {
       );
 
       handleCloseVerifyEmail();
-      alert("Verification code sent! Check your email.");
+      toast.success("Verification code sent! Check your email.");
       window.location.href = `/verify-email?email=${verifyEmail}`;
     } catch (err) {
       setVerifyEmailError(
@@ -205,7 +207,7 @@ export default function Login(props) {
         redirectUserByRole(res.data.user.role); // استخدام الـ role من الـ response
       }, 1000);
     } catch (err) {
-      alert(err.response?.data?.message || "Google Login failed");
+      toast.error(err.response?.data?.message || "Google Login failed");
     }
   };
 

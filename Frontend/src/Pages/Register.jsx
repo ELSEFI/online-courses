@@ -17,7 +17,7 @@ import MuiCard from "@mui/material/Card";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import { styled } from "@mui/material/styles";
-
+import { useToast } from "../components/ui/toast/ToastContext";
 import AppTheme from "../components/helpers/shared-theme/AppTheme";
 import { SitemarkIcon } from "../components/helpers/shared-theme/CustomIcons";
 
@@ -68,6 +68,8 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
 
 export default function Register(props) {
   useAuthRedirect();
+  const toast = useToast();
+
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
   const [passwordError, setPasswordError] = React.useState(false);
@@ -96,7 +98,7 @@ export default function Register(props) {
   };
   // Google Signup Failed
   const handleGoogleSignupFailure = () => {
-    alert("Google Signup Failed. Please try again.");
+    toast.error("Google Signup Failed. Please try again.");
   };
 
   const handleRegister = async (name, email, password) => {
@@ -112,7 +114,7 @@ export default function Register(props) {
         window.location.href = `/verify-email?email=${email}`;
       }, 1500);
     } catch (err) {
-      alert(err.response?.data?.message || "Registration failed");
+      toast.error(err.response?.data?.message || "Registration failed");
     }
   };
 

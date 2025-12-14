@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { useToast } from "../components/ui/toast/ToastContext";
 import {
   Star,
   BookOpen,
@@ -22,6 +23,8 @@ import {
 } from "lucide-react";
 
 const UserProfile = () => {
+  const toast = useToast();
+
   const { userId: urlUserId } = useParams();
   const [user, setUser] = useState(null);
   const [instructorProfile, setInstructorProfile] = useState(null);
@@ -174,11 +177,14 @@ const UserProfile = () => {
         formData.append("profileImage", editedData.profileImage);
       }
 
-      const response = await fetch("http://localhost:5000/api/v1/users/update-profile", {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      const response = await fetch(
+        "http://localhost:5000/api/v1/users/update-profile",
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to update profile");
 
@@ -194,7 +200,7 @@ const UserProfile = () => {
       setIsEditingProfile(false);
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     } finally {
       setSaveLoading(false);
     }
@@ -203,7 +209,7 @@ const UserProfile = () => {
   const handleUpdatePassword = async () => {
     try {
       if (passwordData.newPassword !== passwordData.confirmNewPassword) {
-        alert("Passwords don't match!");
+        toast.warning("Passwords don't match!");
         return;
       }
 

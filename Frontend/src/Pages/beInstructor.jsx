@@ -11,9 +11,9 @@ import {
   Lock,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
 export default function BeInstructorForm() {
   const navigate = useNavigate();
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [formData, setFormData] = useState({

@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "./context/ThemeContext";
+import ThemeProvider from "./context/ThemeProvider";
+import ToastProvider from "./components/ui/toast/ToastProvider";
+import ConfirmProvider from "./components/ui/confirm/ConfirmProvider";
 import Login from "./Pages/Login";
 import Register from "./Pages/Register";
 import VerifyEmail from "./Pages/VerifyEmail";
@@ -15,31 +17,41 @@ import Overview from "./features/overview/Overview";
 import UsersList from "./features/users/UsersList";
 import InstructorsList from "./features/instructors/InstructorsList";
 import MessagesList from "./features/messages/MessagesList";
+import CoursesList from "./features/courses/CoursesList";
+
 function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<UserLayout />}>
-            <Route index element={<Home />} />
-            <Route path="login" element={<Login />} />
-            <Route path="register" element={<Register />} />
-            <Route path="verify-email" element={<VerifyEmail />} />
-            <Route path="be-instructor" element={<BeInstructor />} />
-            <Route path="profile" element={<UserProfile />} />{" "}
-            <Route path="profile/:userId" element={<UserProfile />} />{" "}
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-          </Route>
-          {/* Admin Pages */}
-          <Route path="/admin" element={<DashboardLayout />}>
-            <Route index element={<Overview />} />
-            <Route path="users" element={<UsersList />} />
-            <Route path="instructors" element={<InstructorsList />} />
-            <Route path="messages" element={<MessagesList />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <ToastProvider>
+        <ConfirmProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<UserLayout />}>
+                <Route index element={<Home />} />
+                <Route path="login" element={<Login />} />
+                <Route path="register" element={<Register />} />
+                <Route path="verify-email" element={<VerifyEmail />} />
+                <Route path="be-instructor" element={<BeInstructor />} />
+                <Route path="profile" element={<UserProfile />} />
+                <Route path="profile/:userId" element={<UserProfile />} />
+                <Route
+                  path="/reset-password/:token"
+                  element={<ResetPassword />}
+                />
+              </Route>
+              {/* Admin Pages */}
+              <Route path="/admin" element={<DashboardLayout />}>
+                <Route index element={<Overview />} />
+                <Route path="users" element={<UsersList />} />
+                <Route path="instructors" element={<InstructorsList />} />
+                <Route path="messages" element={<MessagesList />} />
+                <Route path="courses" element={<CoursesList />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </ConfirmProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

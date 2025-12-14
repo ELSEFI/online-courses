@@ -2,20 +2,12 @@ import React, { useState, useEffect } from "react";
 import { usersApi } from "../../api/users.api";
 import { instructorsApi } from "../../api/instructors.api";
 import { requestsApi } from "../../api/requests.api";
-import {
-  Eye,
-  Users,
-  GraduationCap,
-  BookOpen,
-  AlertCircle,
-  Download,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { Users, GraduationCap, BookOpen, AlertCircle, Eye } from "lucide-react";
 import Button from "../../components/ui/Button";
-import Modal from "../../components/ui/Modal"; // we'll define Modal below as simple component
-import EmptyState from "../../components/ui/EmptyState"; // define below
+import Modal from "../../components/ui/Modal";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import { useToast } from "../../components/ui/toast/ToastContext";
+import { useConfirm } from "../../components/ui/confirm/ConfirmContext";
 
 export default function Overview() {
   const [stats, setStats] = useState({
@@ -32,6 +24,9 @@ export default function Overview() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
 
+  const toast = useToast();
+  const confirm = useConfirm();
+
   useEffect(() => {
     load();
   }, []);
@@ -41,15 +36,15 @@ export default function Overview() {
       setLoading(true);
       setError(null);
       const [users, instructors, reqs] = await Promise.all([
-        usersApi.getAll(),
-        instructorsApi.getAll(),
-        requestsApi.getAll(),
+        usersApi.getAll().catch(() => []),
+        instructorsApi.getAll().catch(() => []),
+        requestsApi.getAll().catch(() => []),
       ]);
       const reqArray = Array.isArray(reqs) ? reqs : [];
       setStats({
         users: Array.isArray(users) ? users.length : 0,
         instructors: Array.isArray(instructors) ? instructors.length : 0,
-        courses: 0,
+        courses: 0, // Coming Soon
         requests: reqArray.filter((r) => r.status === "pending").length,
       });
       setRequests(reqArray);
@@ -74,15 +69,26 @@ export default function Overview() {
 
   const approve = async () => {
     if (!selectedRequest) return;
-    if (!window.confirm("Approve?")) return;
+
+    const confirmed = await confirm({
+      title: "Approve Instructor Request",
+      message: "Are you sure you want to approve this instructor request?",
+      confirmText: "Yes, Approve",
+      variant: "info",
+    });
+
+    if (!confirmed) return;
+
     try {
       setProcessing(true);
       await requestsApi.approve(selectedRequest._id);
       setShowModal(false);
       await load();
+      toast.success("Request approved successfully!");
     } catch (err) {
       console.error(err);
       setError("Failed to approve");
+      toast.error("Failed to approve request");
     } finally {
       setProcessing(false);
     }
@@ -90,10 +96,19 @@ export default function Overview() {
 
   const reject = async () => {
     if (!rejectReasons.en.trim() || !rejectReasons.ar.trim()) {
-      alert("Provide both reasons");
+      toast.warning("Please provide rejection reasons in both languages");
       return;
     }
-    if (!window.confirm("Reject?")) return;
+
+    const confirmed = await confirm({
+      title: "Reject Instructor Request",
+      message: "Are you sure you want to reject this instructor request?",
+      confirmText: "Yes, Reject",
+      variant: "danger",
+    });
+
+    if (!confirmed) return;
+
     try {
       setProcessing(true);
       await requestsApi.reject(selectedRequest._id, {
@@ -103,9 +118,11 @@ export default function Overview() {
       setShowModal(false);
       setRejectReasons({ en: "", ar: "" });
       await load();
+      toast.success("Request rejected successfully!");
     } catch (err) {
       console.error(err);
       setError("Failed to reject");
+      toast.error("Failed to reject request");
     } finally {
       setProcessing(false);
     }
@@ -114,86 +131,110 @@ export default function Overview() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-white mb-6">Dashboard Overview</h1>
-      {error && <div className="bg-red-800 p-3 rounded mb-4">{error}</div>}
+    <div className="space-y-6">
+      <h1 className="text-2xl lg:text-3xl font-bold text-white">
+        Dashboard Overview
+      </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {error && (
+        <div className="bg-red-800/20 border border-red-800 text-red-400 p-4 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <div className="bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl p-6 text-white">
-          {" "}
-          <div className="flex justify-between">
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm">Total Users</p>
+              <p className="text-sm opacity-90 mb-1">Total Users</p>
               <h3 className="text-3xl font-bold">{stats.users}</h3>
             </div>
-            <Users className="w-12 h-12" />
+            <Users className="w-10 h-10 opacity-80" />
           </div>
         </div>
+
         <div className="bg-gradient-to-br from-pink-600 to-pink-800 rounded-xl p-6 text-white">
-          {" "}
-          <div className="flex justify-between">
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm">Total Instructors</p>
+              <p className="text-sm opacity-90 mb-1">Total Instructors</p>
               <h3 className="text-3xl font-bold">{stats.instructors}</h3>
             </div>
-            <GraduationCap className="w-12 h-12" />
+            <GraduationCap className="w-10 h-10 opacity-80" />
           </div>
         </div>
+
         <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-6 text-white">
-          {" "}
-          <div className="flex justify-between">
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm">Total Courses</p>
+              <p className="text-sm opacity-90 mb-1">Total Courses</p>
               <h3 className="text-3xl font-bold">{stats.courses}</h3>
             </div>
-            <BookOpen className="w-12 h-12" />
+            <BookOpen className="w-10 h-10 opacity-80" />
           </div>
         </div>
+
         <div className="bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl p-6 text-white">
-          {" "}
-          <div className="flex justify-between">
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm">Pending Requests</p>
+              <p className="text-sm opacity-90 mb-1">Pending Requests</p>
               <h3 className="text-3xl font-bold">{stats.requests}</h3>
             </div>
-            <AlertCircle className="w-12 h-12" />
+            <AlertCircle className="w-10 h-10 opacity-80" />
           </div>
         </div>
       </div>
 
-      <div className="bg-gray-800 rounded-xl p-6 shadow">
-        <h2 className="text-2xl font-bold text-white mb-4">
-          Instructor Requests
-        </h2>
-        {requests.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">No requests</div>
-        ) : (
-          <div className="overflow-x-auto">
+      {/* Requests Table */}
+      <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+        <div className="p-4 lg:p-6 border-b border-gray-700">
+          <h2 className="text-xl lg:text-2xl font-bold text-white">
+            Instructor Requests
+          </h2>
+        </div>
+
+        <div className="overflow-x-auto">
+          {requests.length === 0 ? (
+            <div className="text-center py-12 text-gray-400">
+              <AlertCircle className="w-16 h-16 mx-auto mb-4 opacity-50" />
+              <p className="text-lg">No requests available</p>
+            </div>
+          ) : (
             <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-700">
-                  <th className="p-3 text-left">Name</th>
-                  <th className="p-3 text-left">Email</th>
-                  <th className="p-3 text-left">Status</th>
-                  <th className="p-3 text-left">Date</th>
-                  <th className="p-3">Actions</th>
+              <thead className="bg-gray-700/50">
+                <tr>
+                  <th className="p-3 lg:p-4 text-left text-gray-300 font-semibold">
+                    Name
+                  </th>
+                  <th className="p-3 lg:p-4 text-left text-gray-300 font-semibold hidden sm:table-cell">
+                    Email
+                  </th>
+                  <th className="p-3 lg:p-4 text-left text-gray-300 font-semibold">
+                    Status
+                  </th>
+                  <th className="p-3 lg:p-4 text-left text-gray-300 font-semibold hidden md:table-cell">
+                    Date
+                  </th>
+                  <th className="p-3 lg:p-4 text-center text-gray-300 font-semibold">
+                    Actions
+                  </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-700">
                 {requests.map((r) => (
                   <tr
                     key={r._id}
-                    className="border-b border-gray-700/50 hover:bg-gray-700/30"
+                    className="hover:bg-gray-700/30 transition-colors"
                   >
-                    <td className="p-3 text-white">
+                    <td className="p-3 lg:p-4 text-white">
                       {r.userId?.name || "N/A"}
                     </td>
-                    <td className="p-3 text-gray-300">
+                    <td className="p-3 lg:p-4 text-gray-300 hidden sm:table-cell">
                       {r.userId?.email || "N/A"}
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 lg:p-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                           r.status === "pending"
                             ? "bg-yellow-600/20 text-yellow-400"
                             : r.status === "approved"
@@ -204,14 +245,15 @@ export default function Overview() {
                         {r.status}
                       </span>
                     </td>
-                    <td className="p-3 text-gray-400">
+                    <td className="p-3 lg:p-4 text-gray-400 hidden md:table-cell">
                       {new Date(r.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 lg:p-4 text-center">
                       <Button
                         onClick={() => viewRequest(r._id)}
-                        variant="primary"
+                        className="text-sm"
                       >
+                        <Eye size={16} className="inline mr-1" />
                         View
                       </Button>
                     </td>
@@ -219,53 +261,108 @@ export default function Overview() {
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
+      {/* Request Details Modal */}
       <Modal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          setRejectReasons({ en: "", ar: "" });
+        }}
         title="Request Details"
       >
         {selectedRequest && (
-          <div>
-            <p className="text-sm text-gray-400">Name</p>
-            <p className="text-white">{selectedRequest.userId?.name}</p>
-            <p className="text-sm text-gray-400 mt-4">Email</p>
-            <p className="text-white">{selectedRequest.userId?.email}</p>
-
-            <div className="mt-4">
-              <label className="text-gray-400">Rejection Reason (EN)</label>
-              <textarea
-                value={rejectReasons.en}
-                onChange={(e) =>
-                  setRejectReasons((prev) => ({ ...prev, en: e.target.value }))
-                }
-                className="w-full bg-gray-700 text-white p-3 rounded mt-2"
-                rows="3"
-              />
-            </div>
-            <div className="mt-3">
-              <label className="text-gray-400">Rejection Reason (AR)</label>
-              <textarea
-                value={rejectReasons.ar}
-                onChange={(e) =>
-                  setRejectReasons((prev) => ({ ...prev, ar: e.target.value }))
-                }
-                className="w-full bg-gray-700 text-white p-3 rounded mt-2"
-                rows="3"
-              />
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-400">Name</label>
+              <p className="text-white font-medium">
+                {selectedRequest.userId?.name}
+              </p>
             </div>
 
-            <div className="flex gap-3 mt-4">
-              <Button onClick={approve} variant="success" disabled={processing}>
-                {processing ? "Processing..." : "Accept"}
-              </Button>
-              <Button onClick={reject} variant="danger" disabled={processing}>
-                {processing ? "Processing..." : "Reject"}
-              </Button>
+            <div>
+              <label className="text-sm text-gray-400">Email</label>
+              <p className="text-white font-medium">
+                {selectedRequest.userId?.email}
+              </p>
             </div>
+
+            {selectedRequest.cvURL && (
+              <div>
+                <label className="text-sm text-gray-400">CV File</label>
+                <a
+                  href={selectedRequest.cvURL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-400 hover:underline block"
+                >
+                  View CV
+                </a>
+              </div>
+            )}
+
+            {selectedRequest.status === "pending" && (
+              <>
+                <div>
+                  <label className="text-sm text-gray-400 block mb-2">
+                    Rejection Reason (English)
+                  </label>
+                  <textarea
+                    value={rejectReasons.en}
+                    onChange={(e) =>
+                      setRejectReasons((prev) => ({
+                        ...prev,
+                        en: e.target.value,
+                      }))
+                    }
+                    className="w-full bg-gray-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    rows="3"
+                    placeholder="Enter rejection reason in English..."
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-gray-400 block mb-2">
+                    Rejection Reason (Arabic)
+                  </label>
+                  <textarea
+                    value={rejectReasons.ar}
+                    onChange={(e) =>
+                      setRejectReasons((prev) => ({
+                        ...prev,
+                        ar: e.target.value,
+                      }))
+                    }
+                    className="w-full bg-gray-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    rows="3"
+                    placeholder="أدخل سبب الرفض بالعربية..."
+                    dir="rtl"
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <Button
+                    onClick={approve}
+                    variant="success"
+                    disabled={processing}
+                    className="flex-1"
+                  >
+                    {processing ? "Processing..." : "Approve Request"}
+                  </Button>
+                  <Button
+                    onClick={reject}
+                    variant="danger"
+                    disabled={processing}
+                    className="flex-1"
+                  >
+                    {processing ? "Processing..." : "Reject Request"}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </Modal>

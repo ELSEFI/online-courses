@@ -20,6 +20,15 @@ export default function Sidebar({
     { id: "instructors", label: "Instructors", icon: GraduationCap },
     { id: "courses", label: "Courses", icon: BookOpen },
     { id: "messages", label: "Messages", icon: MessageSquare },
+
+    // 🔹 الموقع الرئيسي
+    {
+      id: "home",
+      label: "Main Site",
+      icon: Globe,
+      external: true,
+      url: "/",
+    },
   ];
 
   return (
@@ -28,6 +37,7 @@ export default function Sidebar({
         collapsed ? "w-20" : "w-64"
       } transition-all`}
     >
+      {/* Header */}
       <div className="p-4 flex items-center justify-between border-b border-gray-700">
         {!collapsed && (
           <div className="flex items-center gap-2">
@@ -52,31 +62,35 @@ export default function Sidebar({
         </button>
       </div>
 
+      {/* Menu */}
       <nav className="p-4 space-y-2">
-        {menu.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => onChange(m.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-              currentPage === m.id
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                : "text-gray-400 hover:bg-gray-700 hover:text-white"
-            }`}
-          >
-            <m.icon className="w-5 h-5" />
-            {!collapsed && <span className="font-medium">{m.label}</span>}
-          </button>
-        ))}
-
-        <a
-          href="/"
-          target="_blank"
-          rel="noreferrer"
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white"
-        >
-          <Globe className="w-5 h-5" />
-          {!collapsed && <span className="font-medium">Main Site</span>}
-        </a>
+        {menu.map((m) =>
+          m.external ? (
+            <a
+              key={m.id}
+              href={m.url}
+              target="_blank"
+              rel="noreferrer"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-700 hover:text-white transition-all"
+            >
+              <m.icon className="w-5 h-5" />
+              {!collapsed && <span className="font-medium">{m.label}</span>}
+            </a>
+          ) : (
+            <button
+              key={m.id}
+              onClick={() => onChange(m.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                currentPage === m.id
+                  ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                  : "text-gray-400 hover:bg-gray-700 hover:text-white"
+              }`}
+            >
+              <m.icon className="w-5 h-5" />
+              {!collapsed && <span className="font-medium">{m.label}</span>}
+            </button>
+          )
+        )}
       </nav>
     </aside>
   );

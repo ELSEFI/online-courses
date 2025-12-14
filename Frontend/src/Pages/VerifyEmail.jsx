@@ -1,16 +1,12 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Card,
-  Stack,
-} from "@mui/material";
+import { useToast } from "../components/ui/toast/ToastContext";
+import { Box, Button, TextField, Typography, Card, Stack } from "@mui/material";
 
 export default function VerifyEmail() {
+  const toast = useToast();
+
   const [params] = useSearchParams();
   const email = params.get("email");
 
@@ -29,7 +25,7 @@ export default function VerifyEmail() {
         code,
       });
 
-      alert("Email verified successfully!");
+      toast.success("Email verified successfully!");
       window.location.href = "/login";
     } catch (err) {
       setError(err.response?.data?.message || "Verification failed");
