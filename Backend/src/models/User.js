@@ -79,3 +79,19 @@ userSchema.methods.generateVerificationCode = function () {
   return this.verificationCode;
 };
 module.exports = mongoose.model("User", userSchema);
+
+userSchema.methods.generateResetToken = function () {
+  const crypto = require("crypto");
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  this.resetPasswordExpire = Date.now() + 30 * 60 * 1000; // 30 minutes
+  return resetToken;
+};
+
+userSchema.methods.incrementTokenVersion = function () {
+  this.tokenVersion += 1;
+  return this.save();
+};
