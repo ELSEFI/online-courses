@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const lessonSchema = new mongoose.Schema(
+const contentSchema = new mongoose.Schema(
   {
     section: {
       type: mongoose.Schema.Types.ObjectId,
@@ -10,17 +10,17 @@ const lessonSchema = new mongoose.Schema(
     title: {
       en: {
         type: String,
-        required: [true, "English lesson title is required"],
+        required: [true, "English title is required"],
         trim: true,
-        minLength: [3, "Lesson title must be at least 3 characters"],
-        maxLength: [100, "Lesson title cannot exceed 100 characters"],
+        minLength: [3, "Title must be at least 3 characters"],
+        maxLength: [100, "Title cannot exceed 100 characters"],
       },
       ar: {
         type: String,
-        required: [true, "عنوان الدرس باللغه العربيه مطلوب"],
+        required: [true, "اسم العنوان بالعربي مطلوب"],
         trim: true,
-        minLength: [3, "عنوان الدرس يجب ان يكون علي الاقل 3 حروف"],
-        maxLength: [100, "عنوان الدرس يجب الا يتعدي 100 حرف"],
+        minLength: [3, "Title must be at least 3 characters"],
+        maxLength: [100, "Title cannot exceed 100 characters"],
       },
     },
     description: {
@@ -30,19 +30,47 @@ const lessonSchema = new mongoose.Schema(
       },
       ar: {
         type: String,
-        maxLength: [1000, "وصف الدرس يجب الا يتعدي 1000 حرف"],
+        maxLength: [1000, "الوصف لا يمكن ان يكون اقل من 1000 حرف"],
       },
     },
-    videoUrl: {
+
+    contentType: {
       type: String,
-      required: [true, "Video URL is required"],
+      enum: {
+        values: ["video", "pdf", "quiz", "assignment"],
+        message: "Invalid content type",
+      },
+      required: [true, "Content type is required"],
     },
-    duration: {
-      type: Number, // Duration in seconds
-      required: [true, "Video duration is required"],
-      min: [0, "Duration cannot be negative"],
+
+    video: {
+      url: {
+        type: String,
+        required: function () {
+          return this.contentType === "video";
+        },
+      },
+      duration: {
+        type: Number,
+      },
+      thumbnail: String,
+    },
+
+    pdf: {
+      url: {
+        type: String,
+        required: function () {
+          return this.contentType === "pdf";
+        },
+      },
+      fileName: String,
+      fileSize: Number, //bytes
     },
     order: {
+      type: Number,
+      default: 0,
+    },
+    duration: {
       type: Number,
       default: 0,
     },
@@ -50,24 +78,34 @@ const lessonSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    resources: [
-      {
-        title: {
-          type: String,
-        },
-        fileUrl: {
-          type: String,
-        },
-        fileSize: {
-          type: Number,
-        },
-      },
-    ],
     isActive: {
       type: Boolean,
       default: true,
     },
+
+    attachments: [
+      {
+        title: {
+          type: String,
+          required: true,
+        },
+        url: {
+          type: String,
+          required: true,
+        },
+        fileType: {
+          type: String,
+          enum: ["pdf", "doc", "docx", "zip", "other"],
+        },
+        fileSize: Number,
+      },
+    ],
+
     viewsCount: {
+      type: Number,
+      default: 0,
+    },
+    completionCount: {
       type: Number,
       default: 0,
     },
@@ -77,15 +115,15 @@ const lessonSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
-lessonSchema.index({ course: 1, section: 1, order: 1 });
-lessonSchema.index({ section: 1, order: 1 });
-lessonSchema.index({ isFreePreview: 1, isActive: 1 });
+// ========== Indexes ==========
+contentSchema.index({ course: 1, section: 1, order: 1 });
+contentSchema.index({ section: 1, contentType: 1 });
+contentSchema.index({ isFreePreview: 1, isActive: 1 });
 
-// Method: Increment views
-lessonSchema.methods.incrementViews = async function () {
+// ========== Methods ==========
+contentSchema.methods.incrementViews = async function () {
   this.viewsCount += 1;
   await this.save();
 };
 
-module.exports = mongoose.model("Lesson", lessonSchema);
+module.exports = mongoose.model("Content", contentSchema);

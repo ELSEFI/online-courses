@@ -62,6 +62,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Hashing Passwords
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
 
@@ -69,17 +70,19 @@ userSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
+// Check Valid Password at Login
 userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
+// Generate Verification Code
 userSchema.methods.generateVerificationCode = function () {
   this.verificationCode = Math.floor(100000 + Math.random() * 900000);
   this.verificationCodeExpire = Date.now() + 5 * 60 * 1000;
   return this.verificationCode;
 };
-module.exports = mongoose.model("User", userSchema);
 
+// Generate Reset Token
 userSchema.methods.generateResetToken = function () {
   const crypto = require("crypto");
   const resetToken = crypto.randomBytes(32).toString("hex");
@@ -91,7 +94,10 @@ userSchema.methods.generateResetToken = function () {
   return resetToken;
 };
 
+// Logout Of All Devices
 userSchema.methods.incrementTokenVersion = function () {
   this.tokenVersion += 1;
   return this.save();
 };
+
+module.exports = mongoose.model("User", userSchema);

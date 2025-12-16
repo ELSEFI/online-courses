@@ -22,6 +22,7 @@ const wishlistSchema = new mongoose.Schema(
   }
 );
 
+// Get Wishlist For User
 wishlistSchema.statics.getUserWishlist = function (userId) {
   return this.find({ user: userId })
     .populate({

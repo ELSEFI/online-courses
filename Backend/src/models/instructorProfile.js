@@ -92,6 +92,7 @@ const instructorProfileSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Calculating The Rate and Total Reviews
 instructorProfileSchema.methods.calculateRating = async function () {
   const Course = mongoose.model("Course");
   const courses = await Course.find({ instructor: this._id });
@@ -111,6 +112,7 @@ instructorProfileSchema.methods.calculateRating = async function () {
   await this.save();
 };
 
+// Update The Stats Of Instructor(Total Courses and Total Students)
 instructorProfileSchema.methods.updateStats = async function () {
   const Course = mongoose.model("Course");
   const Enrollment = mongoose.model("Enrollment");
