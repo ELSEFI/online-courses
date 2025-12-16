@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const mongooseLeanVirtuals = require("mongoose-lean-virtuals");
 
 const categorySchema = new mongoose.Schema(
   {
@@ -64,6 +65,9 @@ categorySchema.index({ isActive: 1 });
 categorySchema.index({ parent: 1 });
 categorySchema.index({ slug: 1, parent: 1 }, { unique: true });
 categorySchema.index({ "name.en": 1, parent: 1 }, { unique: true });
+categorySchema.set("toJSON", { virtuals: true });
+categorySchema.set("toObject", { virtuals: true });
+categorySchema.plugin(mongooseLeanVirtuals);
 
 // Virtual for subcategories
 categorySchema.virtual("subcategories", {
@@ -79,9 +83,15 @@ categorySchema.virtual("courses", {
   foreignField: "category",
 });
 
+categorySchema.virtual("imageUrl").get(function () {
+  if (!this.image) return null;
+
+  return `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${this.image}`;
+});
+
 // Pre-save: Generate slug
-categorySchema.pre("save", async function (next) {
-  if (!this.isModified("name.en")) return next();
+categorySchema.pre("save", async function () {
+  if (!this.isModified("name.en")) return;
 
   const Category = mongoose.model("Category");
 
@@ -100,15 +110,17 @@ categorySchema.pre("save", async function (next) {
   }
 
   this.slug = slug;
-  next();
 });
 
 // Pre-save: Validate parent is not self
-categorySchema.pre("save", function (next) {
-  if (this.parent && this.parent.toString() === this._id.toString()) {
-    return next(new Error("Category cannot be its own parent"));
+categorySchema.pre("save", async function () {
+  if (
+    this.parent &&
+    this._id &&
+    this.parent.toString() === this._id.toString()
+  ) {
+    throw new Error("Category cannot be its own parent");
   }
-  next();
 });
 
 // Method: Update courses count
@@ -124,10 +136,37 @@ categorySchema.methods.updateCoursesCount = async function () {
 // Static: Get category tree
 categorySchema.statics.getCategoryTree = async function () {
   const categories = await this.find({ isActive: true })
-    .populate("subcategories")
-    .sort({ order: 1, "name.en": 1 });
+    .sort({ order: 1, "name.en": 1 })
+    .lean({ virtuals: true });
 
-  return categories.filter((cat) => !cat.parent);
+  const map = {};
+  categories.forEach((cat) => {
+    cat.subcategories = [];
+    map[cat._id.toString()] = cat;
+  });
+
+  const tree = [];
+
+  categories.forEach((cat) => {
+    if (cat.parent) {
+      const parentId = cat.parent.toString();
+      if (map[parentId]) {
+        map[parentId].subcategories.push(cat);
+      }
+    } else {
+      tree.push(cat);
+    }
+  });
+  const removeId = (node) => {
+    delete node.id;
+    if (node.subcategories?.length) {
+      node.subcategories.forEach(removeId);
+    }
+  };
+
+  tree.forEach(removeId);
+
+  return tree;
 };
 
 module.exports = mongoose.model("Category", categorySchema);

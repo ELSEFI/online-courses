@@ -3,6 +3,11 @@ const adminController = require("../controllers/adminController");
 const protected = require("../Middleware/jwtMiddleware");
 const restrictTo = require("../Middleware/roleMiddleware");
 const uploadCvs = require("../Middleware/uploadCvs");
+const {
+  uploadImage,
+  resizeProfileImage,
+  resizeCategoryImage,
+} = require("../Middleware/uploadImage");
 
 const router = express.Router();
 router.use(protected, restrictTo("admin"));
@@ -54,5 +59,15 @@ router.post("/users/add-user", adminController.addUser);
 router.get("/users/:userId", adminController.getUser);
 router.delete("/users/:userId", adminController.deleteUser);
 router.patch("/users/:userId/update-status", adminController.updateStatus);
+
+// ==================== CATEGORIES ROUTES ====================
+router.post(
+  "/categories/add-category",
+  uploadImage.single("image"),
+  resizeCategoryImage,
+  adminController.addCategory
+);
+
+router.get("/categories", adminController.getAllCategories);
 
 module.exports = router;

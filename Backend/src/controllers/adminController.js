@@ -4,6 +4,7 @@ const User = require("../models/User");
 const Contact = require("../models/contactWithUs");
 const Category = require("../models/Category");
 const { sendReplyEmail } = require("../services/emailSender");
+const { uploadToCloudinary } = require("../services/cloudinaryUpload");
 
 exports.getAllInstructors = async (req, res) => {
   const instructors = await instructorProfile
@@ -374,7 +375,6 @@ exports.deleteMessage = async (req, res) => {
 };
 
 // ========== CATEGORIES ========== //
-
 exports.addCategory = async (req, res) => {
   const {
     nameEn,
@@ -395,9 +395,7 @@ exports.addCategory = async (req, res) => {
     if (category) {
       return res.status(409).json({ message: "Category already exists" });
     }
-    let image = null;
-    if (req.file) image = req.file.filename;
-
+    const result = await uploadToCloudinary(req.file.buffer, "Categories");
     category = await Category.create({
       name: {
         en: nameEn,
@@ -409,7 +407,7 @@ exports.addCategory = async (req, res) => {
       },
       parent: parentsCategory || null,
       order,
-      image,
+      image: result.public_id || null,
     });
     res.status(201).json({ message: "Category Created Successfully" });
   } catch (error) {
@@ -418,6 +416,16 @@ exports.addCategory = async (req, res) => {
         message: "Category with same name already exists in this level",
       });
     }
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+exports.getAllCategories = async (req, res) => {
+  try {
+    const categories = await Category.getCategoryTree();
+    res.status(200).json({ results: categories.length, data: categories });
+  } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
   }
