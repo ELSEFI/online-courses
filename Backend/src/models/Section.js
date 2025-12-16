@@ -9,7 +9,11 @@ const sectionSchema = new mongoose.Schema(
     },
     title: {
       en: { type: String, required: true },
-      ar: { type: String },
+      ar: { type: String, required: true },
+    },
+    description: {
+      en: { type: String, required: true },
+      ar: { type: String, required: true },
     },
     order: {
       type: Number,
@@ -22,5 +26,12 @@ const sectionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+sectionSchema.virtual("lessons", {
+  ref: "Lesson",
+  localField: "_id",
+  foreignField: "section",
+  options: { sort: { order: 1 } },
+});
 
 module.exports = mongoose.model("Section", sectionSchema);

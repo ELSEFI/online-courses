@@ -14,9 +14,11 @@ const categorySchema = new mongoose.Schema(
       },
       ar: {
         type: String,
+        required: [true, "اسم القسم باللغه العربيه مطلوب"],
         trim: true,
-        minLength: [2, "Category name must be at least 2 characters"],
-        maxLength: [50, "Category name cannot exceed 50 characters"],
+        unique: true,
+        minLength: [2, "اسم القسم يجب ان يكون اكبر من حرفين"],
+        maxLength: [50, "اسم القسم يجب الا يتعدي 50 حرف"],
       },
     },
     slug: {
@@ -27,13 +29,16 @@ const categorySchema = new mongoose.Schema(
     description: {
       en: {
         type: String,
+        required: [true, "English category description is required"],
         maxLength: [500, "Description cannot exceed 500 characters"],
       },
       ar: {
         type: String,
-        maxLength: [500, "Description cannot exceed 500 characters"],
+        required: [true, "وصف القسم باللغه العربيه مطلوب"],
+        maxLength: [500, "يجب الا يتعدي الوصف 500 حرف"],
       },
     },
+    image: { type: String },
     parent: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
@@ -59,7 +64,7 @@ const categorySchema = new mongoose.Schema(
 
 // Indexes
 categorySchema.index({ slug: 1 });
-categorySchema.index({ isActive: 1, isFeatured: 1 });
+categorySchema.index({ isActive: 1 });
 categorySchema.index({ parent: 1 });
 
 // Virtual for subcategories
