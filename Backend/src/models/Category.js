@@ -8,7 +8,6 @@ const categorySchema = new mongoose.Schema(
         type: String,
         required: [true, "English category name is required"],
         trim: true,
-        unique: true,
         minLength: [2, "Category name must be at least 2 characters"],
         maxLength: [50, "Category name cannot exceed 50 characters"],
       },
@@ -16,14 +15,12 @@ const categorySchema = new mongoose.Schema(
         type: String,
         required: [true, "اسم القسم باللغه العربيه مطلوب"],
         trim: true,
-        unique: true,
         minLength: [2, "اسم القسم يجب ان يكون اكبر من حرفين"],
         maxLength: [50, "اسم القسم يجب الا يتعدي 50 حرف"],
       },
     },
     slug: {
       type: String,
-      unique: true,
       lowercase: true,
     },
     description: {
@@ -63,9 +60,10 @@ const categorySchema = new mongoose.Schema(
 );
 
 // Indexes
-categorySchema.index({ slug: 1 });
 categorySchema.index({ isActive: 1 });
 categorySchema.index({ parent: 1 });
+categorySchema.index({ slug: 1, parent: 1 }, { unique: true });
+categorySchema.index({ "name.en": 1, parent: 1 }, { unique: true });
 
 // Virtual for subcategories
 categorySchema.virtual("subcategories", {
@@ -82,10 +80,26 @@ categorySchema.virtual("courses", {
 });
 
 // Pre-save: Generate slug
-categorySchema.pre("save", function (next) {
-  if (this.isModified("name.en")) {
-    this.slug = slugify(this.name.en, { lower: true, strict: true });
+categorySchema.pre("save", async function (next) {
+  if (!this.isModified("name.en")) return next();
+
+  const Category = mongoose.model("Category");
+
+  const baseSlug = slugify(this.name.en, { lower: true, strict: true });
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (
+    await Category.exists({
+      slug,
+      parent: this.parent || null,
+      _id: { $ne: this._id },
+    })
+  ) {
+    slug = `${baseSlug}-${counter++}`;
   }
+
+  this.slug = slug;
   next();
 });
 

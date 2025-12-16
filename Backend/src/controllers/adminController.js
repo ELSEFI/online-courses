@@ -2,6 +2,7 @@ const instructorRequest = require("../models/instructorRequest");
 const instructorProfile = require("../models/instructorProfile");
 const User = require("../models/User");
 const Contact = require("../models/contactWithUs");
+const Category = require("../models/Category");
 const { sendReplyEmail } = require("../services/emailSender");
 
 exports.getAllInstructors = async (req, res) => {
@@ -369,5 +370,55 @@ exports.deleteMessage = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// ========== CATEGORIES ========== //
+
+exports.addCategory = async (req, res) => {
+  const {
+    nameEn,
+    nameAr,
+    descriptionEn,
+    descriptionAr,
+    parentsCategory,
+    order,
+  } = req.body;
+  try {
+    if (!nameEn || !nameAr || !descriptionEn || !descriptionAr)
+      return res.status(400).json({ message: "All Inputs Required" });
+
+    let category = await Category.findOne({
+      "name.en": nameEn,
+      parent: parentsCategory || null,
+    });
+    if (category) {
+      return res.status(409).json({ message: "Category already exists" });
+    }
+    let image = null;
+    if (req.file) image = req.file.filename;
+
+    category = await Category.create({
+      name: {
+        en: nameEn,
+        ar: nameAr,
+      },
+      description: {
+        en: descriptionEn,
+        ar: descriptionAr,
+      },
+      parent: parentsCategory || null,
+      order,
+      image,
+    });
+    res.status(201).json({ message: "Category Created Successfully" });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Category with same name already exists in this level",
+      });
+    }
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
   }
 };
