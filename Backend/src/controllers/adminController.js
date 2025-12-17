@@ -423,7 +423,8 @@ exports.addCategory = async (req, res) => {
 
 exports.getAllCategories = async (req, res) => {
   try {
-    const categories = await Category.getCategoryTree();
+    const includeInactive = req.query.includeInactive === "true";
+    const categories = await Category.getCategoryTree({ includeInactive });
     res.status(200).json({ results: categories.length, data: categories });
   } catch (error) {
     console.error(error);
@@ -433,9 +434,20 @@ exports.getAllCategories = async (req, res) => {
 
 exports.getCategory = async (req, res) => {
   const { categorySlug } = req.params;
+  const { includeInactive } = req.query;
 
   try {
-    const category = await Category.findOne({ slug: categorySlug });
+    const filter = {
+      slug: categorySlug,
+    };
+
+    if (includeInactive !== "true") {
+      filter.isActive = true;
+    }
+    const category = await Category.findOne(filter).populate({
+      path: "subcategories",
+      options: { sort: { order: 1, "name.en": 1 } },
+    });
 
     if (!category)
       return res.status(400).json({ message: "Not Founded Category" });

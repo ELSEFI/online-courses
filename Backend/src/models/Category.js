@@ -134,8 +134,15 @@ categorySchema.methods.updateCoursesCount = async function () {
 };
 
 // Static: Get category tree
-categorySchema.statics.getCategoryTree = async function () {
-  const categories = await this.find({ isActive: true })
+categorySchema.statics.getCategoryTree = async function ({
+  includeInactive = false,
+} = {}) {
+  const filter = {};
+  if (!includeInactive) {
+    filter.isActive = true;
+  }
+
+  const categories = await this.find(filter)
     .sort({ order: 1, "name.en": 1 })
     .lean({ virtuals: true });
 
