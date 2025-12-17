@@ -69,5 +69,6 @@ router.post(
 );
 
 router.get("/categories", adminController.getAllCategories);
+router.get("/categories/:categorySlug", adminController.getCategory);
 
 module.exports = router;
