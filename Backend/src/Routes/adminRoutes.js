@@ -78,5 +78,11 @@ router.patch(
   "/categories/:categoryId/restore-category",
   adminController.restoreCategory
 );
+router.patch(
+  "/categories/:categoryId/update-category",
+  uploadImage.single("image"),
+  resizeCategoryImage,
+  adminController.updateCategory
+);
 
 module.exports = router;

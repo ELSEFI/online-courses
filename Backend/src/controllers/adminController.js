@@ -388,14 +388,10 @@ exports.addCategory = async (req, res) => {
     if (!nameEn || !nameAr || !descriptionEn || !descriptionAr)
       return res.status(400).json({ message: "All Inputs Required" });
 
-    let category = await Category.findOne({
-      "name.en": nameEn,
-      parent: parentsCategory || null,
-    });
-    if (category) {
-      return res.status(409).json({ message: "Category already exists" });
+    let result = null;
+    if (req.file) {
+      result = await uploadToCloudinary(req.file.buffer, "Categories");
     }
-    const result = await uploadToCloudinary(req.file.buffer, "Categories");
     category = await Category.create({
       name: {
         en: nameEn,
@@ -406,8 +402,8 @@ exports.addCategory = async (req, res) => {
         ar: descriptionAr,
       },
       parent: parentsCategory || null,
-      order,
-      image: result.public_id || null,
+      order: order ?? 0,
+      image: result?.public_id || null,
     });
     res.status(201).json({ message: "Category Created Successfully" });
   } catch (error) {
@@ -519,6 +515,52 @@ exports.restoreCategory = async (req, res) => {
     res.status(200).json({
       message: "Category and all subcategories restored successfully",
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+exports.updateCategory = async (req, res) => {
+  const { categoryId } = req.params;
+  const {
+    nameEn,
+    nameAr,
+    descriptionEn,
+    descriptionAr,
+    parentCategory,
+    order,
+  } = req.body;
+  try {
+    const category = await Category.findById(categoryId);
+    if (!category)
+      return res.status(404).json({
+        message: "Category Not Found",
+      });
+    let imageId = category.image;
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer, "Categories");
+      imageId = result.public_id;
+    }
+    await Category.findByIdAndUpdate(
+      categoryId,
+      {
+        name: {
+          en: nameEn ?? category.name.en,
+          ar: nameAr ?? category.name.ar,
+        },
+        description: {
+          en: descriptionEn ?? category.description.en,
+          ar: descriptionAr ?? category.description.ar,
+        },
+        parent: parentCategory ?? category.parent,
+        order: order ?? category.order,
+        image: imageId,
+      },
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({ message: "Category Updated Successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
