@@ -69,6 +69,14 @@ router.post(
 );
 
 router.get("/categories", adminController.getAllCategories);
-router.get("/categories/:categorySlug", adminController.getCategory);
+router.get("/categories/:categoryId", adminController.getCategory);
+router.patch(
+  "/categories/:categoryId/disable-category",
+  adminController.disableCategory
+);
+router.patch(
+  "/categories/:categoryId/restore-category",
+  adminController.restoreCategory
+);
 
 module.exports = router;

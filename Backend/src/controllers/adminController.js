@@ -433,26 +433,92 @@ exports.getAllCategories = async (req, res) => {
 };
 
 exports.getCategory = async (req, res) => {
-  const { categorySlug } = req.params;
+  const { categoryId } = req.params;
   const { includeInactive } = req.query;
 
   try {
     const filter = {
-      slug: categorySlug,
+      _id: categoryId,
     };
 
     if (includeInactive !== "true") {
       filter.isActive = true;
     }
-    const category = await Category.findOne(filter).populate({
+
+    const populateOptions = {
       path: "subcategories",
       options: { sort: { order: 1, "name.en": 1 } },
-    });
+    };
+
+    if (includeInactive !== "true") {
+      populateOptions.match = { isActive: true };
+    }
+    const category = await Category.findOne(filter).populate(populateOptions);
 
     if (!category)
       return res.status(400).json({ message: "Not Founded Category" });
 
     res.status(200).json(category);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+async function getAllDescendantCategoryIds(categoryId) {
+  const children = await Category.find({ parent: categoryId }).select("_id");
+
+  let ids = children.map((child) => child._id);
+
+  for (const child of children) {
+    const childIds = await getAllDescendantCategoryIds(child._id);
+    ids = ids.concat(childIds);
+  }
+
+  return ids;
+}
+
+exports.disableCategory = async (req, res) => {
+  const { categoryId } = req.params;
+  try {
+    const category = await Category.findById(categoryId);
+    if (!category)
+      return res.status(404).json({ message: "Category Not Found" });
+
+    const children = await getAllDescendantCategoryIds(categoryId);
+    await Category.updateMany(
+      {
+        _id: { $in: [categoryId, ...children] },
+      },
+      { isActive: false }
+    );
+
+    res.status(200).json({
+      message: "Category and all subcategories disabled successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+exports.restoreCategory = async (req, res) => {
+  const { categoryId } = req.params;
+  try {
+    const category = await Category.findById(categoryId);
+    if (!category)
+      return res.status(404).json({ message: "Category Not Found" });
+
+    const children = await getAllDescendantCategoryIds(categoryId);
+    await Category.updateMany(
+      {
+        _id: { $in: [categoryId, ...children] },
+      },
+      { isActive: true }
+    );
+
+    res.status(200).json({
+      message: "Category and all subcategories restored successfully",
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
