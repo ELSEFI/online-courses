@@ -638,3 +638,30 @@ exports.createCourse = async (req, res) => {
     res.status(500).json({ message: `Server Error ${error.message}` });
   }
 };
+
+const mongoose = require("mongoose");
+
+exports.getCourse = async (req, res) => {
+  const { courseId } = req.params;
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ message: "Invalid Course ID" });
+    }
+
+    const filter = { _id: courseId };
+
+    if (req.user?.role !== "admin") {
+      filter.isPublished = true;
+    }
+
+    const course = await Course.findOne(filter);
+
+    if (!course) return res.status(404).json({ message: "Course Not Found" });
+
+    res.status(200).json(course);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};

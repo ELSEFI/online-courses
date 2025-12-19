@@ -67,7 +67,7 @@ const courseSchema = new mongoose.Schema(
     },
     instructor: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "instructorProfile",
+      ref: "InstructorProfile",
       required: true,
     },
     createdBy: {
@@ -113,10 +113,30 @@ const courseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+courseSchema.set("toJSON", { virtuals: true });
+courseSchema.set("toObject", { virtuals: true });
+
 courseSchema.virtual("thumbnailUrl").get(function () {
   if (!this.thumbnail) return null;
 
   return `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${this.thumbnail}`;
+});
+
+courseSchema.pre(/^find/, function () {
+  this.populate([
+    {
+      path: "instructor",
+      select: "userId rating totalCourses",
+    },
+    {
+      path: "category",
+      select: "name slug",
+    },
+    {
+      path: "createdBy",
+      select: "name email role",
+    },
+  ]);
 });
 
 courseSchema.pre("save", function () {

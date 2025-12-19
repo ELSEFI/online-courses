@@ -87,9 +87,13 @@ router.patch(
 
 // ==================== COURSES ROUTES ====================
 
-module.exports = router.post(
+router.post(
   "/courses/add-course",
   uploadImage.single("courseThumbnail"),
   resizeCategoryImage,
   adminController.createCourse
 );
+
+router.get("/courses/:courseId", adminController.getCourse);
+
+module.exports = router;
