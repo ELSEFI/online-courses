@@ -40,12 +40,14 @@ const courseSchema = new mongoose.Schema(
         {
           type: String,
           trim: true,
+          default: "No Requirements",
         },
       ],
       ar: [
         {
           type: String,
           trim: true,
+          default: "لا يوجد متطلبات سابقه",
         },
       ],
     },
@@ -111,11 +113,16 @@ const courseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-courseSchema.pre("save", function (next) {
+courseSchema.virtual("thumbnailUrl").get(function () {
+  if (!this.thumbnail) return null;
+
+  return `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${this.thumbnail}`;
+});
+
+courseSchema.pre("save", function () {
   if (!this.slug) {
     this.slug = slugify(this.title.en, { lower: true });
   }
-  next();
 });
 
 module.exports = mongoose.model("Course", courseSchema);

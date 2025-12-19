@@ -85,4 +85,11 @@ router.patch(
   adminController.updateCategory
 );
 
-module.exports = router;
+// ==================== COURSES ROUTES ====================
+
+module.exports = router.post(
+  "/courses/add-course",
+  uploadImage.single("courseThumbnail"),
+  resizeCategoryImage,
+  adminController.createCourse
+);

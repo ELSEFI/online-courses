@@ -3,8 +3,10 @@ const instructorProfile = require("../models/instructorProfile");
 const User = require("../models/User");
 const Contact = require("../models/contactWithUs");
 const Category = require("../models/Category");
+const Course = require("../models/Course");
 const { sendReplyEmail } = require("../services/emailSender");
 const { uploadToCloudinary } = require("../services/cloudinaryUpload");
+const { deleteFromCloudinary } = require("../services/cloudinaryDestroy");
 
 exports.getAllInstructors = async (req, res) => {
   const instructors = await instructorProfile
@@ -385,14 +387,11 @@ exports.addCategory = async (req, res) => {
     order,
   } = req.body;
   try {
-    if (!nameEn || !nameAr || !descriptionEn || !descriptionAr)
-      return res.status(400).json({ message: "All Inputs Required" });
-
     let result = null;
     if (req.file) {
       result = await uploadToCloudinary(req.file.buffer, "Categories");
     }
-    category = await Category.create({
+    const category = await Category.create({
       name: {
         en: nameEn,
         ar: nameAr,
@@ -405,7 +404,9 @@ exports.addCategory = async (req, res) => {
       order: order ?? 0,
       image: result?.public_id || null,
     });
-    res.status(201).json({ message: "Category Created Successfully" });
+    res
+      .status(201)
+      .json({ message: "Category Created Successfully", category });
   } catch (error) {
     if (error.code === 11000) {
       return res.status(409).json({
@@ -539,6 +540,7 @@ exports.updateCategory = async (req, res) => {
       });
     let imageId = category.image;
     if (req.file) {
+      await deleteFromCloudinary(category.image);
       const result = await uploadToCloudinary(req.file.buffer, "Categories");
       imageId = result.public_id;
     }
@@ -562,6 +564,76 @@ exports.updateCategory = async (req, res) => {
 
     res.status(200).json({ message: "Category Updated Successfully" });
   } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+// ========== COURSES ========== //
+exports.createCourse = async (req, res) => {
+  const {
+    titleEn,
+    titleAr,
+    shortDescEn,
+    shortDescAr,
+    descEn,
+    descAr,
+    requirementsEn,
+    requirementsAr,
+    price,
+    discountPrice,
+    instructorId,
+    category,
+    levelEn,
+    levelAr,
+  } = req.body;
+  let uploadThumbnail = null;
+  try {
+    if (!req.file)
+      return res.status(400).json({ message: "Course thumbnail is Required" });
+    uploadThumbnail = await uploadToCloudinary(req.file.buffer, "Courses");
+
+    const course = await Course.create({
+      title: {
+        en: titleEn,
+        ar: titleAr,
+      },
+      shortDescription: {
+        en: shortDescEn ?? undefined,
+        ar: shortDescAr ?? undefined,
+      },
+      description: {
+        en: descEn,
+        ar: descAr,
+      },
+      requirements: {
+        en: requirementsEn ? [requirementsEn] : undefined,
+        ar: requirementsAr ? [requirementsAr] : undefined,
+      },
+      price: price ?? 0,
+      discountPrice: discountPrice ?? undefined,
+      instructor: instructorId,
+      createdBy: req.user._id,
+      category,
+      level: {
+        en: levelEn,
+        ar: levelAr,
+      },
+      thumbnail: uploadThumbnail.public_id,
+    });
+    const instructor = await instructorProfile.findById(instructorId);
+    if (!instructor)
+      return res.status(404).json({ message: "Instructor Not Found" });
+    res.status(201).json({ message: "Course Added Successfully", course });
+  } catch (error) {
+    if (uploadThumbnail) {
+      await deleteFromCloudinary(uploadThumbnail.public_id);
+    }
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Course with same name already exists",
+      });
+    }
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
   }
