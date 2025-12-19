@@ -95,5 +95,6 @@ router.post(
 );
 
 router.get("/courses/:courseId", adminController.getCourse);
+router.patch("/courses/:courseId", adminController.changePublishStatus);
 
 module.exports = router;

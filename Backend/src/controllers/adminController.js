@@ -665,3 +665,31 @@ exports.getCourse = async (req, res) => {
     res.status(500).json({ message: `Server Error ${error.message}` });
   }
 };
+
+exports.changePublishStatus = async (req, res) => {
+  const { courseId } = req.params;
+  const { isPublished } = req.body;
+
+  try {
+    if (typeof isPublished !== "boolean") {
+      return res.status(400).json({ message: "isPublished must be boolean" });
+    }
+
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ message: "Course Not Found" });
+
+    course.isPublished = isPublished;
+    course.publishedAt = isPublished ? new Date() : null;
+
+    await course.save();
+
+    res.status(200).json({
+      message: isPublished
+        ? "Course Published Successfully"
+        : "Course Unpublished Successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
