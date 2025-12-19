@@ -109,6 +109,10 @@ const courseSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    status: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );

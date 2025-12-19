@@ -649,7 +649,7 @@ exports.getCourse = async (req, res) => {
       return res.status(400).json({ message: "Invalid Course ID" });
     }
 
-    const filter = { _id: courseId };
+    const filter = { _id: courseId, status: true };
 
     if (req.user?.role !== "admin") {
       filter.isPublished = true;
@@ -688,6 +688,49 @@ exports.changePublishStatus = async (req, res) => {
         ? "Course Published Successfully"
         : "Course Unpublished Successfully",
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+exports.deleteCourse = async (req, res) => {
+  const { courseId } = req.params;
+
+  try {
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ message: "Course Not Found" });
+
+    if (!course.status)
+      return res.status(400).json({ message: "Course already deleted" });
+
+    course.status = false;
+    course.isPublished = false;
+
+    await course.save();
+
+    res.status(200).json({ message: "Course Deleted Successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+exports.restoreCourse = async (req, res) => {
+  const { courseId } = req.params;
+
+  try {
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ message: "Course Not Found" });
+
+    if (course.status)
+      return res.status(400).json({ message: "Course already active" });
+
+    course.status = true;
+    course.isPublished = false;
+
+    await course.save();
+
+    res.status(200).json({ message: "Course restored Successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
