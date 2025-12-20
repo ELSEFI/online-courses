@@ -130,7 +130,11 @@ courseSchema.pre(/^find/, function () {
   this.populate([
     {
       path: "instructor",
-      select: "userId rating totalCourses",
+      select: "rating totalCourses userId",
+      populate: {
+        path: "userId",
+        select: "name email role",
+      },
     },
     {
       path: "category",
