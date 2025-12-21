@@ -95,9 +95,15 @@ router.post(
 );
 
 router.get("/courses/:courseId", adminController.getCourse);
-router.patch("/courses/:courseId", adminController.changePublishStatus);
-router.patch("/courses/:courseId", adminController.deleteCourse);
-router.patch("/courses/:courseId", adminController.restoreCourse);
-router.patch("/courses/:courseId", adminController.updateCourse);
+router.patch(
+  "/courses/:courseId/publish-status",
+  adminController.changePublishStatus
+);
+router.patch("/courses/:courseId/disable-course", adminController.deleteCourse);
+router.patch(
+  "/courses/:courseId/restore-course",
+  adminController.restoreCourse
+);
+router.patch("/courses/:courseId/update-course", adminController.updateCourse);
 
 module.exports = router;
