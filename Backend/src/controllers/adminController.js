@@ -640,6 +640,71 @@ exports.createCourse = async (req, res) => {
   }
 };
 
+exports.getAllCourses = async (req, res) => {
+  const { categoryId } = req.params;
+
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 12;
+  const skip = (page - 1) * limit;
+
+  try {
+    const allCategories = await getAllDescendantCategoryIds(categoryId);
+    allCategories.push(categoryId);
+
+    const filter = {
+      status: true,
+      category: { $in: allCategories },
+    };
+
+    
+    if (req.user.role !== "admin") {
+      filter.isPublished = true;
+    } else if (req.query.isPublished !== undefined) {
+      filter.isPublished = req.query.isPublished === "true";
+    }
+
+    if (req.query.subCategory) {
+      filter.category = req.query.subCategory;
+    }
+
+    if (req.query.level) {
+      filter["level.en"] = req.query.level;
+    }
+
+    if (req.query.minRating) {
+      filter.rating = { $gte: Number(req.query.minRating) };
+    }
+
+    if (req.query.minPrice || req.query.maxPrice) {
+      filter.price = {};
+      if (req.query.minPrice) filter.price.$gte = Number(req.query.minPrice);
+      if (req.query.maxPrice) filter.price.$lte = Number(req.query.maxPrice);
+    }
+
+    let sort = { createdAt: -1 };
+    if (req.query.sort === "rating") sort = { rating: -1 };
+    if (req.query.sort === "popular") sort = { enrollmentCount: -1 };
+
+    const courses = await Course.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Course.countDocuments(filter);
+
+    res.status(200).json({
+      page,
+      totalPages: Math.ceil(total / limit),
+      totalResults: total,
+      results: courses.length,
+      courses,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 exports.getCourse = async (req, res) => {
   const { courseId } = req.params;
 

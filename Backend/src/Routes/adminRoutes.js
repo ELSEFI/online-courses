@@ -87,6 +87,8 @@ router.patch(
 
 // ==================== COURSES ROUTES ====================
 
+router.get("/courses", adminController.getAllCourses);
+
 router.post(
   "/courses/add-course",
   uploadImage.single("courseThumbnail"),
@@ -99,11 +101,14 @@ router.patch(
   "/courses/:courseId/publish-status",
   adminController.changePublishStatus
 );
+
 router.patch("/courses/:courseId/disable-course", adminController.deleteCourse);
+
 router.patch(
   "/courses/:courseId/restore-course",
   adminController.restoreCourse
 );
+
 router.patch("/courses/:courseId/update-course", adminController.updateCourse);
 
 module.exports = router;
