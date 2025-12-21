@@ -1,4 +1,5 @@
 const instructorRequest = require("../models/instructorRequest");
+const mongoose = require("mongoose");
 const instructorProfile = require("../models/instructorProfile");
 const User = require("../models/User");
 const Contact = require("../models/contactWithUs");
@@ -639,8 +640,6 @@ exports.createCourse = async (req, res) => {
   }
 };
 
-const mongoose = require("mongoose");
-
 exports.getCourse = async (req, res) => {
   const { courseId } = req.params;
 
@@ -689,6 +688,82 @@ exports.changePublishStatus = async (req, res) => {
         : "Course Unpublished Successfully",
     });
   } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+exports.updateCourse = async (req, res) => {
+  const {
+    titleEn,
+    titleAr,
+    shortDescEn,
+    shortDescAr,
+    descEn,
+    descAr,
+    requirementsEn,
+    requirementsAr,
+    price,
+    discountPrice,
+    instructorId,
+    category,
+    levelEn,
+    levelAr,
+  } = req.body;
+
+  const { courseId } = req.params;
+  let updatedThumbnail = null;
+
+  try {
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ message: "Course Not Found" });
+    let oldThumbnail = course.thumbnail;
+    // Handle thumbnail
+    if (req.file) {
+      updatedThumbnail = await uploadToCloudinary(req.file.buffer, "Courses");
+      course.thumbnail = updatedThumbnail.public_id;
+    }
+
+    course.title.en = titleEn ?? course.title.en;
+    course.title.ar = titleAr ?? course.title.ar;
+
+    course.shortDescription.en = shortDescEn ?? course.shortDescription.en;
+    course.shortDescription.ar = shortDescAr ?? course.shortDescription.ar;
+
+    course.description.en = descEn ?? course.description.en;
+    course.description.ar = descAr ?? course.description.ar;
+
+    if (requirementsEn) course.requirements.en = [requirementsEn];
+    if (requirementsAr) course.requirements.ar = [requirementsAr];
+
+    course.price = price ?? course.price;
+    course.discountPrice = discountPrice ?? course.discountPrice;
+
+    course.instructor = instructorId ?? course.instructor;
+    course.category = category ?? course.category;
+
+    course.level.en = levelEn ?? course.level.en;
+    course.level.ar = levelAr ?? course.level.ar;
+
+    await course.save();
+
+    // delete old thumbnail AFTER save
+    if (updatedThumbnail) {
+      await deleteFromCloudinary(oldThumbnail);
+    }
+
+    res.status(200).json({ message: "Course Updated Successfully" });
+  } catch (error) {
+    if (updatedThumbnail) {
+      await deleteFromCloudinary(updatedThumbnail.public_id);
+    }
+
+    if (error.code === 11000) {
+      return res
+        .status(409)
+        .json({ message: "Course with same title already exists" });
+    }
+
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
   }

@@ -98,5 +98,6 @@ router.get("/courses/:courseId", adminController.getCourse);
 router.patch("/courses/:courseId", adminController.changePublishStatus);
 router.patch("/courses/:courseId", adminController.deleteCourse);
 router.patch("/courses/:courseId", adminController.restoreCourse);
+router.patch("/courses/:courseId", adminController.updateCourse);
 
 module.exports = router;
