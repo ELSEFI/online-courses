@@ -5,6 +5,7 @@ const User = require("../models/User");
 const Contact = require("../models/contactWithUs");
 const Category = require("../models/Category");
 const Course = require("../models/Course");
+const Section = require("../models/Section");
 const { sendReplyEmail } = require("../services/emailSender");
 const { uploadToCloudinary } = require("../services/cloudinaryUpload");
 const { deleteFromCloudinary } = require("../services/cloudinaryDestroy");
@@ -657,7 +658,6 @@ exports.getAllCourses = async (req, res) => {
       category: { $in: allCategories },
     };
 
-    
     if (req.user.role !== "admin") {
       filter.isPublished = true;
     } else if (req.query.isPublished !== undefined) {
@@ -872,6 +872,41 @@ exports.restoreCourse = async (req, res) => {
     await course.save();
 
     res.status(200).json({ message: "Course restored Successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+// ========== SECTIONS ========== //
+
+exports.addSection = async (req, res) => {
+  const { courseSlug } = req.params;
+  const { titleEn, titleAr, descriptionAr, descriptionEn, order } = req.body;
+  try {
+    if (!titleEn || !titleAr || !descriptionEn || !descriptionAr) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const course = await Course.findOne({ slug: courseSlug, status: true });
+    if (!course)
+      return res
+        .status(404)
+        .json({ message: "No Course Found To Add Section" });
+
+    const section = await Section.create({
+      course: course._id,
+      title: {
+        en: titleEn,
+        ar: titleAr,
+      },
+      description: {
+        en: descriptionEn,
+        ar: descriptionAr,
+      },
+      order: order ?? 0,
+    });
+    res.status(201).json({ message: "Section Created Successfully", section });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
