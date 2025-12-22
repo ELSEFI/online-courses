@@ -125,3 +125,13 @@ router.get(
   "/courses/:courseSlug/sections/:sectionId",
   adminController.getSection
 );
+
+router.patch(
+  "/courses/:courseSlug/sections/:sectionId",
+  adminController.disableSection
+);
+
+router.patch(
+  "/courses/:courseSlug/sections/:sectionId",
+  adminController.restoreCourse
+);
