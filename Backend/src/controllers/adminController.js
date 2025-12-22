@@ -653,6 +653,7 @@ exports.getAllCourses = async (req, res) => {
 
     const filter = {
       status: true,
+      isPublished: true,
       category: { $in: allCategories },
     };
 
