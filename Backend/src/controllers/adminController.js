@@ -1034,3 +1034,36 @@ exports.restoreSection = async (req, res) => {
     res.status(500).json({ message: `Server Error ${error.message}` });
   }
 };
+
+exports.editSection = async (req, res) => {
+  const { courseSlug, sectionId } = req.params;
+  const { titleEn, titleAr, descriptionEn, descriptionAr, order } = req.body;
+  try {
+    if (!mongoose.Types.ObjectId.isValid(sectionId)) {
+      return res.status(400).json({ message: "Invalid Section ID" });
+    }
+
+    const course = await Course.findOne({ slug: courseSlug, status: true });
+    if (!course) return res.status(404).json({ message: "No Course Found" });
+
+    const section = await Section.findOne({
+      course: course._id,
+      _id: sectionId,
+    });
+    if (!section) return res.status(404).json({ message: "No Section Found" });
+
+    section.title.en = titleEn ?? section.title.en;
+    section.title.ar = titleAr ?? section.title.ar;
+
+    section.description.en = descriptionEn ?? section.description.en;
+    section.description.ar = descriptionAr ?? section.description.ar;
+
+    section.order = order ?? section.order;
+
+    await section.save();
+    res.status(200).json({ message: "Section Updated Successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};

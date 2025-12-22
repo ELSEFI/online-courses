@@ -119,7 +119,7 @@ router.post(
   adminController.addSection
 );
 
-router.get("/courses/:courseSlug/sections", adminController.addSection);
+router.get("/courses/:courseSlug/sections", adminController.getAllSections);
 
 router.get(
   "/courses/:courseSlug/sections/:sectionId",
@@ -127,11 +127,16 @@ router.get(
 );
 
 router.patch(
-  "/courses/:courseSlug/sections/:sectionId",
+  "/courses/:courseSlug/sections/:sectionId/disable-section",
   adminController.disableSection
 );
 
 router.patch(
-  "/courses/:courseSlug/sections/:sectionId",
-  adminController.restoreCourse
+  "/courses/:courseSlug/sections/:sectionId/restore-section",
+  adminController.restoreSection
+);
+
+router.patch(
+  "/courses/:courseSlug/sections/:sectionId/edit-section",
+  adminController.editSection
 );
