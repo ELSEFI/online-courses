@@ -913,6 +913,35 @@ exports.addSection = async (req, res) => {
   }
 };
 
+exports.getAllSections = async (req, res) => {
+  const { courseSlug } = req.params;
+
+  try {
+    const course = await Course.findOne({ slug: courseSlug, status: true });
+    if (!course) {
+      return res.status(404).json({ message: "No Course Found" });
+    }
+
+    const filter = { course: course._id };
+
+    if (req.user?.role !== "admin") {
+      filter.isActive = true;
+    } else if (req.query.isActive !== undefined) {
+      filter.isActive = req.query.isActive === "true";
+    }
+
+    const sections = await Section.find(filter).sort({ order: 1 });
+
+    res.status(200).json({
+      results: sections.length,
+      sections,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
 exports.getSection = async (req, res) => {
   const { courseSlug, sectionId } = req.params;
 

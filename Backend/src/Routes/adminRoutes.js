@@ -118,6 +118,9 @@ router.post(
   "/courses/:courseSlug/sections/add-section",
   adminController.addSection
 );
+
+router.get("/courses/:courseSlug/sections", adminController.addSection);
+
 router.get(
   "/courses/:courseSlug/sections/:sectionId",
   adminController.getSection
