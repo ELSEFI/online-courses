@@ -1,129 +1,70 @@
 const mongoose = require("mongoose");
 
-const contentSchema = new mongoose.Schema(
+const attachmentSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    type: {
+      type: String,
+      enum: ["pdf", "zip", "image"],
+      required: true,
+    },
+    fileUrl: { type: String, required: true },
+  },
+  { _id: false }
+);
+
+const lessonSchema = new mongoose.Schema(
   {
     section: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Section",
-      required: [true, "Section is required"],
+      required: true,
     },
+
     title: {
-      en: {
-        type: String,
-        required: [true, "English title is required"],
-        trim: true,
-        minLength: [3, "Title must be at least 3 characters"],
-        maxLength: [100, "Title cannot exceed 100 characters"],
-      },
-      ar: {
-        type: String,
-        required: [true, "اسم العنوان بالعربي مطلوب"],
-        trim: true,
-        minLength: [3, "Title must be at least 3 characters"],
-        maxLength: [100, "Title cannot exceed 100 characters"],
-      },
-    },
-    description: {
-      en: {
-        type: String,
-        maxLength: [1000, "Description cannot exceed 1000 characters"],
-      },
-      ar: {
-        type: String,
-        maxLength: [1000, "الوصف لا يمكن ان يكون اقل من 1000 حرف"],
-      },
+      en: { type: String, required: true },
+      ar: { type: String, required: true },
     },
 
-    contentType: {
+    type: {
       type: String,
-      enum: {
-        values: ["video", "pdf", "quiz", "assignment"],
-        message: "Invalid content type",
-      },
-      required: [true, "Content type is required"],
+      enum: ["video", "quiz", "article"],
+      default: "video",
+      required: true,
     },
 
-    video: {
-      url: {
-        type: String,
-        required: function () {
-          return this.contentType === "video";
-        },
-      },
-      duration: {
-        type: Number,
-      },
-      thumbnail: String,
-    },
-
-    pdf: {
-      url: {
-        type: String,
-        required: function () {
-          return this.contentType === "pdf";
-        },
-      },
-      fileName: String,
-      fileSize: Number, //bytes
-    },
     order: {
       type: Number,
       default: 0,
     },
-    duration: {
-      type: Number,
-      default: 0,
-    },
-    isFreePreview: {
-      type: Boolean,
-      default: false,
-    },
+
     isActive: {
       type: Boolean,
       default: true,
     },
 
-    attachments: [
-      {
-        title: {
-          type: String,
-          required: true,
-        },
-        url: {
-          type: String,
-          required: true,
-        },
-        fileType: {
-          type: String,
-          enum: ["pdf", "doc", "docx", "zip", "other"],
-        },
-        fileSize: Number,
+    // 🎥 Video metadata
+    video: {
+      provider: {
+        type: String,
+        enum: ["cloudinary", "vimeo"],
       },
-    ],
-
-    viewsCount: {
-      type: Number,
-      default: 0,
+      publicId: String,
+      duration: Number, // seconds
     },
-    completionCount: {
-      type: Number,
-      default: 0,
+
+    // 📎 Attachments
+    attachments: [attachmentSchema],
+
+    // 📝 Quiz reference (optional)
+    quiz: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Quiz",
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-// ========== Indexes ==========
-contentSchema.index({ course: 1, section: 1, order: 1 });
-contentSchema.index({ section: 1, contentType: 1 });
-contentSchema.index({ isFreePreview: 1, isActive: 1 });
+lessonSchema.index({ section: 1, order: 1 });
 
-// ========== Methods ==========
-contentSchema.methods.incrementViews = async function () {
-  this.viewsCount += 1;
-  await this.save();
-};
-
-module.exports = mongoose.model("Content", contentSchema);
+module.exports = mongoose.model("Lesson", lessonSchema);

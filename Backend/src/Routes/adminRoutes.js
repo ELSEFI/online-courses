@@ -140,3 +140,5 @@ router.patch(
   "/courses/:courseSlug/sections/:sectionId/edit-section",
   adminController.editSection
 );
+
+// ==================== LESSONS ROUTES ====================
