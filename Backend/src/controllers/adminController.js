@@ -912,3 +912,40 @@ exports.addSection = async (req, res) => {
     res.status(500).json({ message: `Server Error ${error.message}` });
   }
 };
+
+exports.getSection = async (req, res) => {
+  const { courseSlug, sectionId } = req.params;
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(sectionId)) {
+      return res.status(400).json({ message: "Invalid Section ID" });
+    }
+
+    const course = await Course.findOne({ slug: courseSlug, status: true });
+    if (!course) {
+      return res.status(404).json({ message: "Course Not Found" });
+    }
+
+    const filter = {
+      _id: sectionId,
+      course: course._id,
+    };
+
+    if (req.user?.role !== "admin") {
+      filter.isActive = true;
+    } else if (req.query.isActive !== undefined) {
+      filter.isActive = req.query.isActive === "true";
+    }
+
+    const section = await Section.findOne(filter).populate("lessons");
+
+    if (!section) {
+      return res.status(404).json({ message: "Section Not Found" });
+    }
+
+    res.status(200).json(section);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
