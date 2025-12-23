@@ -142,3 +142,7 @@ router.patch(
 );
 
 // ==================== LESSONS ROUTES ====================
+router.post(
+  "/courses/:courseSlug/sections/:sectionId/lessons",
+  adminController.addLesson
+);
