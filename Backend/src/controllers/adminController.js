@@ -1078,7 +1078,8 @@ exports.addLesson = async (req, res) => {
   const { courseSlug, sectionId } = req.params;
   const { titleEn, titleAr, type, order } = req.body;
   try {
-    const course = await Course.
+    const course = await Course.findOne({ slug: courseSlug, status: true });
+    if (!course) return res.status(404).json({ message: "Course Not Found!" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
