@@ -3,20 +3,22 @@ const mongoose = require("mongoose");
 const questionSchema = new mongoose.Schema(
   {
     questionText: {
-      en: { type: String, required: true },
-      ar: { type: String, required: true },
+      type: String,
+      required: true,
     },
 
-    options: [
-      {
-        en: String,
-        ar: String,
-      },
-    ],
-
+    options: {
+      type: [String],
+      required: true,
+    },
     correctAnswerIndex: {
       type: Number,
       required: true,
+      validate: {
+        validator(v) {
+          return v >= 0 && v < this.options.length;
+        },
+      },
     },
 
     score: {
@@ -29,12 +31,6 @@ const questionSchema = new mongoose.Schema(
 
 const quizSchema = new mongoose.Schema(
   {
-    lesson: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Lesson",
-      required: true,
-    },
-
     title: {
       en: { type: String, required: true },
       ar: { type: String, required: true },

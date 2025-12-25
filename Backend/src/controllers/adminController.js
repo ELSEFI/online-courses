@@ -11,7 +11,10 @@ const Quiz = require("../models/Quiz");
 const { sendReplyEmail } = require("../services/emailSender");
 const uploadCvToCloudinary = require("../services/cvUpload");
 const uploadImageToCloudinary = require("../services/imageUpload");
+const uploadVideoToCloudinary = require("../services/videoUpload");
+const uploadFileToCloudinary = require("../services/fileUpload");
 const deleteFromCloudinary = require("../services/cloudinaryDestroy");
+const quizService = require("../services/quizService");
 
 exports.getAllInstructors = async (req, res) => {
   const instructors = await instructorProfile
@@ -1093,11 +1096,58 @@ exports.deleteSection = async (req, res) => {};
 exports.addLesson = async (req, res) => {
   const { courseSlug, sectionId } = req.params;
   const { titleEn, titleAr, type, order } = req.body;
-  try {
-    const course = await Course.findOne({ slug: courseSlug, status: true });
-    if (!course) return res.status(404).json({ message: "Course Not Found!" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: `Server Error ${error.message}` });
+
+  if (!["video", "file", "quiz"].includes(type))
+    return res.status(400).json({ message: "Invalid lesson type" });
+
+  const course = await Course.findOne({ slug: courseSlug, status: true });
+  if (!course) return res.status(404).json({ message: "Course not found" });
+
+  const section = await Section.findOne({ _id: sectionId, isActive: true });
+  if (!section) return res.status(404).json({ message: "Section not found" });
+
+  let video = null;
+  let files = [];
+  let quizId = null;
+
+  if (type === "video") {
+    if (!req.file) return res.status(400).json({ message: "Video required" });
+
+    const uploaded = await uploadVideoToCloudinary(req.file);
+    video = {
+      provider: "cloudinary",
+      publicId: uploaded.public_id,
+      duration: uploaded.duration,
+    };
   }
+
+  if (type === "file") {
+    if (!req.file) return res.status(400).json({ message: "File required" });
+
+    const uploaded = await uploadFileToCloudinary(req.file);
+    files.push({
+      name: req.body.attName,
+      type: req.body.attType,
+      fileUrl: uploaded.public_id,
+    });
+  }
+
+  if (type === "quiz") {
+    quizId = await quizService.createQuiz(req.body.quiz);
+  }
+
+  const lesson = await Lesson.create({
+    section: section._id,
+    title: { en: titleEn, ar: titleAr },
+    type,
+    order: order ?? 0,
+    video,
+    files,
+    quiz: quizId,
+  });
+
+  res.status(201).json({
+    message: "Lesson created successfully",
+    lesson,
+  });
 };

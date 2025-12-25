@@ -5,7 +5,7 @@ const attachmentSchema = new mongoose.Schema(
     name: { type: String, required: true },
     type: {
       type: String,
-      enum: ["pdf", "zip", "image"],
+      enum: ["pdf", "zip"],
       required: true,
     },
     fileUrl: { type: String, required: true },
@@ -28,7 +28,7 @@ const lessonSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["video", "quiz", "article"],
+      enum: ["video", "quiz", "file"],
       default: "video",
       required: true,
     },
@@ -47,14 +47,14 @@ const lessonSchema = new mongoose.Schema(
     video: {
       provider: {
         type: String,
-        enum: ["cloudinary", "vimeo"],
+        enum: ["cloudinary"],
       },
       publicId: String,
       duration: Number, // seconds
     },
 
     // 📎 Attachments
-    attachments: [attachmentSchema],
+    files: [attachmentSchema],
 
     // 📝 Quiz reference (optional)
     quiz: {
