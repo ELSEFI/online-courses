@@ -1,13 +1,14 @@
 const express = require("express");
+
 const adminController = require("../controllers/adminController");
 const protected = require("../Middleware/jwtMiddleware");
 const restrictTo = require("../Middleware/roleMiddleware");
+
 const uploadCvs = require("../Middleware/uploadCvs");
-const {
-  uploadImage,
-  resizeProfileImage,
-  resizeCategoryImage,
-} = require("../Middleware/uploadImage");
+const uploadImage = require("../Middleware/uploadImage");
+const resize = require("../Middleware/resizeImage");
+const uploadFile = require("../Middleware/uploadFile");
+const uploadVideo = require("../Middleware/uploadVideo");
 
 const router = express.Router();
 router.use(protected, restrictTo("admin"));
@@ -64,7 +65,7 @@ router.patch("/users/:userId/update-status", adminController.updateStatus);
 router.post(
   "/categories/add-category",
   uploadImage.single("image"),
-  resizeCategoryImage,
+  resize.resizeCategoryImage,
   adminController.addCategory
 );
 
@@ -81,7 +82,7 @@ router.patch(
 router.patch(
   "/categories/:categoryId/update-category",
   uploadImage.single("image"),
-  resizeCategoryImage,
+  resize.resizeCategoryImage,
   adminController.updateCategory
 );
 
@@ -92,7 +93,7 @@ router.get("/courses", adminController.getAllCourses);
 router.post(
   "/courses/add-course",
   uploadImage.single("courseThumbnail"),
-  resizeCategoryImage,
+  resize.resizeThumbnail,
   adminController.createCourse
 );
 

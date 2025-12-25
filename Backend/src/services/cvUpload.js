@@ -1,11 +1,11 @@
 const cloudinary = require("../config/cloudinaryConfig");
 
-exports.uploadCvToCloudinary = (file) => {
+exports.uploadCvToCloudinary = (file, folder) => {
   return new Promise((resolve, reject) => {
     cloudinary.uploader
       .upload_stream(
         {
-          folder: "cvs",
+          folder,
           resource_type: "raw",
           use_filename: true,
           unique_filename: true,

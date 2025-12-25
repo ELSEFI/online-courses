@@ -5,7 +5,9 @@ const {
   sendEmail,
   sendResetPasswordEmail,
 } = require("../services/emailSender");
-const { uploadToCloudinary } = require("../services/cloudinaryUpload");
+const uploadCvToCloudinary = require("../services/cvUpload");
+const uploadImageToCloudinary = require("../services/imageUpload");
+const deleteFromCloudinary = require("../services/cloudinaryDestroy");
 const crypto = require("crypto");
 
 const createToken = (id, role, tokenV) => {
@@ -243,7 +245,7 @@ exports.updateProfile = async (req, res) => {
 
     if (name) user.name = name;
     if (req.file) {
-      const result = await uploadToCloudinary(req.file.buffer, "users");
+      const result = await uploadImageToCloudinary(req.file.buffer, "users");
 
       user.profileImage = result.public_id;
     }
@@ -270,6 +272,9 @@ exports.updateProfile = async (req, res) => {
         : null,
     });
   } catch (error) {
+    if (result) {
+      await deleteFromCloudinary(result.public_id);
+    }
     console.error(error);
     res.status(500).json({ message: `Server Error + ${error}` });
   }

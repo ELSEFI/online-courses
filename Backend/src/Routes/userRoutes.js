@@ -4,14 +4,12 @@ const userController = require("../controllers/userController");
 const { verifyEmail } = require("../Middleware/verifyEmail");
 const router = express.Router();
 const protected = require("../Middleware/jwtMiddleware");
-const {
-  uploadImage,
-  resizeProfileImage,
-} = require("../Middleware/uploadImage");
 const uploadCvs = require("../Middleware/uploadCvs");
+const uploadImage = require("../Middleware/uploadImage");
+const resize = require("../Middleware/resizeImage");
 
 // ROUTES
-router.post("/contact-with-us",userController.contactWithUs)
+router.post("/contact-with-us", userController.contactWithUs);
 router.post("/register", authController.register);
 router.post("/verify-email", verifyEmail);
 router.post("/login", authController.login);
@@ -24,7 +22,7 @@ router.patch(
   "/update-profile",
   protected,
   uploadImage.single("profileImage"),
-  resizeProfileImage,
+  resize.resizeProfileImage,
   authController.updateProfile
 );
 router.patch("/update-password", protected, authController.updatePassword);

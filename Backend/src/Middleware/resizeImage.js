@@ -35,5 +35,3 @@ exports.resizeThumbnail = async (req, res, next) => {
 
   next();
 };
-
-module.exports = resizeThumbnail;

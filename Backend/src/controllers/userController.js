@@ -1,8 +1,7 @@
 const instructorRequest = require("../models/instructorRequest");
-const User = require("../models/User");
 const Contact = require("../models/contactWithUs");
-const fs = require("fs").promises;
-const path = require("path");
+const deleteFromCloudinary = require("../services/cloudinaryDestroy");
+const uploadCvToCloudinary = require("../services/cvUpload");
 
 exports.beInstructor = async (req, res) => {
   try {
@@ -37,33 +36,29 @@ exports.beInstructor = async (req, res) => {
         message: "Your Not Allow To Be Instructor Please Connect With Us",
       });
 
+    const cv = await uploadCvToCloudinary(req.file.buffer, "instructors-cvs");
+
     const existingRequest = await instructorRequest.findOne({
       userId: req.user._id,
     });
 
     if (existingRequest) {
       if (existingRequest.status === "pending") {
-        await fs.unlink(req.file.path);
+        await deleteFromCloudinary(cv.public_id);
         return res
           .status(400)
           .json({ message: "You already have a pending request" });
       }
       if (existingRequest.status === "approved") {
-        await fs.unlink(req.file.path);
+        await deleteFromCloudinary(cv.public_id);
         return res
           .status(400)
           .json({ message: "You are already an instructor" });
       }
-      if (existingRequest.cvURL) {
-        const oldCvPath = path.join(
-          __dirname,
-          "..",
-          "public",
-          "cvs",
-          existingRequest.cvURL
-        );
+      if (existingRequest.cvFile) {
+        await deleteFromCloudinary(existingRequest.cvFile);
         try {
-          await fs.unlink(oldCvPath);
+          await uploadCvToCloudinary(req.file.buffer, "instructors-cvs");
         } catch (err) {
           console.log("Old CV not found:", err.message);
         }
@@ -83,20 +78,17 @@ exports.beInstructor = async (req, res) => {
         ar: jobTitle_ar,
       },
       status: "pending",
-      cvFile: req.file.filename,
+      cvFile: cv.public_id,
     });
 
     await request.populate("userId", "name email profileImage");
     res.status(201).json({
       message: "Request submitted successfully",
-      request: {
-        ...request.toObject(),
-        cvURL: `${req.protocol}://${req.get("host")}/cvs/${request.cvFile}`,
-      },
+      request,
     });
   } catch (error) {
     if (req.file) {
-      await fs.unlink(req.file.path).catch((err) => console.log(err));
+      await deleteFromCloudinary(cv.public_id);
     }
     console.error(error);
 

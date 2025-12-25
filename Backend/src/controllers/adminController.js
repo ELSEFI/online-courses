@@ -9,8 +9,9 @@ const Section = require("../models/Section");
 const Lesson = require("../models/Lesson");
 const Quiz = require("../models/Quiz");
 const { sendReplyEmail } = require("../services/emailSender");
-const { uploadToCloudinary } = require("../services/cloudinaryUpload");
-const { deleteFromCloudinary } = require("../services/cloudinaryDestroy");
+const uploadCvToCloudinary = require("../services/cvUpload");
+const uploadImageToCloudinary = require("../services/imageUpload");
+const deleteFromCloudinary = require("../services/cloudinaryDestroy");
 
 exports.getAllInstructors = async (req, res) => {
   const instructors = await instructorProfile
@@ -46,6 +47,7 @@ exports.removeInstructor = async (req, res) => {
       return res.status(400).json({ message: "No Instructor Founded" });
 
     await User.findByIdAndUpdate(instructor.userId, { role: "user" });
+    await deleteFromCloudinary(instructor.cvFile);
     await instructorProfile.findByIdAndDelete(req.params.instructorId);
 
     res.status(200).json({ message: "instructor Has Been Removed" });
@@ -96,7 +98,7 @@ exports.addInstructor = async (req, res) => {
       emailVerified: true,
     });
     await user.save();
-
+    const cv = await uploadCvToCloudinary(req.file.buffer, "instructors-cvs");
     const instructor = await instructorProfile.create({
       userId: user._id,
       bio: {
@@ -108,11 +110,16 @@ exports.addInstructor = async (req, res) => {
         en: jobTitleEn,
         ar: jobTitleAr,
       },
-      cvFile: req.file.filename,
+      cvFile: cv.public_id,
     });
 
-    res.status(200).json({ message: "Instructor Created Successfully" });
+    res
+      .status(200)
+      .json({ message: "Instructor Created Successfully", instructor });
   } catch (error) {
+    if (req.file) {
+      await deleteFromCloudinary(cv.public_id);
+    }
     console.error(error);
     res.status(500).json({ message: "Server Error" });
   }
@@ -393,7 +400,7 @@ exports.addCategory = async (req, res) => {
   try {
     let result = null;
     if (req.file) {
-      result = await uploadToCloudinary(req.file.buffer, "Categories");
+      result = await uploadImageToCloudinary(req.file.buffer, "Categories");
     }
     const category = await Category.create({
       name: {
@@ -412,6 +419,9 @@ exports.addCategory = async (req, res) => {
       .status(201)
       .json({ message: "Category Created Successfully", category });
   } catch (error) {
+    if (req.file) {
+      await deleteFromCloudinary(result.public_id);
+    }
     if (error.code === 11000) {
       return res.status(409).json({
         message: "Category with same name already exists in this level",
@@ -545,7 +555,10 @@ exports.updateCategory = async (req, res) => {
     let imageId = category.image;
     if (req.file) {
       await deleteFromCloudinary(category.image);
-      const result = await uploadToCloudinary(req.file.buffer, "Categories");
+      const result = await uploadImageToCloudinary(
+        req.file.buffer,
+        "Categories"
+      );
       imageId = result.public_id;
     }
     await Category.findByIdAndUpdate(
@@ -568,6 +581,9 @@ exports.updateCategory = async (req, res) => {
 
     res.status(200).json({ message: "Category Updated Successfully" });
   } catch (error) {
+    if (result) {
+      await deleteFromCloudinary(result.public_id);
+    }
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
   }
@@ -595,7 +611,7 @@ exports.createCourse = async (req, res) => {
   try {
     if (!req.file)
       return res.status(400).json({ message: "Course thumbnail is Required" });
-    uploadThumbnail = await uploadToCloudinary(req.file.buffer, "Courses");
+    uploadThumbnail = await uploadImageToCloudinary(req.file.buffer, "Courses");
 
     const course = await Course.create({
       title: {
