@@ -1,13 +1,19 @@
 const mongoose = require("mongoose");
 
-const attachmentSchema = new mongoose.Schema(
+const filesSchema = new mongoose.Schema(
   {
     name: String,
     type: { type: String, enum: ["pdf", "zip"] },
-    publicId: String,
+    fileName: String,
+    size: Number,
   },
-  { _id: false }
+  { _id: false, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
+
+filesSchema.virtual("fileUrl").get(function () {
+  if (!this.fileName) return null;
+  return `${process.env.BASE_URL}/files/${this.fileName}`;
+});
 
 const lessonSchema = new mongoose.Schema(
   {
@@ -29,22 +35,28 @@ const lessonSchema = new mongoose.Schema(
     video: {
       provider: {
         type: String,
-        enum: ["cloudinary", "youtube"],
+        enum: ["cloudinary", "local"],
       },
-      publicId: String,
+      fileName: String,
+      size: Number,
       duration: Number,
     },
 
-    attachments: [attachmentSchema],
+    files: [filesSchema],
 
     quiz: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Quiz",
     },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 lessonSchema.index({ section: 1, order: 1 });
+
+lessonSchema.virtual("videoUrl").get(function () {
+  if (!this.video || !this.video.fileName) return null;
+  return `${process.env.BASE_URL}/videos/${this.video.fileName}`;
+});
 
 module.exports = mongoose.model("Lesson", lessonSchema);

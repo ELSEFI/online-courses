@@ -13,8 +13,8 @@ const { sendReplyEmail } = require("../services/emailSender");
 const { uploadCvToCloudinary } = require("../services/cvUpload");
 const { uploadImageToCloudinary } = require("../services/imageUpload");
 const { uploadVideoToCloudinary } = require("../services/videoUpload");
-const { uploadFileToCloudinary } = require("../services/fileUpload");
 const { deleteFromCloudinary } = require("../services/cloudinaryDestroy");
+const path = require("path");
 
 exports.getAllInstructors = async (req, res) => {
   const instructors = await instructorProfile
@@ -1106,53 +1106,52 @@ exports.addLesson = async (req, res) => {
     if (!section) return res.status(404).json({ message: "Section not found" });
 
     let video = null;
-    let attachments = [];
+    let files = [];
     let quizId = null;
 
-    // Handle video
     if (hasVideo === "true") {
       if (!req.files?.video) {
         return res.status(400).json({ message: "Video file is required" });
       }
-      const uploaded = await uploadVideoToCloudinary(req.files.video[0]);
+
+      const file = req.files.video[0];
+
       video = {
-        provider: "cloudinary",
-        publicId: uploaded.public_id,
-        duration: uploaded.duration,
+        provider: "local",
+        fileName: file.filename,
+        size: file.size,
+        duration: null,
       };
     }
 
-    // Handle attachments (files)
-    if (req.files?.attachments) {
-      for (let i = 0; i < req.files.attachments.length; i++) {
-        const file = req.files.attachments[i];
-        const uploaded = await uploadFileToCloudinary(file);
-
-        attachments.push({
-          name: req.body[`attName${i}`] || file.originalname,
-          type: req.body[`attType${i}`],
-          publicId: uploaded.public_id,
+    if (req.files?.files) {
+      req.files.files.forEach((file, index) => {
+        files.push({
+          name: req.body[`fileName${index}`] || file.originalname,
+          type: path.extname(file.originalname).replace(".", ""),
+          fileName: file.filename,
+          size: file.size,
         });
-      }
+      });
     }
 
-    // Handle quiz
     if (hasQuiz === "true") {
       if (!req.body.quiz) {
         return res.status(400).json({ message: "Quiz data is required" });
       }
+
       const quizData =
         typeof req.body.quiz === "string"
           ? JSON.parse(req.body.quiz)
           : req.body.quiz;
+
       quizId = await quizService.createQuiz(quizData);
     }
 
-    // Validation: At least one content type must be provided
-    if (!video && attachments.length === 0 && !quizId) {
+    if (!video && files.length === 0 && !quizId) {
       return res.status(400).json({
         message:
-          "Lesson must have at least one content (video, attachments, or quiz)",
+          "Lesson must have at least one content (video, Files, or quiz)",
       });
     }
 
@@ -1161,7 +1160,7 @@ exports.addLesson = async (req, res) => {
       title: { en: titleEn, ar: titleAr },
       order: order ?? 0,
       video,
-      attachments,
+      files,
       quiz: quizId,
     });
 
@@ -1170,8 +1169,9 @@ exports.addLesson = async (req, res) => {
       lesson,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error creating lesson", error: error.message });
+    res.status(500).json({
+      message: "Error creating lesson",
+      error: error.message,
+    });
   }
 };

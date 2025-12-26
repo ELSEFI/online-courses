@@ -7,7 +7,7 @@ const restrictTo = require("../Middleware/roleMiddleware");
 const uploadCvs = require("../Middleware/uploadCvs");
 const uploadImage = require("../Middleware/uploadImage");
 const resize = require("../Middleware/resizeImage");
-const upload = require("../Middleware/uploadLesson");
+const uploadLesson = require("../Middleware/uploadLesson");
 const uploadVideo = require("../Middleware/uploadVideo");
 
 const router = express.Router();
@@ -145,9 +145,9 @@ router.patch(
 // ==================== LESSONS ROUTES ====================
 router.post(
   "/courses/:courseSlug/sections/:sectionId/lessons/add-lesson",
-  upload.fields([
+  uploadLesson.fields([
     { name: "video", maxCount: 1 },
-    { name: "attachments", maxCount: 10 },
+    { name: "files", maxCount: 5 },
   ]),
   adminController.addLesson
 );

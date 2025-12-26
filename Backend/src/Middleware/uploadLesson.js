@@ -1,30 +1,40 @@
 const multer = require("multer");
+const path = require("path");
 
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 500 * 1024 * 1024 },
-  fileFilter(req, file, cb) {
-    const allowedVideoTypes = [
-      "video/mp4",
-      "video/avi",
-      "video/mov",
-      "video/mkv",
-    ];
-    const allowedFileTypes = [
-      "application/pdf",
-      "application/zip",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
-
-    const isVideo = allowedVideoTypes.includes(file.mimetype);
-    const isFile = allowedFileTypes.includes(file.mimetype);
-
-    if (!isVideo && !isFile) {
-      return cb(new Error("Invalid file type"));
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    if (file.fieldname === "video") {
+      cb(null, "public/videos");
+    } else if (file.fieldname === "files") {
+      cb(null, "public/files");
     }
-    cb(null, true);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName =
+      Date.now() +
+      "-" +
+      Math.round(Math.random() * 1e9) +
+      path.extname(file.originalname);
+    cb(null, uniqueName);
   },
 });
 
-module.exports = upload;
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype.startsWith("video/") ||
+    file.mimetype === "application/pdf" ||
+    file.mimetype === "application/zip"
+  ) {
+    cb(null, true);
+  } else {
+    cb(new Error("invalid File Type"), false);
+  }
+};
+
+const uploadLesson = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB
+});
+
+module.exports = uploadLesson;
