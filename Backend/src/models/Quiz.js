@@ -6,7 +6,6 @@ const questionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
     options: {
       type: [String],
       required: true,
@@ -14,13 +13,7 @@ const questionSchema = new mongoose.Schema(
     correctAnswerIndex: {
       type: Number,
       required: true,
-      validate: {
-        validator(v) {
-          return v >= 0 && v < this.options.length;
-        },
-      },
     },
-
     score: {
       type: Number,
       default: 1,
@@ -38,10 +31,7 @@ const quizSchema = new mongoose.Schema(
 
     questions: [questionSchema],
 
-    totalScore: {
-      type: Number,
-      default: 0,
-    },
+    totalScore: Number,
 
     isActive: {
       type: Boolean,
@@ -51,7 +41,6 @@ const quizSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// calculate total score before save
 quizSchema.pre("save", function () {
   this.totalScore = this.questions.reduce((sum, q) => sum + q.score, 0);
 });

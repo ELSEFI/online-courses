@@ -1,9 +1,7 @@
 const InstructorRequest = require("../models/instructorRequest");
 const Contact = require("../models/contactWithUs");
-const { uploadCvToCloudinary } = require("../services/cvUpload.service");
-const {
-  deleteFromCloudinary,
-} = require("../services/cloudinaryDelete.service");
+const uploadCvToCloudinary = require("../services/cvUpload");
+const deleteFromCloudinary = require("../services/cloudinaryDestroy");
 
 exports.beInstructor = async (req, res) => {
   let uploadedCv = null;

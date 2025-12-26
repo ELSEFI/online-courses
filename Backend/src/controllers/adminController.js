@@ -8,13 +8,13 @@ const Course = require("../models/Course");
 const Section = require("../models/Section");
 const Lesson = require("../models/Lesson");
 const Quiz = require("../models/Quiz");
+const quizService = require("../services/quiz");
 const { sendReplyEmail } = require("../services/emailSender");
-const uploadCvToCloudinary = require("../services/cvUpload");
-const uploadImageToCloudinary = require("../services/imageUpload");
-const uploadVideoToCloudinary = require("../services/videoUpload");
-const uploadFileToCloudinary = require("../services/fileUpload");
-const deleteFromCloudinary = require("../services/cloudinaryDestroy");
-const quizService = require("../services/quizService");
+const { uploadCvToCloudinary } = require("../services/cvUpload");
+const { uploadImageToCloudinary } = require("../services/imageUpload");
+const { uploadVideoToCloudinary } = require("../services/videoUpload");
+const { uploadFileToCloudinary } = require("../services/fileUpload");
+const { deleteFromCloudinary } = require("../services/cloudinaryDestroy");
 
 exports.getAllInstructors = async (req, res) => {
   const instructors = await instructorProfile
@@ -1093,61 +1093,85 @@ exports.editSection = async (req, res) => {
 exports.deleteSection = async (req, res) => {};
 
 // ========== LESSON ========== //
+
 exports.addLesson = async (req, res) => {
-  const { courseSlug, sectionId } = req.params;
-  const { titleEn, titleAr, type, order } = req.body;
+  try {
+    const { courseSlug, sectionId } = req.params;
+    const { titleEn, titleAr, hasVideo, hasQuiz, order } = req.body;
 
-  if (!["video", "file", "quiz"].includes(type))
-    return res.status(400).json({ message: "Invalid lesson type" });
+    const course = await Course.findOne({ slug: courseSlug, status: true });
+    if (!course) return res.status(404).json({ message: "Course not found" });
 
-  const course = await Course.findOne({ slug: courseSlug, status: true });
-  if (!course) return res.status(404).json({ message: "Course not found" });
+    const section = await Section.findOne({ _id: sectionId, isActive: true });
+    if (!section) return res.status(404).json({ message: "Section not found" });
 
-  const section = await Section.findOne({ _id: sectionId, isActive: true });
-  if (!section) return res.status(404).json({ message: "Section not found" });
+    let video = null;
+    let attachments = [];
+    let quizId = null;
 
-  let video = null;
-  let files = [];
-  let quizId = null;
+    // Handle video
+    if (hasVideo === "true") {
+      if (!req.files?.video) {
+        return res.status(400).json({ message: "Video file is required" });
+      }
+      const uploaded = await uploadVideoToCloudinary(req.files.video[0]);
+      video = {
+        provider: "cloudinary",
+        publicId: uploaded.public_id,
+        duration: uploaded.duration,
+      };
+    }
 
-  if (type === "video") {
-    if (!req.file) return res.status(400).json({ message: "Video required" });
+    // Handle attachments (files)
+    if (req.files?.attachments) {
+      for (let i = 0; i < req.files.attachments.length; i++) {
+        const file = req.files.attachments[i];
+        const uploaded = await uploadFileToCloudinary(file);
 
-    const uploaded = await uploadVideoToCloudinary(req.file);
-    video = {
-      provider: "cloudinary",
-      publicId: uploaded.public_id,
-      duration: uploaded.duration,
-    };
-  }
+        attachments.push({
+          name: req.body[`attName${i}`] || file.originalname,
+          type: req.body[`attType${i}`],
+          publicId: uploaded.public_id,
+        });
+      }
+    }
 
-  if (type === "file") {
-    if (!req.file) return res.status(400).json({ message: "File required" });
+    // Handle quiz
+    if (hasQuiz === "true") {
+      if (!req.body.quiz) {
+        return res.status(400).json({ message: "Quiz data is required" });
+      }
+      const quizData =
+        typeof req.body.quiz === "string"
+          ? JSON.parse(req.body.quiz)
+          : req.body.quiz;
+      quizId = await quizService.createQuiz(quizData);
+    }
 
-    const uploaded = await uploadFileToCloudinary(req.file);
-    files.push({
-      name: req.body.attName,
-      type: req.body.attType,
-      fileUrl: uploaded.public_id,
+    // Validation: At least one content type must be provided
+    if (!video && attachments.length === 0 && !quizId) {
+      return res.status(400).json({
+        message:
+          "Lesson must have at least one content (video, attachments, or quiz)",
+      });
+    }
+
+    const lesson = await Lesson.create({
+      section: section._id,
+      title: { en: titleEn, ar: titleAr },
+      order: order ?? 0,
+      video,
+      attachments,
+      quiz: quizId,
     });
+
+    res.status(201).json({
+      message: "Lesson created successfully",
+      lesson,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error creating lesson", error: error.message });
   }
-
-  if (type === "quiz") {
-    quizId = await quizService.createQuiz(req.body.quiz);
-  }
-
-  const lesson = await Lesson.create({
-    section: section._id,
-    title: { en: titleEn, ar: titleAr },
-    type,
-    order: order ?? 0,
-    video,
-    files,
-    quiz: quizId,
-  });
-
-  res.status(201).json({
-    message: "Lesson created successfully",
-    lesson,
-  });
 };
