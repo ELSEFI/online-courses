@@ -1175,3 +1175,23 @@ exports.addLesson = async (req, res) => {
     });
   }
 };
+
+exports.getAllLessons = async (req, res) => {
+  const { sectionId } = req.params;
+  try {
+    let sectionFilter = {
+      _id: sectionId,
+    };
+    if (req.user.role === "admin" || req.user.role === "instructor") {
+      sectionFilter.isActive = req.query.isActive === "true";
+    } else {
+      sectionFilter.isActive = true;
+    }
+    const section = await Section.findOne(sectionFilter);
+    if (!section) return res.status(404).json({ message: "No Sections Found" });
+    let lessonFilter = {
+      section: section._id,
+    };
+    const lessons = await Lesson.findOne(filter);
+  } catch (error) {}
+};
