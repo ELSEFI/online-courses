@@ -160,3 +160,8 @@ router.get(
   "/courses/:courseSlug/sections/:sectionId/lessons/:lessonId",
   adminController.getLesson
 );
+
+router.delete(
+  "/courses/:courseSlug/sections/:sectionId/lessons/:lessonId",
+  adminController.deleteLesson
+);
