@@ -170,3 +170,9 @@ router.patch(
   "/courses/:courseSlug/sections/:sectionId/lessons/:lessonId/restore",
   adminController.deleteLesson
 );
+
+router.patch(
+  "/courses/:courseSlug/sections/:sectionId/lessons/:lessonId",
+  uploadLesson.fields([{ name: "files", maxCount: 5 }]),
+  adminController.editLesson
+);

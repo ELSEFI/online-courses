@@ -41,7 +41,9 @@ const lessonSchema = new mongoose.Schema(
       size: Number,
       duration: Number,
     },
-
+    hasQuiz: {
+      type: Boolean,
+    },
     files: [filesSchema],
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
@@ -60,6 +62,5 @@ lessonSchema.virtual("quiz", {
   foreignField: "lesson",
   justOne: true,
 });
-
 
 module.exports = mongoose.model("Lesson", lessonSchema);
