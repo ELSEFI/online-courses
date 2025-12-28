@@ -165,3 +165,8 @@ router.delete(
   "/courses/:courseSlug/sections/:sectionId/lessons/:lessonId",
   adminController.deleteLesson
 );
+
+router.patch(
+  "/courses/:courseSlug/sections/:sectionId/lessons/:lessonId/restore",
+  adminController.deleteLesson
+);

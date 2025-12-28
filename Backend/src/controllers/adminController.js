@@ -1364,6 +1364,58 @@ exports.deleteLesson = async (req, res) => {
   }
 };
 
+exports.restoreLesson = async (req, res) => {
+  const { courseSlug, sectionId, lessonId } = req.params;
+  try {
+    const isAdmin = ["admin", "instructor"].includes(req.user.role);
+
+    const courseFilter = {
+      slug: courseSlug,
+      status: true,
+    };
+
+    if (!isAdmin) {
+      courseFilter.isPublished = true;
+    } else if (req.query.isPublished !== undefined) {
+      courseFilter.isPublished = req.query.isPublished === "true";
+    }
+
+    const course = await Course.findOne(courseFilter);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    const sectionFilter = {
+      _id: sectionId,
+      course: course._id,
+    };
+
+    if (!isAdmin) {
+      sectionFilter.isActive = true;
+    } else if (req.query.sectionActive !== undefined) {
+      sectionFilter.isActive = req.query.sectionActive === "true";
+    }
+
+    const section = await Section.findOne(sectionFilter);
+    if (!section) {
+      return res.status(404).json({ message: "Section not found" });
+    }
+
+    const lesson = Lesson.findOne({
+      _id: lessonId,
+      section: sectionId,
+      isActive: false,
+    });
+    if (!lesson) return res.status(404).json({ message: "Lesson Not Found" });
+    lesson.isActive = true;
+    await lesson.save();
+    res.status(200).json({ message: "Lesson Activated Successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
 exports.getQuiz = async (req, res) => {
   const { lessonId } = req.params;
   try {
