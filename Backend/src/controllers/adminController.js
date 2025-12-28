@@ -1177,21 +1177,58 @@ exports.addLesson = async (req, res) => {
 };
 
 exports.getAllLessons = async (req, res) => {
-  const { sectionId } = req.params;
+  const { courseSlug, sectionId } = req.params;
   try {
+    let courseFilter = {
+      slug: courseSlug,
+      status: true,
+      isPublished: true,
+    };
+    if (req.user.role !== "admin" && req.user.role !== "instructor") {
+      courseFilter.isPublished = true;
+    } else if (req.query.isPublished !== undefined) {
+      courseFilter.isPublished = req.query.isPublished === "true";
+    }
+
+    const course = await Course.findOne(courseFilter);
+    console.log(course);
+
+    if (!course) return res.status(404).json({ message: "No Course Found" });
     let sectionFilter = {
       _id: sectionId,
+      course: course._id,
+      isActive: true,
     };
-    if (req.user.role === "admin" || req.user.role === "instructor") {
-      sectionFilter.isActive = req.query.isActive === "true";
-    } else {
+
+    if (req.user.role !== "admin" && req.user.role !== "instructor") {
       sectionFilter.isActive = true;
+    } else if (req.query["section.isActive"] !== undefined) {
+      sectionFilter.isActive = req.query["section.isActive"] === "true";
     }
+
     const section = await Section.findOne(sectionFilter);
     if (!section) return res.status(404).json({ message: "No Sections Found" });
+
     let lessonFilter = {
       section: section._id,
     };
-    const lessons = await Lesson.findOne(filter);
-  } catch (error) {}
+
+    if (req.user.role !== "admin" && req.user.role !== "instructor") {
+      lessonFilter.isActive = true;
+    } else if (req.query["lesson.isActive"] !== undefined) {
+      lessonFilter.isActive = req.query["lesson.isActive"] === "true";
+    }
+
+    const lessons = await Lesson.find(lessonFilter)
+      .populate("quiz", "title totalScore")
+      .sort({ order: 1 });
+
+    res.status(200).json({
+      result: lessons.length,
+      lessons,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
 };

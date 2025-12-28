@@ -144,10 +144,15 @@ router.patch(
 
 // ==================== LESSONS ROUTES ====================
 router.post(
-  "/courses/:courseSlug/sections/:sectionId/lessons/add-lesson",
+  "/courses/:courseSlug/sections/:sectionId/add-lesson",
   uploadLesson.fields([
     { name: "video", maxCount: 1 },
     { name: "files", maxCount: 5 },
   ]),
   adminController.addLesson
+);
+
+router.get(
+  "/courses/:courseSlug/sections/:sectionId/lessons",
+  adminController.getAllLessons
 );
