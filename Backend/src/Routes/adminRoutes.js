@@ -154,8 +154,6 @@ router.get(
   adminController.getAllLessons
 );
 
-router.get("/lessons/:lessonId/quiz", adminController.getQuiz);
-
 router.get(
   "/courses/:courseSlug/sections/:sectionId/lessons/:lessonId",
   adminController.getLesson
@@ -176,3 +174,6 @@ router.patch(
   uploadLesson.fields([{ name: "files", maxCount: 5 }]),
   adminController.editLesson
 );
+// ==================== LESSONS ROUTES ====================
+router.get("/lessons/:lessonId/quiz", adminController.getQuiz);
+router.get("/lessons/:lessonId/quiz/:quizId", adminController.getGrades);

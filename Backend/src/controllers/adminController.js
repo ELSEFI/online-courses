@@ -1473,7 +1473,7 @@ exports.editLesson = async (req, res) => {
 
     res.status(200).json({
       message: "Lesson updated successfully",
-      lesson,      
+      lesson,
     });
   } catch (error) {
     console.error(error);
@@ -1481,6 +1481,7 @@ exports.editLesson = async (req, res) => {
   }
 };
 
+// ========== Quizzes ========== //
 exports.getQuiz = async (req, res) => {
   const { lessonId } = req.params;
   try {
@@ -1504,6 +1505,33 @@ exports.getQuiz = async (req, res) => {
       return res.status(404).json({ message: "No Quiz Found For This Lesson" });
 
     res.status(200).json(quiz);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+exports.getGrades = async (req, res) => {
+  const { lessonId, quizId } = req.params;
+  try {
+    const quiz = await Quiz.findOne({ _id: quizId, lesson: lessonId });
+    if (!quiz) return res.status(404).json({ message: "Quiz Not Found" });
+
+    const totalGrades = await QuizAttempt.find({ quiz: quiz._id })
+      .sort({
+        obtainedScore: -1,
+      })
+      .populate("user");
+    const topGrades = await QuizAttempt.find({ quiz: quizId })
+      .sort({
+        obtainedScore: -1,
+      })
+      .populate("user")
+      .limit(10);
+    res.status(200).json({
+      totalGrades,
+      topGrades,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
