@@ -1000,34 +1000,6 @@ exports.getSection = async (req, res) => {
   }
 };
 
-exports.disableSection = async (req, res) => {
-  const { courseSlug, sectionId } = req.params;
-  try {
-    if (!mongoose.Types.ObjectId.isValid(sectionId)) {
-      return res.status(400).json({ message: "Invalid Section ID" });
-    }
-
-    const course = await Course.findOne({ slug: courseSlug, status: true });
-    if (!course) return res.status(404).json({ message: "No Course Found" });
-
-    const section = await Section.findOne({
-      course: course._id,
-      _id: sectionId,
-    });
-    if (!section) return res.status(404).json({ message: "No Section Found" });
-
-    if (!section.isActive)
-      return res.status(409).json({ message: "This Section Already Disabled" });
-    section.isActive = false;
-
-    await section.save();
-    res.status(200).json({ message: "Section Disabled Successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: `Server Error ${error.message}` });
-  }
-};
-
 exports.restoreSection = async (req, res) => {
   const { courseSlug, sectionId } = req.params;
   try {
@@ -1089,11 +1061,40 @@ exports.editSection = async (req, res) => {
   }
 };
 
-// todo
-exports.deleteSection = async (req, res) => {};
+exports.deleteSection = async (req, res) => {
+  const { courseSlug, sectionId } = req.params;
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(sectionId)) {
+      return res.status(400).json({ message: "Invalid Section ID" });
+    }
+
+    const course = await Course.findOne({ slug: courseSlug });
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    const section = await Section.findOne({
+      _id: sectionId,
+      course: course._id,
+    });
+
+    if (!section) return res.status(404).json({ message: "Section not found" });
+
+    if (!section.isActive)
+      return res.status(409).json({ message: "This Section Already Disabled" });
+
+    section.isActive = false;
+    await section.save();
+
+    await Lesson.updateMany({ section: section._id }, { isActive: false });
+
+    res.status(200).json({ message: "Section disabled successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 
 // ========== LESSON ========== //
-
 exports.addLesson = async (req, res) => {
   try {
     const { courseSlug, sectionId } = req.params;

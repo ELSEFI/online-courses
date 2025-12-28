@@ -125,18 +125,18 @@ router.get(
 );
 
 router.patch(
-  "/courses/:courseSlug/sections/:sectionId/disable",
-  adminController.disableSection
-);
-
-router.patch(
   "/courses/:courseSlug/sections/:sectionId/restore",
   adminController.restoreSection
 );
 
 router.patch(
-  "/courses/:courseSlug/sections/:sectionId/edit-section",
+  "/courses/:courseSlug/sections/:sectionId/edit",
   adminController.editSection
+);
+
+router.delete(
+  "/courses/:courseSlug/sections/:sectionId",
+  adminController.deleteSection
 );
 
 // ==================== LESSONS ROUTES ====================
