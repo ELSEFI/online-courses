@@ -77,7 +77,7 @@ const quizAttemptSchema = new mongoose.Schema(
 );
 
 /* ================= Indexes ================= */
-quizAttemptSchema.index({ user: 1, quiz: 1 }, { unique: true });
+quizAttemptSchema.index({ user: 1, quiz: 1, lesson: 1 }, { unique: true });
 
 quizAttemptSchema.index({ quiz: 1, obtainedScore: -1 });
 

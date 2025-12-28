@@ -115,10 +115,7 @@ router.patch("/courses/:courseId/update-course", adminController.updateCourse);
 module.exports = router;
 
 // ==================== SECTIONS ROUTES ====================
-router.post(
-  "/courses/:courseSlug/sections",
-  adminController.addSection
-);
+router.post("/courses/:courseSlug/sections", adminController.addSection);
 
 router.get("/courses/:courseSlug/sections", adminController.getAllSections);
 
@@ -157,7 +154,9 @@ router.get(
   adminController.getAllLessons
 );
 
+router.get("/lessons/:lessonId/quiz", adminController.getQuiz);
+
 router.get(
-  "/lessons/:lessonId/quiz",
-  adminController.getQuiz
+  "/courses/:courseSlug/sections/:sectionId/lessons/:lessonId",
+  adminController.getLesson
 );

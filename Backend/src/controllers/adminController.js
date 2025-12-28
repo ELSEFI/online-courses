@@ -1188,43 +1188,48 @@ exports.addLesson = async (req, res) => {
 exports.getAllLessons = async (req, res) => {
   const { courseSlug, sectionId } = req.params;
   try {
-    let courseFilter = {
+    const isAdmin = ["admin", "instructor"].includes(req.user.role);
+
+    const courseFilter = {
       slug: courseSlug,
       status: true,
-      isPublished: true,
     };
-    if (req.user.role !== "admin" && req.user.role !== "instructor") {
+
+    if (!isAdmin) {
       courseFilter.isPublished = true;
     } else if (req.query.isPublished !== undefined) {
       courseFilter.isPublished = req.query.isPublished === "true";
     }
 
     const course = await Course.findOne(courseFilter);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
 
-    if (!course) return res.status(404).json({ message: "No Course Found" });
-    let sectionFilter = {
+    const sectionFilter = {
       _id: sectionId,
       course: course._id,
-      isActive: true,
     };
 
-    if (req.user.role !== "admin" && req.user.role !== "instructor") {
+    if (!isAdmin) {
       sectionFilter.isActive = true;
-    } else if (req.query["section.isActive"] !== undefined) {
-      sectionFilter.isActive = req.query["section.isActive"] === "true";
+    } else if (req.query.sectionActive !== undefined) {
+      sectionFilter.isActive = req.query.sectionActive === "true";
     }
 
     const section = await Section.findOne(sectionFilter);
-    if (!section) return res.status(404).json({ message: "No Sections Found" });
+    if (!section) {
+      return res.status(404).json({ message: "Section not found" });
+    }
 
     let lessonFilter = {
       section: section._id,
     };
 
-    if (req.user.role !== "admin" && req.user.role !== "instructor") {
+    if (!isAdmin) {
       lessonFilter.isActive = true;
-    } else if (req.query["lesson.isActive"] !== undefined) {
-      lessonFilter.isActive = req.query["lesson.isActive"] === "true";
+    } else if (req.query.lessonActive !== undefined) {
+      lessonFilter.isActive = req.query.lessonActive === "true";
     }
 
     const lessons = await Lesson.find(lessonFilter)
@@ -1238,6 +1243,71 @@ exports.getAllLessons = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+exports.getLesson = async (req, res) => {
+  const { courseSlug, sectionId, lessonId } = req.params;
+
+  try {
+    const isAdmin = ["admin", "instructor"].includes(req.user.role);
+
+    const courseFilter = {
+      slug: courseSlug,
+      status: true,
+    };
+
+    if (!isAdmin) {
+      courseFilter.isPublished = true;
+    } else if (req.query.isPublished !== undefined) {
+      courseFilter.isPublished = req.query.isPublished === "true";
+    }
+
+    const course = await Course.findOne(courseFilter);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    const sectionFilter = {
+      _id: sectionId,
+      course: course._id,
+    };
+
+    if (!isAdmin) {
+      sectionFilter.isActive = true;
+    } else if (req.query.sectionActive !== undefined) {
+      sectionFilter.isActive = req.query.sectionActive === "true";
+    }
+
+    const section = await Section.findOne(sectionFilter);
+    if (!section) {
+      return res.status(404).json({ message: "Section not found" });
+    }
+
+    const lessonFilter = {
+      _id: lessonId,
+      section: section._id,
+    };
+
+    if (!isAdmin) {
+      lessonFilter.isActive = true;
+    } else if (req.query.lessonActive !== undefined) {
+      lessonFilter.isActive = req.query.lessonActive === "true";
+    }
+
+    const lesson = await Lesson.findOne(lessonFilter).populate(
+      "quiz",
+      "title totalScore"
+    );
+
+    if (!lesson) {
+      return res.status(404).json({ message: "Lesson not found" });
+    }
+
+    res.status(200).json(lesson);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
   }
 };
 
