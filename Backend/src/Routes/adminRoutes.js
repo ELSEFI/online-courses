@@ -91,7 +91,7 @@ router.patch(
 router.get("/courses", adminController.getAllCourses);
 
 router.post(
-  "/courses/add-course",
+  "/courses",
   uploadImage.single("courseThumbnail"),
   resize.resizeThumbnail,
   adminController.createCourse
@@ -103,7 +103,7 @@ router.patch(
   adminController.changePublishStatus
 );
 
-router.patch("/courses/:courseId/disable-course", adminController.deleteCourse);
+router.delete("/courses/:courseId", adminController.deleteCourse);
 
 router.patch(
   "/courses/:courseId/restore-course",
@@ -116,7 +116,7 @@ module.exports = router;
 
 // ==================== SECTIONS ROUTES ====================
 router.post(
-  "/courses/:courseSlug/sections/add-section",
+  "/courses/:courseSlug/sections",
   adminController.addSection
 );
 
@@ -128,12 +128,12 @@ router.get(
 );
 
 router.patch(
-  "/courses/:courseSlug/sections/:sectionId/disable-section",
+  "/courses/:courseSlug/sections/:sectionId/disable",
   adminController.disableSection
 );
 
 router.patch(
-  "/courses/:courseSlug/sections/:sectionId/restore-section",
+  "/courses/:courseSlug/sections/:sectionId/restore",
   adminController.restoreSection
 );
 
@@ -144,7 +144,7 @@ router.patch(
 
 // ==================== LESSONS ROUTES ====================
 router.post(
-  "/courses/:courseSlug/sections/:sectionId/add-lesson",
+  "/courses/:courseSlug/sections/:sectionId/lessons",
   uploadLesson.fields([
     { name: "video", maxCount: 1 },
     { name: "files", maxCount: 5 },
@@ -155,4 +155,9 @@ router.post(
 router.get(
   "/courses/:courseSlug/sections/:sectionId/lessons",
   adminController.getAllLessons
+);
+
+router.get(
+  "/lessons/:lessonId/quiz",
+  adminController.getQuiz
 );

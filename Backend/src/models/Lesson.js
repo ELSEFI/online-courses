@@ -43,11 +43,6 @@ const lessonSchema = new mongoose.Schema(
     },
 
     files: [filesSchema],
-
-    quiz: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Quiz",
-    },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
@@ -58,5 +53,13 @@ lessonSchema.virtual("videoUrl").get(function () {
   if (!this.video || !this.video.fileName) return null;
   return `${process.env.BASE_URL}/videos/${this.video.fileName}`;
 });
+
+lessonSchema.virtual("quiz", {
+  ref: "Quiz",
+  localField: "_id",
+  foreignField: "lesson",
+  justOne: true,
+});
+
 
 module.exports = mongoose.model("Lesson", lessonSchema);

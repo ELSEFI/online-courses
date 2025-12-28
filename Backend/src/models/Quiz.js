@@ -24,6 +24,11 @@ const questionSchema = new mongoose.Schema(
 
 const quizSchema = new mongoose.Schema(
   {
+    lesson: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Lesson",
+      required: true,
+    },
     title: {
       en: { type: String, required: true },
       ar: { type: String, required: true },
@@ -40,6 +45,7 @@ const quizSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+quizSchema.index({ lesson: 1 });
 
 quizSchema.pre("save", function () {
   this.totalScore = this.questions.reduce((sum, q) => sum + q.score, 0);

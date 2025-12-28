@@ -1140,12 +1140,21 @@ exports.addLesson = async (req, res) => {
         return res.status(400).json({ message: "Quiz data is required" });
       }
 
-      const quizData =
-        typeof req.body.quiz === "string"
-          ? JSON.parse(req.body.quiz)
-          : req.body.quiz;
+      let quizData;
 
-      quizId = await quizService.createQuiz(quizData);
+      try {
+        quizData =
+          typeof req.body.quiz === "string"
+            ? JSON.parse(req.body.quiz)
+            : req.body.quiz;
+      } catch (err) {
+        return res.status(400).json({ message: "Invalid quiz format" });
+      }
+
+      quizId = await quizService.createQuiz({
+        ...quizData,
+        lesson: lesson._id,
+      });
     }
 
     if (!video && files.length === 0 && !quizId) {
@@ -1161,12 +1170,12 @@ exports.addLesson = async (req, res) => {
       order: order ?? 0,
       video,
       files,
-      quiz: quizId,
     });
 
     res.status(201).json({
       message: "Lesson created successfully",
       lesson,
+      quizId,
     });
   } catch (error) {
     res.status(500).json({
@@ -1191,7 +1200,6 @@ exports.getAllLessons = async (req, res) => {
     }
 
     const course = await Course.findOne(courseFilter);
-    console.log(course);
 
     if (!course) return res.status(404).json({ message: "No Course Found" });
     let sectionFilter = {
@@ -1227,6 +1235,35 @@ exports.getAllLessons = async (req, res) => {
       result: lessons.length,
       lessons,
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+exports.getQuiz = async (req, res) => {
+  const { lessonId } = req.params;
+  try {
+    if (!mongoose.Types.ObjectId.isValid(lessonId)) {
+      return res.status(400).json({ message: "Invalid lesson id" });
+    }
+
+    let quizFilter = {
+      lesson: lessonId,
+      isActive: true,
+    };
+
+    if (req.user.role !== "admin" && req.user.role !== "instructor") {
+      quizFilter.isActive = true;
+    } else if (req.query["quiz.isActive"] !== undefined) {
+      quizFilter.isActive = req.query["quiz.isActive"] === "true";
+    }
+
+    const quiz = await Quiz.findOne(quizFilter);
+    if (!quiz)
+      return res.status(404).json({ message: "No Quiz Found For This Lesson" });
+
+    res.status(200).json(quiz);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });

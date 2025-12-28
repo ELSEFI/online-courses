@@ -1,5 +1,5 @@
 const Quiz = require("../models/Quiz");
-exports.createQuiz = async ({ title, questions }) => {
-  const quiz = await Quiz.create({ title, questions });
+exports.createQuiz = async ({ title, questions, lesson }) => {
+  const quiz = await Quiz.create({ lesson, title, questions });
   return quiz._id;
 };
