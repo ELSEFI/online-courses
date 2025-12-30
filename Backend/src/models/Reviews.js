@@ -30,4 +30,41 @@ const reviewSchema = new mongoose.Schema(
 
 reviewSchema.index({ user: 1, course: 1 }, { unique: true });
 
+reviewSchema.statics.calcAverageRatings = async function (courseId) {
+  const Course = mongoose.model("Course");
+
+  const stats = await this.aggregate([
+    { $match: { course: courseId } },
+    {
+      $group: {
+        _id: "$course",
+        avgRating: { $avg: "$rating" },
+        totalReviews: { $sum: 1 },
+      },
+    },
+  ]);
+
+  if (stats.length > 0) {
+    await Course.findByIdAndUpdate(courseId, {
+      rating: stats[0].avgRating,
+      totalReviews: stats[0].totalReviews,
+    });
+  } else {
+    await Course.findByIdAndUpdate(courseId, {
+      rating: 0,
+      totalReviews: 0,
+    });
+  }
+};
+
+reviewSchema.post("save", function () {
+  this.constructor.calcAverageRatings(this.course);
+});
+
+reviewSchema.post("findOneAndDelete", function (doc) {
+  if (doc) {
+    doc.constructor.calcAverageRatings(doc.course);
+  }
+});
+
 module.exports = mongoose.model("Review", reviewSchema);
