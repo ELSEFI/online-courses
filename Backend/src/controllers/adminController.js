@@ -438,7 +438,10 @@ exports.addCategory = async (req, res) => {
 
 exports.getAllCategories = async (req, res) => {
   try {
-    const includeInactive = req.query.includeInactive === "true";
+    let includeInactive = null;
+    if (req.user.role === "admin") {
+      includeInactive = req.query.includeInactive === "true";
+    }
     const categories = await Category.getCategoryTree({ includeInactive });
     res.status(200).json({ results: categories.length, data: categories });
   } catch (error) {
@@ -447,29 +450,25 @@ exports.getAllCategories = async (req, res) => {
   }
 };
 
-exports.getCategory = async (req, res) => {
+exports.getSubCategories = async (req, res) => {
   const { categoryId } = req.params;
-  const { includeInactive } = req.query;
-
   try {
     const filter = {
       _id: categoryId,
     };
-
-    if (includeInactive !== "true") {
-      filter.isActive = true;
-    }
-
     const populateOptions = {
       path: "subcategories",
       options: { sort: { order: 1, "name.en": 1 } },
     };
 
-    if (includeInactive !== "true") {
-      populateOptions.match = { isActive: true };
+    if (req.user.role === "admin" && req.query.includeInactive === "true") {
+      if (req.query.includeInactive === "true") {
+        populateOptions.match = { isActive: true };
+        filter.isActive = true;
+      }
     }
-    const category = await Category.findOne(filter).populate(populateOptions);
 
+    const category = await Category.findOne(filter).populate(populateOptions);
     if (!category)
       return res.status(400).json({ message: "Not Founded Category" });
 

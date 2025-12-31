@@ -9,6 +9,7 @@ const uploadCvToCloudinary = require("../services/cvUpload");
 const uploadImageToCloudinary = require("../services/imageUpload");
 const deleteFromCloudinary = require("../services/cloudinaryDestroy");
 const crypto = require("crypto");
+const Enrollment = require("../models/Enrollment");
 
 const createToken = (id, role, tokenV) => {
   const payload = { id, role, tokenV };

@@ -1,12 +1,16 @@
 const express = require("express");
 const authController = require("../controllers/authController");
 const userController = require("../controllers/userController");
+const adminController = require("../controllers/adminController");
 const { verifyEmail } = require("../Middleware/verifyEmail");
 const router = express.Router();
 const protected = require("../Middleware/jwtMiddleware");
 const uploadCvs = require("../Middleware/uploadCvs");
 const uploadImage = require("../Middleware/uploadImage");
 const resize = require("../Middleware/resizeImage");
+
+// ===== MAIN PAGE ===== //
+// ===== MAIN PAGE ===== //
 
 // ROUTES
 router.post("/contact-with-us", userController.contactWithUs);
