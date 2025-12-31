@@ -182,5 +182,5 @@ router.get("/lessons/:lessonId/quiz/:quizId", adminController.getGrades);
 router.get("courses/courseSlug/reviews", adminController.getReviews);
 router.delete(
   "courses/courseSlug/reviews/reviewId",
-  adminController.DeleteReview
+  adminController.deleteReview
 );

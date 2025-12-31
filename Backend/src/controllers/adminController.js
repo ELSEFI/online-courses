@@ -8,6 +8,7 @@ const Course = require("../models/Course");
 const Section = require("../models/Section");
 const Lesson = require("../models/Lesson");
 const Quiz = require("../models/Quiz");
+const Review = require("../models/Reviews");
 const quizService = require("../services/quiz");
 const { sendReplyEmail } = require("../services/emailSender");
 const { uploadCvToCloudinary } = require("../services/cvUpload");
@@ -1550,9 +1551,23 @@ exports.getReviews = async (req, res) => {
     if (req.query.rating) {
       filter.rating.$eq = Number(req.query.rating);
     }
-    const reviews = await find(filter)
+    const reviews = await Review.find(filter)
       .sort({ createdAt: -1 })
       .populate("user", "name profileImage");
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+exports.deleteReview = async (req, res) => {
+  const { courseSlug, reviewId } = req.body;
+  try {
+    const course = await Course.findOne({ slug: courseSlug });
+    if (!course) return res.status(404).json({ message: "Course Not Found" });
+
+    const review = await Review.findByIdAndDelete(reviewId);
+    res.status(200).json({ message: "Review Deleted Successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
