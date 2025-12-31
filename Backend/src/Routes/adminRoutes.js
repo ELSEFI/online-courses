@@ -179,8 +179,8 @@ router.get("/lessons/:lessonId/quiz", adminController.getQuiz);
 router.get("/lessons/:lessonId/quiz/:quizId", adminController.getGrades);
 
 // ==================== REVIEWS ROUTES ====================
-router.get("/lessons/:lessonId/reviews", adminController.getReviews);
+router.get("courses/courseSlug/reviews", adminController.getReviews);
 router.delete(
-  "/lessons/:lessonId/reviews/reviewId",
+  "courses/courseSlug/reviews/reviewId",
   adminController.DeleteReview
 );

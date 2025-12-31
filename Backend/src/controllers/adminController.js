@@ -1537,3 +1537,24 @@ exports.getGrades = async (req, res) => {
     res.status(500).json({ message: `Server Error ${error.message}` });
   }
 };
+
+// ========== LESSON ========== //
+exports.getReviews = async (req, res) => {
+  const { courseSlug } = req.body;
+  try {
+    const course = await Course.findOne({ slug: courseSlug });
+    if (!course) return res.status(404).json({ message: "Course Not Found" });
+    let filter = {
+      course: course._id,
+    };
+    if (req.query.rating) {
+      filter.rating.$eq = Number(req.query.rating);
+    }
+    const reviews = await find(filter)
+      .sort({ createdAt: -1 })
+      .populate("user", "name profileImage");
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
