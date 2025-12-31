@@ -728,17 +728,21 @@ exports.getAllCourses = async (req, res) => {
 };
 
 exports.getCourse = async (req, res) => {
-  const { courseId } = req.params;
+  const { courseSlug } = req.params;
 
   try {
-    if (!mongoose.Types.ObjectId.isValid(courseId)) {
-      return res.status(400).json({ message: "Invalid Course ID" });
-    }
+    const filter = {
+      slug: courseSlug,
+      status: true,
+      isPublished: true,
+    };
 
-    const filter = { _id: courseId, status: true };
-
-    if (req.user?.role !== "admin") {
-      filter.isPublished = true;
+    if (req.user?.role === "admin" && req.query.isPublished) {
+      if (req.query.isPublished === "true") {
+        filter.isPublished = true;
+      } else if (req.query.isPublished === "false") {
+        filter.isPublished = false;
+      }
     }
 
     const course = await Course.findOne(filter);
@@ -943,12 +947,17 @@ exports.getAllSections = async (req, res) => {
       return res.status(404).json({ message: "No Course Found" });
     }
 
-    const filter = { course: course._id };
+    const filter = {
+      course: course._id,
+      isActive: true,
+    };
 
-    if (req.user?.role !== "admin") {
-      filter.isActive = true;
-    } else if (req.query.isActive !== undefined) {
-      filter.isActive = req.query.isActive === "true";
+    if (req.user?.role === "admin" && req.query.isActive) {
+      if (req.query.isActive === "true") {
+        filter.isActive = true;
+      } else if (req.query.isActive === "false") {
+        filter.isActive = false;
+      }
     }
 
     const sections = await Section.find(filter).sort({ order: 1 });
@@ -963,42 +972,42 @@ exports.getAllSections = async (req, res) => {
   }
 };
 
-exports.getSection = async (req, res) => {
-  const { courseSlug, sectionId } = req.params;
+// exports.getSection = async (req, res) => {
+//   const { courseSlug, sectionId } = req.params;
 
-  try {
-    if (!mongoose.Types.ObjectId.isValid(sectionId)) {
-      return res.status(400).json({ message: "Invalid Section ID" });
-    }
+//   try {
+//     if (!mongoose.Types.ObjectId.isValid(sectionId)) {
+//       return res.status(400).json({ message: "Invalid Section ID" });
+//     }
 
-    const course = await Course.findOne({ slug: courseSlug, status: true });
-    if (!course) {
-      return res.status(404).json({ message: "Course Not Found" });
-    }
+//     const course = await Course.findOne({ slug: courseSlug, status: true });
+//     if (!course) {
+//       return res.status(404).json({ message: "Course Not Found" });
+//     }
 
-    const filter = {
-      _id: sectionId,
-      course: course._id,
-    };
+//     const filter = {
+//       _id: sectionId,
+//       course: course._id,
+//     };
 
-    if (req.user?.role !== "admin") {
-      filter.isActive = true;
-    } else if (req.query.isActive !== undefined) {
-      filter.isActive = req.query.isActive === "true";
-    }
+//     if (req.user?.role !== "admin") {
+//       filter.isActive = true;
+//     } else if (req.query.isActive !== undefined) {
+//       filter.isActive = req.query.isActive === "true";
+//     }
 
-    const section = await Section.findOne(filter).populate("lessons");
+//     const section = await Section.findOne(filter).populate("lessons");
 
-    if (!section) {
-      return res.status(404).json({ message: "Section Not Found" });
-    }
+//     if (!section) {
+//       return res.status(404).json({ message: "Section Not Found" });
+//     }
 
-    res.status(200).json(section);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: `Server Error ${error.message}` });
-  }
-};
+//     res.status(200).json(section);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: `Server Error ${error.message}` });
+//   }
+// };
 
 exports.restoreSection = async (req, res) => {
   const { courseSlug, sectionId } = req.params;
@@ -1169,6 +1178,7 @@ exports.addLesson = async (req, res) => {
       section: section._id,
       title: { en: titleEn, ar: titleAr },
       order: order ?? 0,
+      isFree: req.body.isFree ?? false,
       video,
       files,
     });
@@ -1234,6 +1244,7 @@ exports.getAllLessons = async (req, res) => {
     }
 
     const lessons = await Lesson.find(lessonFilter)
+      .select("title order isFree hasQuiz")
       .populate("quiz", "title totalScore")
       .sort({ order: 1 });
 

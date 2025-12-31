@@ -31,7 +31,10 @@ const lessonSchema = new mongoose.Schema(
     order: { type: Number, default: 0 },
 
     isActive: { type: Boolean, default: true },
-
+    isFree: {
+      type: Boolean,
+      default: false,
+    },
     video: {
       provider: {
         type: String,

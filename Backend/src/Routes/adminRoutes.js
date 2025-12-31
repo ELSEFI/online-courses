@@ -119,10 +119,10 @@ router.post("/courses/:courseSlug/sections", adminController.addSection);
 
 router.get("/courses/:courseSlug/sections", adminController.getAllSections);
 
-router.get(
-  "/courses/:courseSlug/sections/:sectionId",
-  adminController.getSection
-);
+// router.get(
+//   "/courses/:courseSlug/sections/:sectionId",
+//   adminController.getSection
+// );
 
 router.patch(
   "/courses/:courseSlug/sections/:sectionId/restore",

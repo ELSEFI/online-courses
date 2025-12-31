@@ -10,7 +10,24 @@ const uploadImage = require("../Middleware/uploadImage");
 const resize = require("../Middleware/resizeImage");
 
 // ===== MAIN PAGE ===== //
+router.get("/categories", adminController.getAllCategories);
+router.get("/categories/:categoryId", adminController.getSubCategories);
 // ===== MAIN PAGE ===== //
+
+// ===== COURSES ===== //
+router.get("/:categoryId/courses", adminController.getAllCourses);
+router.get("/courses/:courseSlug", adminController.getCourse);
+router.get("/:courseId/:courseSlug/sections", adminController.getAllSections);
+router.get(
+  "/:courseId/:courseSlug/sections/:sectionId/lessons",
+  adminController.getAllLessons
+);
+router.get(
+  "/:courseId/:courseSlug/sections/:sectionId/lessons/:lessonId",
+  isEnrollment,
+  adminController.getLesson
+);
+// ===== COURSES ===== //
 
 // ROUTES
 router.post("/contact-with-us", userController.contactWithUs);
