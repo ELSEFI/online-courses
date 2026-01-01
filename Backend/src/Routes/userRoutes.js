@@ -3,12 +3,13 @@ const authController = require("../controllers/authController");
 const userController = require("../controllers/userController");
 const adminController = require("../controllers/adminController");
 const { verifyEmail } = require("../Middleware/verifyEmail");
-const router = express.Router();
 const protected = require("../Middleware/jwtMiddleware");
 const uploadCvs = require("../Middleware/uploadCvs");
 const uploadImage = require("../Middleware/uploadImage");
 const resize = require("../Middleware/resizeImage");
+const isEnrollment = require("../Middleware/checkEnrollment");
 
+const router = express.Router();
 // ===== MAIN PAGE ===== //
 router.get("/categories", adminController.getAllCategories);
 router.get("/categories/:categoryId", adminController.getSubCategories);
@@ -17,13 +18,14 @@ router.get("/categories/:categoryId", adminController.getSubCategories);
 // ===== COURSES ===== //
 router.get("/:categoryId/courses", adminController.getAllCourses);
 router.get("/courses/:courseSlug", adminController.getCourse);
-router.get("/:courseId/:courseSlug/sections", adminController.getAllSections);
+router.get("/courses/:courseSlug/sections", adminController.getAllSections);
 router.get(
-  "/:courseId/:courseSlug/sections/:sectionId/lessons",
+  "/courses/:courseSlug/sections/:sectionId/lessons",
   adminController.getAllLessons
 );
 router.get(
-  "/:courseId/:courseSlug/sections/:sectionId/lessons/:lessonId",
+  "/courses/:courseSlug/sections/:sectionId/lessons/:lessonId",
+  protected,
   isEnrollment,
   adminController.getLesson
 );
