@@ -31,6 +31,19 @@ router.get(
 );
 // ===== COURSES ===== //
 
+// ===== QUIZZES ===== //
+router.get(
+  "/lesson//:lessonId/quiz",
+  protected,
+  isEnrollment,
+  adminController.getQuiz
+);
+// ===== QUIZZES ===== //
+
+// ===== REVIEWS ===== //
+router.get("/courses/:/courseSlug/reviews", adminController.getReviews);
+// ===== REVIEWS ===== //
+
 // ROUTES
 router.post("/contact-with-us", userController.contactWithUs);
 router.post("/register", authController.register);

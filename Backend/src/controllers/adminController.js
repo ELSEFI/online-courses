@@ -1549,7 +1549,7 @@ exports.getGrades = async (req, res) => {
   }
 };
 
-// ========== LESSON ========== //
+// ========== REVIEWS ========== //
 exports.getReviews = async (req, res) => {
   const { courseSlug } = req.body;
   try {
