@@ -33,7 +33,7 @@ router.get(
 
 // ===== QUIZZES ===== //
 router.get(
-  "/lesson//:lessonId/quiz",
+  "/lesson/:lessonId/quiz",
   protected,
   isEnrollment,
   adminController.getQuiz
@@ -41,7 +41,8 @@ router.get(
 // ===== QUIZZES ===== //
 
 // ===== REVIEWS ===== //
-router.get("/courses/:/courseSlug/reviews", adminController.getReviews);
+router.get("/courses/:courseSlug/reviews", adminController.getReviews);
+router.delete("/reviews/:reviewId", adminController.deleteReview);
 // ===== REVIEWS ===== //
 
 // ROUTES

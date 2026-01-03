@@ -1571,12 +1571,17 @@ exports.getReviews = async (req, res) => {
 };
 
 exports.deleteReview = async (req, res) => {
-  const { courseSlug, reviewId } = req.body;
+  const { reviewId } = req.body;
   try {
-    const course = await Course.findOne({ slug: courseSlug });
-    if (!course) return res.status(404).json({ message: "Course Not Found" });
+    const review = await Review.findById(reviewId);
 
-    const review = await Review.findByIdAndDelete(reviewId);
+    if (req.user.role === "user" && review.user !== req.user._id) {
+      res
+        .status(404)
+        .json({ message: "Your Not Allow To Delete That Comment" });
+    }
+    
+    await Review.findByIdAndDelete(reviewId);
     res.status(200).json({ message: "Review Deleted Successfully" });
   } catch (error) {
     console.error(error);
