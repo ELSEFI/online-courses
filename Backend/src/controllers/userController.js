@@ -2,6 +2,8 @@ const InstructorRequest = require("../models/instructorRequest");
 const Contact = require("../models/contactWithUs");
 const uploadCvToCloudinary = require("../services/cvUpload");
 const deleteFromCloudinary = require("../services/cloudinaryDestroy");
+const Course = require("../models/Course");
+const Review = require("../models/Reviews");
 
 exports.beInstructor = async (req, res) => {
   let uploadedCv = null;
@@ -106,5 +108,37 @@ exports.contactWithUs = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// REVIEWS
+exports.addReview = async (req, res) => {
+  const { courseSlug } = req.params;
+  const { userRate } = req.body;
+  try {
+    const course = await Course.findOne({
+      slug: courseSlug,
+      isPublished: true,
+      status: true,
+    });
+    if (!course) return res.status(404).json({ message: "Course Not Found" });
+    if (req.user.role !== "user") {
+      res.status(403).json({ message: "Your Not Allowed To Add Review" });
+    }
+    const review = new Review.create({
+      user: req.user._id,
+      course: course._id,
+      review: req.body.review ?? null,
+      rating: userRate,
+    });
+    res.status(200).json({ message: "Your Review Added Successfully", review });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Your Already Rate This Course",
+      });
+    }
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
   }
 };

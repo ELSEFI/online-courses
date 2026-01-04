@@ -42,6 +42,7 @@ router.get(
 
 // ===== REVIEWS ===== //
 router.get("/courses/:courseSlug/reviews", adminController.getReviews);
+router.post("/courses/:courseSlug/reviews", userController.addReview);
 router.delete("/reviews/:reviewId", adminController.deleteReview);
 // ===== REVIEWS ===== //
 
