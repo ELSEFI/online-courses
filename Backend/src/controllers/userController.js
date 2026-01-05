@@ -216,3 +216,14 @@ exports.addWishlist = async (req, res) => {
     res.status(500).json({ message: `Server Error ${error.message}` });
   }
 };
+
+exports.GetWishlist = async (req, res) => {
+  try {
+    const userId = req.params.userId ? req.params.userId : req.user._id;
+    const wishlist = await Wishlist.getUserWishlist(userId);
+    res.status(200).json(wishlist);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
