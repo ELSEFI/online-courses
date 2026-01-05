@@ -115,17 +115,8 @@ instructorProfileSchema.methods.calculateRating = async function () {
 // Update The Stats Of Instructor(Total Courses and Total Students)
 instructorProfileSchema.methods.updateStats = async function () {
   const Course = mongoose.model("Course");
-  const Enrollment = mongoose.model("Enrollment");
-
   const courses = await Course.find({ instructor: this._id });
   this.totalCourses = courses.length;
-
-  const courseIds = courses.map((c) => c._id);
-  const enrollments = await Enrollment.countDocuments({
-    course: { $in: courseIds },
-  });
-  this.totalStudents = enrollments;
-
   await this.save();
 };
 

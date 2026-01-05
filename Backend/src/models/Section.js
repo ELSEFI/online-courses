@@ -32,11 +32,5 @@ sectionSchema.index({ course: 1, order: 1 });
 sectionSchema.set("toJSON", { virtuals: true });
 sectionSchema.set("toObject", { virtuals: true });
 
-sectionSchema.virtual("lessons", {
-  ref: "Lesson",
-  localField: "_id",
-  foreignField: "section",
-  options: { sort: { order: 1 } },
-});
 
 module.exports = mongoose.model("Section", sectionSchema);

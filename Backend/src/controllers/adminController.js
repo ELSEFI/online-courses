@@ -9,6 +9,7 @@ const Section = require("../models/Section");
 const Lesson = require("../models/Lesson");
 const Quiz = require("../models/Quiz");
 const Review = require("../models/Reviews");
+const Enrollment = require("../models/Enrollment");
 const quizService = require("../services/quiz");
 const { sendReplyEmail } = require("../services/emailSender");
 const { uploadCvToCloudinary } = require("../services/cvUpload");
@@ -1315,7 +1316,15 @@ exports.getLesson = async (req, res) => {
     if (!lesson) {
       return res.status(404).json({ message: "Lesson not found" });
     }
+    const enrollment = await Enrollment.findOne({
+      user: req.user._id,
+      course: course._id,
+    });
+    if (!enrollment)
+      return res.status(404).json({ message: "No Enrollment Found" });
 
+    await enrollment.completeLesson(lessonId);
+    await enrollment.save();
     res.status(200).json(lesson);
   } catch (error) {
     console.error(error);
@@ -1580,7 +1589,7 @@ exports.deleteReview = async (req, res) => {
         .status(404)
         .json({ message: "Your Not Allow To Delete That Comment" });
     }
-    
+
     await Review.findByIdAndDelete(reviewId);
     res.status(200).json({ message: "Review Deleted Successfully" });
   } catch (error) {
