@@ -21,6 +21,7 @@ const wishlistSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+wishlistSchema.index({ user: 1, course: 1 }, { unique: true });
 
 // Get Wishlist For User
 wishlistSchema.statics.getUserWishlist = function (userId) {

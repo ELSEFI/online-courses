@@ -94,5 +94,9 @@ router.post(
   uploadCvs.single("cv"),
   userController.beInstructor
 );
+// WISHLIST
+router.post("/wishlist", protected, userController.addWishlist);
+router.get("/wishlist", protected, userController.GetWishlist);
+router.delete("/wishlist/:courseId", protected, userController.deleteWishlist);
 
 module.exports = router;

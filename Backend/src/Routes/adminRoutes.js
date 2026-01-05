@@ -112,8 +112,6 @@ router.patch(
 
 router.patch("/courses/:courseId/update-course", adminController.updateCourse);
 
-module.exports = router;
-
 // ==================== SECTIONS ROUTES ====================
 router.post("/courses/:courseSlug/sections", adminController.addSection);
 
@@ -184,3 +182,4 @@ router.delete(
   "courses/courseSlug/reviews/reviewId",
   adminController.deleteReview
 );
+module.exports = router;

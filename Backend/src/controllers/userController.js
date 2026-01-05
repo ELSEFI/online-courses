@@ -192,3 +192,27 @@ exports.solveQuiz = async (req, res) => {
     res.status(500).json({ message: `Server Error ${error.message}` });
   }
 };
+
+// Wishlist
+exports.addWishlist = async (req, res) => {
+  const { courseId } = req.params;
+  try {
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ message: "Course Not Found" });
+
+    const wishlist = await Wishlist.create({
+      user: req.user._id,
+      course: course._id,
+      addedAt: new Date(),
+    });
+    res.status(200).json({ message: "Add Course To Wishlist Successfully" });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Already Added This Course To Your Wishlist ",
+      });
+    }
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
