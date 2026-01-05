@@ -7,7 +7,8 @@ const protected = require("../Middleware/jwtMiddleware");
 const uploadCvs = require("../Middleware/uploadCvs");
 const uploadImage = require("../Middleware/uploadImage");
 const resize = require("../Middleware/resizeImage");
-const isEnrollment = require("../Middleware/checkEnrollment");
+const { isEnrollment } = require("../Middleware/isEnrollment");
+const { isCompleted } = require("../Middleware/isCompleted");
 
 const router = express.Router();
 // ===== MAIN PAGE ===== //
@@ -19,6 +20,9 @@ router.get("/categories/:categoryId", adminController.getSubCategories);
 router.get("/:categoryId/courses", adminController.getAllCourses);
 router.get("/courses/:courseSlug", adminController.getCourse);
 router.get("/courses/:courseSlug/sections", adminController.getAllSections);
+// ===== COURSES ===== //
+
+// ===== LESSONS ===== //
 router.get(
   "/courses/:courseSlug/sections/:sectionId/lessons",
   adminController.getAllLessons
@@ -29,7 +33,7 @@ router.get(
   isEnrollment,
   adminController.getLesson
 );
-// ===== COURSES ===== //
+// ===== LESSONS ===== //
 
 // ===== QUIZZES ===== //
 router.get(
@@ -42,8 +46,14 @@ router.get(
 
 // ===== REVIEWS ===== //
 router.get("/courses/:courseSlug/reviews", adminController.getReviews);
-router.post("/courses/:courseSlug/reviews", userController.addReview);
-router.delete("/reviews/:reviewId", adminController.deleteReview);
+router.post(
+  "/courses/:courseSlug/reviews",
+  protected,
+  isEnrollment,
+  isCompleted,
+  userController.addReview
+);
+router.delete("/reviews/:reviewId", protected, adminController.deleteReview);
 // ===== REVIEWS ===== //
 
 // ROUTES

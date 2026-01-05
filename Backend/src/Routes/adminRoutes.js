@@ -70,7 +70,7 @@ router.post(
 );
 
 router.get("/categories", adminController.getAllCategories);
-router.get("/categories/:categoryId", adminController.getCategory);
+router.get("/categories/:categoryId", adminController.getSubCategories);
 router.patch(
   "/categories/:categoryId/disable-category",
   adminController.disableCategory

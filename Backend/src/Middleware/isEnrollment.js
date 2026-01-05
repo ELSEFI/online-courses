@@ -1,7 +1,7 @@
 const Enrollment = require("../models/Enrollment");
 const Course = require("../models/Course");
 
-exports.checkEnrollment = async (req, res, next) => {
+exports.isEnrollment = async (req, res, next) => {
   const { courseSlug } = req.params;
   try {
     const course = await Course.findOne({ slug: courseSlug });
@@ -17,6 +17,7 @@ exports.checkEnrollment = async (req, res, next) => {
         .stats(403)
         .json({ message: "You Should Subscribe at Course To Open Content" });
     }
+    req.enrollment = enrollment;
     next();
   } catch (error) {
     console.error(error);
