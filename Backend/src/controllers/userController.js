@@ -4,6 +4,8 @@ const uploadCvToCloudinary = require("../services/cvUpload");
 const deleteFromCloudinary = require("../services/cloudinaryDestroy");
 const Course = require("../models/Course");
 const Review = require("../models/Reviews");
+const Quiz = require("../models/Quiz");
+const QuizAttempt = require("../models/QuizAttempt");
 
 exports.beInstructor = async (req, res) => {
   let uploadedCv = null;
@@ -125,7 +127,7 @@ exports.addReview = async (req, res) => {
     if (req.user.role !== "user") {
       res.status(403).json({ message: "Your Not Allowed To Add Review" });
     }
-    const review = new Review.create({
+    const review = await Review.create({
       user: req.user._id,
       course: course._id,
       review: req.body.review ?? null,
@@ -143,4 +145,50 @@ exports.addReview = async (req, res) => {
   }
 };
 
+exports.solveQuiz = async (req, res) => {
+  const { lessonId, quizId } = req.params;
+  const answers = req.body;
+  const quiz = req.quiz;
+  try {
+    if (!Array.isArray(answers))
+      return res.status(404).json({ message: "Answers Must be Array" });
+    let obtainedScore = 0;
+    const attemptAnswers = [];
 
+    for (const answer of answers) {
+      const question = quiz.question.id(answers.questionId);
+      if (!question) continue;
+
+      const isCorrect =
+        answer.selectedOptionIndex === question.correctAnswerIndex;
+
+      const score = isCorrect ? question.score : 0;
+      obtainedScore += score;
+
+      attemptAnswers.push({
+        questionId: question._id,
+        selectedOptionIndex: answer.selectedOptionIndex,
+        isCorrect,
+        score,
+      });
+    }
+
+    const attempt = await QuizAttempt.create({
+      user: req.user._id,
+      quiz: quiz._id,
+      lesson: lessonId,
+      answers: attemptAnswers,
+      totalScore: quiz.totalScore,
+      obtainedScore,
+      submittedAt: new Date(),
+    });
+
+    res.status(200).json({
+      message: "Quiz submitted successfully",
+      attempt,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};

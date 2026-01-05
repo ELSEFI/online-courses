@@ -4,11 +4,13 @@ const userController = require("../controllers/userController");
 const adminController = require("../controllers/adminController");
 const { verifyEmail } = require("../Middleware/verifyEmail");
 const protected = require("../Middleware/jwtMiddleware");
+const restrictTo = require("../Middleware/roleMiddleware");
 const uploadCvs = require("../Middleware/uploadCvs");
 const uploadImage = require("../Middleware/uploadImage");
 const resize = require("../Middleware/resizeImage");
 const { isEnrollment } = require("../Middleware/isEnrollment");
 const { isCompleted } = require("../Middleware/isCompleted");
+const { isAttempts } = require("../Middleware/isAttempts");
 
 const router = express.Router();
 // ===== MAIN PAGE ===== //
@@ -41,6 +43,14 @@ router.get(
   protected,
   isEnrollment,
   adminController.getQuiz
+);
+router.post(
+  "/lessons/:lessonId/quiz/:quizId",
+  protected,
+  restrictTo("user"),
+  isEnrollment,
+  isAttempts,
+  userController.solveQuiz
 );
 // ===== QUIZZES ===== //
 

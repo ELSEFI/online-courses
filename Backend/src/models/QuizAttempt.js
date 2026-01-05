@@ -84,6 +84,11 @@ quizAttemptSchema.index({ quiz: 1, obtainedScore: -1 });
 quizAttemptSchema.pre("save", function (next) {
   if (this.totalScore > 0) {
     this.percentage = Math.round((this.obtainedScore / this.totalScore) * 100);
+    if (this.percentage >= 50) {
+      this.passed = true;
+    } else {
+      this.passed = false;
+    }
   }
   next();
 });
