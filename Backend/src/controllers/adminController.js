@@ -1503,13 +1503,14 @@ exports.editLesson = async (req, res) => {
 
 // ========== Quizzes ========== //
 exports.getQuiz = async (req, res) => {
-  const { lessonId } = req.params;
+  const { lessonId, quizId } = req.params;
   try {
     if (!mongoose.Types.ObjectId.isValid(lessonId)) {
       return res.status(400).json({ message: "Invalid lesson id" });
     }
 
     let quizFilter = {
+      _id: quizId,
       lesson: lessonId,
       isActive: true,
     };

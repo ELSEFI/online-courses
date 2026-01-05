@@ -174,7 +174,7 @@ router.patch(
   uploadLesson.fields([{ name: "files", maxCount: 5 }]),
   adminController.editLesson
 );
-// ==================== LESSONS ROUTES ====================
+// ==================== QUIZZES ROUTES ====================
 router.get("/lessons/:lessonId/quiz", adminController.getQuiz);
 router.get("/lessons/:lessonId/quiz/:quizId", adminController.getGrades);
 

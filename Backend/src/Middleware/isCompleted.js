@@ -5,7 +5,7 @@ exports.isCompleted = async (req, res, next) => {
         .status(404)
         .json({ message: "You Should Complete Course To Rate it" });
     }
-    next();
+    return next();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });

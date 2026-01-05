@@ -18,7 +18,7 @@ exports.isEnrollment = async (req, res, next) => {
         .json({ message: "You Should Subscribe at Course To Open Content" });
     }
     req.enrollment = enrollment;
-    next();
+   return next();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });

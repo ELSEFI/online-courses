@@ -35,7 +35,10 @@ const quizSchema = new mongoose.Schema(
     },
 
     questions: [questionSchema],
-
+    totalAttempts: {
+      type: Number,
+      default: 1,
+    },
     totalScore: Number,
 
     isActive: {
