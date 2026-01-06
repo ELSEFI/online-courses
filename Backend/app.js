@@ -5,7 +5,7 @@ const path = require("path");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const mongoSanitize = require("express-mongo-sanitize");
-const xss = require("express-xss-sanitizer");
+const xss = require("xss-clean");
 
 // ROUTES
 const categoriesRoutes = require("./src/Routes/categoriesRoutes");
@@ -24,10 +24,6 @@ const enrollmentRoutes = require("./src/Routes/enrollmentRoutes");
 
 const app = express();
 
-/* ================= PAYMOB WEBHOOK (IMPORTANT) ================= */
-/*
-  ❗ لازم يكون قبل express.json
-*/
 app.post(
   "/api/v1/payments/webhook",
   express.raw({ type: "application/json" }),
@@ -49,12 +45,8 @@ app.use(
   })
 );
 
-/* ================= BODY PARSERS ================= */
-
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
-
-/* ================= RATE LIMIT ================= */
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -63,8 +55,6 @@ const authLimiter = rateLimit({
 });
 
 app.use("/api/v1/auth", authLimiter);
-
-/* ================= SANITIZATION ================= */
 
 app.use(mongoSanitize());
 app.use(xss());
@@ -88,8 +78,6 @@ app.use("/api/v1/lessons/:lessonId/quiz", quizRoutes);
 app.use("/api/v1/messages", contactRoutes);
 app.use("/api/v1/:courseSlug/reviews", reviewsRoutes);
 app.use("/api/v1/wishlist", wishlistRoutes);
-
-// PAYMENTS (create payment only)
 app.use("/api/v1/courses/:courseId/payments", enrollmentRoutes);
 
 // ADMIN
