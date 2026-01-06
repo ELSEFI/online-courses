@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Enrollment = require("../models/Enrollment");
 const {
   sendEmail,
   sendResetPasswordEmail,
@@ -103,42 +104,25 @@ exports.resendVerification = async (req, res) => {
   }
 };
 exports.profile = async (req, res) => {
-  try {
-    if (!req.user)
-      return res.status(401).json({ message: "Your Not Logging in" });
-
-    const user = req.user;
-    const imageUrl = user.profileImage
-      ? `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${user.profileImage}`
-      : null;
-
-    const userWithImage = user.toObject();
-    userWithImage.profileImage = imageUrl;
-
-    res.status(200).json({ user: userWithImage, imageUrl });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+  if (!req.user) {
+    return res.status(401).json({ message: "Not authenticated" });
   }
+  const enrollments = await Enrollment.getUserCourse(req.user._id);
+  res.status(200).json({ user: req.user, enrollments });
 };
 
 exports.getUser = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.userId).select(
-      "name role profileImage"
-    );
-    if (!user) return res.status(404).json({ message: "No User Founded!" });
+  const user = await User.findById(req.params.userId).select(
+    "name role profileImage"
+  );
 
-    // Convert user to object and add full image URL
-    const userObject = user.toObject();
-    userObject.profileImage = user.profileImage
-      ? `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${user.profileImage}`
-      : null;
-
-    res.status(200).json(userObject);
-  } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
   }
+
+  const enrollments = await Enrollment.getUserCourse(user._id);
+
+  res.status(200).json(user, enrollments);
 };
 
 exports.updateProfile = async (req, res) => {

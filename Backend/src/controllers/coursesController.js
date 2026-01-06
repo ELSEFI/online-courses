@@ -1,4 +1,5 @@
 const Course = require("../models/Course");
+const Enrollment = require("../models/Enrollment");
 const { uploadImageToCloudinary } = require("../services/imageUpload");
 const instructorProfile = require("../models/instructorProfile");
 const { deleteFromCloudinary } = require("../services/cloudinaryDestroy");
@@ -156,10 +157,13 @@ exports.getCourse = async (req, res) => {
     }
 
     const course = await Course.findOne(filter);
-
     if (!course) return res.status(404).json({ message: "Course Not Found" });
+    let enrollments = null;
+    if (req.user.role === "admin" || course.instructor === req.user._id) {
+      enrollments = await Enrollment.getCourseEnrollments(course._id);
+    }
 
-    res.status(200).json(course);
+    res.status(200).json(course, enrollments);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });

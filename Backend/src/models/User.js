@@ -59,8 +59,14 @@ const userSchema = new mongoose.Schema(
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
+
+userSchema.virtual("profileImageUrl").get(function () {
+  if (!this.profileImage) return null;
+
+  return `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${this.profileImage}`;
+});
 
 // Hashing Passwords
 userSchema.pre("save", async function () {
