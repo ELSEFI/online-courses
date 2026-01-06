@@ -22,7 +22,7 @@ exports.sendEmail = async (toEmail, code) => {
       `,
     };
 
-    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
     console.log("Email sent successfully:");
   } catch (error) {
     console.log("Error sending email:", error);
@@ -59,7 +59,6 @@ exports.sendResetPasswordEmail = async (toEmail, resetURL) => {
   }
 };
 
-
 exports.sendReplyEmail = async (toEmail, replyMessage) => {
   try {
     const htmlContent = `
@@ -93,5 +92,52 @@ exports.sendReplyEmail = async (toEmail, replyMessage) => {
     console.log("Reply email sent successfully");
   } catch (error) {
     console.log("Error sending reply email:", error);
+  }
+};
+
+exports.sendEnrollmentEmail = async ({ user, course }) => {
+  try {
+    const subject = `🎉 You are enrolled in ${course.title.en}`;
+
+    const html = `
+      <div style="font-family: Arial; padding:20px">
+        <h2>Congratulations ${user.name} 🎉</h2>
+        <p>You have successfully enrolled in:</p>
+        <h3>${course.title.en}</h3>
+  
+        <p>You can start learning now 👇</p>
+  
+        <a 
+          href="${process.env.CLIENT_URL}/courses/${course.slug}"
+          style="
+            display:inline-block;
+            padding:12px 20px;
+            background:#4f46e5;
+            color:#fff;
+            text-decoration:none;
+            border-radius:6px;
+          "
+        >
+          Go to Course
+        </a>
+  
+        <p style="margin-top:20px">
+          Happy learning 🚀 <br />
+          Online Courses Team
+        </p>
+      </div>
+    `;
+    const sendSmtpEmail = {
+      sender: {
+        name: "Courses",
+        email: "mohamedelsefi11@gmail.com",
+      },
+      to: user.email,
+      subject,
+      html,
+    };
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
+  } catch (error) {
+    console.log("Error sending email:", error);
   }
 };

@@ -20,10 +20,21 @@ const wishlistRoutes = require("./src/Routes/wishlistRoutes");
 const usersRoutes = require("./src/Routes/usersRoutes");
 const logsRoutes = require("./src/Routes/logsRoutes");
 const authRoutes = require("./src/Routes/authRoutes");
+const enrollmentRoutes = require("./src/Routes/enrollmentRoutes");
 
 const app = express();
 
-/* ============ SECURITY MIDDLEWARES ============ */
+/* ================= PAYMOB WEBHOOK (IMPORTANT) ================= */
+/*
+  ❗ لازم يكون قبل express.json
+*/
+app.post(
+  "/api/v1/payments/webhook",
+  express.raw({ type: "application/json" }),
+  require("./src/controllers/enrollmentController").payMobWebhook
+);
+
+/* ================= SECURITY ================= */
 
 app.use(
   helmet({
@@ -31,15 +42,19 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "10kb" }));
-app.use(express.urlencoded({ extended: true, limit: "10kb" }));
-
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:3000",
     credentials: true,
   })
 );
+
+/* ================= BODY PARSERS ================= */
+
+app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+
+/* ================= RATE LIMIT ================= */
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -49,18 +64,22 @@ const authLimiter = rateLimit({
 
 app.use("/api/v1/auth", authLimiter);
 
-app.use(mongoSanitize());
+/* ================= SANITIZATION ================= */
 
+app.use(mongoSanitize());
 app.use(xss());
 
-/* ================= STATIC FILES ================= */
+/* ================= STATIC ================= */
 
 app.use(express.static("public"));
 
 /* ================= ROUTES ================= */
 
-// PUBLIC
+// AUTH
+app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1", logsRoutes);
+
+// PUBLIC
 app.use("/api/v1/categories", categoriesRoutes);
 app.use("/api/v1/user", coursesRoutes);
 app.use("/api/v1/:courseSlug/sections", sectionRoutes);
@@ -69,7 +88,9 @@ app.use("/api/v1/lessons/:lessonId/quiz", quizRoutes);
 app.use("/api/v1/messages", contactRoutes);
 app.use("/api/v1/:courseSlug/reviews", reviewsRoutes);
 app.use("/api/v1/wishlist", wishlistRoutes);
-app.use("/api/v1/auth", authRoutes);
+
+// PAYMENTS (create payment only)
+app.use("/api/v1/courses/:courseId/payments", enrollmentRoutes);
 
 // ADMIN
 app.use("/api/v1/admin/instructors", instructorsRoutes);
