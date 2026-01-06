@@ -7,6 +7,8 @@ exports.isEnrollment = async (req, res, next) => {
     const course = await Course.findOne({ slug: courseSlug });
     if (!course) return res.status(404).json({ message: "Course Not Found" });
 
+    if (req.user.role !== "user") return next();
+
     const enrollment = await Enrollment.findOne({
       course: course._id,
       user: req.user._id,
@@ -14,11 +16,11 @@ exports.isEnrollment = async (req, res, next) => {
 
     if (!enrollment) {
       return res
-        .stats(403)
+        .status(403)
         .json({ message: "You Should Subscribe at Course To Open Content" });
     }
     req.enrollment = enrollment;
-   return next();
+    return next();
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
