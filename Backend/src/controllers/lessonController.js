@@ -214,19 +214,10 @@ exports.getLesson = async (req, res) => {
       "quiz",
       "title totalScore"
     );
-
     if (!lesson) {
       return res.status(404).json({ message: "Lesson not found" });
     }
-    const enrollment = await Enrollment.findOne({
-      user: req.user._id,
-      course: course._id,
-    });
-    if (!enrollment)
-      return res.status(404).json({ message: "No Enrollment Found" });
 
-    await enrollment.completeLesson(lessonId);
-    await enrollment.save();
     res.status(200).json(lesson);
   } catch (error) {
     console.error(error);
@@ -237,16 +228,12 @@ exports.getLesson = async (req, res) => {
 exports.deleteLesson = async (req, res) => {
   const { courseSlug, sectionId, lessonId } = req.params;
   try {
-    const isAdmin = ["admin", "instructor"].includes(req.user.role);
-
     const courseFilter = {
       slug: courseSlug,
       status: true,
     };
 
-    if (!isAdmin) {
-      courseFilter.isPublished = true;
-    } else if (req.query.isPublished !== undefined) {
+    if (req.query.isPublished !== undefined) {
       courseFilter.isPublished = req.query.isPublished === "true";
     }
 
@@ -260,9 +247,7 @@ exports.deleteLesson = async (req, res) => {
       course: course._id,
     };
 
-    if (!isAdmin) {
-      sectionFilter.isActive = true;
-    } else if (req.query.sectionActive !== undefined) {
+    if (req.query.sectionActive !== undefined) {
       sectionFilter.isActive = req.query.sectionActive === "true";
     }
 
@@ -289,16 +274,12 @@ exports.deleteLesson = async (req, res) => {
 exports.restoreLesson = async (req, res) => {
   const { courseSlug, sectionId, lessonId } = req.params;
   try {
-    const isAdmin = ["admin", "instructor"].includes(req.user.role);
-
     const courseFilter = {
       slug: courseSlug,
       status: true,
     };
 
-    if (!isAdmin) {
-      courseFilter.isPublished = true;
-    } else if (req.query.isPublished !== undefined) {
+    if (req.query.isPublished !== undefined) {
       courseFilter.isPublished = req.query.isPublished === "true";
     }
 
@@ -312,9 +293,7 @@ exports.restoreLesson = async (req, res) => {
       course: course._id,
     };
 
-    if (!isAdmin) {
-      sectionFilter.isActive = true;
-    } else if (req.query.sectionActive !== undefined) {
+    if (req.query.sectionActive !== undefined) {
       sectionFilter.isActive = req.query.sectionActive === "true";
     }
 
@@ -347,11 +326,6 @@ exports.editLesson = async (req, res) => {
       !mongoose.Types.ObjectId.isValid(lessonId)
     ) {
       return res.status(400).json({ message: "Invalid ID" });
-    }
-
-    const isAdmin = ["admin", "instructor"].includes(req.user.role);
-    if (!isAdmin) {
-      return res.status(403).json({ message: "Not authorized" });
     }
 
     const course = await Course.findOne({
@@ -397,6 +371,42 @@ exports.editLesson = async (req, res) => {
       message: "Lesson updated successfully",
       lesson,
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+exports.completeLesson = async (req, res) => {
+  const { courseSlug, sectionId, lessonId } = req.params;
+  try {
+    const course = await Course.findOne({
+      slug: courseSlug,
+      status: true,
+      isPublished: true,
+    });
+    if (!course) return res.status(404).json({ message: "Course Not Found" });
+
+    const section = await Section.findOne({
+      course: course._id,
+      isActive: true,
+      _id: sectionId,
+    });
+    if (!section) return res.status(404).json({ message: "Section Not Found" });
+
+    const lesson = await Lesson.findOne({
+      section: section._id,
+      isActive: true,
+      _id: lessonId,
+    });
+    if (!lesson) return res.status(404).json({ message: "Lesson Not Found" });
+
+    const enrollment = await Enrollment.findOne({
+      user: req.user._id,
+      course: course._id,
+    });
+    await enrollment.completeLesson(lesson._id);
+    rea.status
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });

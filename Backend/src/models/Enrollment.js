@@ -24,7 +24,8 @@ const enrollmentSchema = new mongoose.Schema(
     },
     completedLessons: [
       {
-        type: Boolean,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Lesson",
       },
     ],
     completedAt: {
@@ -59,8 +60,12 @@ enrollmentSchema.post("save", async function () {
 // Method: Update progress
 enrollmentSchema.methods.updateProgress = async function () {
   const Lesson = mongoose.model("Lesson");
+  const sections = mongoose
+    .model("Section")
+    .find({ course: this.course, isActive: true })
+    .select("_id");
   const totalLessons = await Lesson.countDocuments({
-    course: this.course,
+    section: { $in: sections.map((s) => s._id) },
     isActive: true,
   });
 
