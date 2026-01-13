@@ -1,8 +1,18 @@
 const Course = require("../models/Course");
-const Enrollment = require("../models/Enrollment");
+const Category = require("../models/Category");
 const { uploadImageToCloudinary } = require("../services/imageUpload");
 const instructorProfile = require("../models/instructorProfile");
 const { deleteFromCloudinary } = require("../services/cloudinaryDestroy");
+
+async function getAllDescendantCategoryIds(categoryId) {
+  const children = await Category.find({ parent: categoryId }).select("_id");
+  let ids = children.map((child) => child._id);
+  for (const child of children) {
+    const childIds = await getAllDescendantCategoryIds(child._id);
+    ids = ids.concat(childIds);
+  }
+  return ids;
+}
 
 exports.createCourse = async (req, res) => {
   const {
@@ -81,60 +91,93 @@ exports.getAllCourses = async (req, res) => {
   const skip = (page - 1) * limit;
 
   try {
-    const allCategories = await getAllDescendantCategoryIds(categoryId);
-    allCategories.push(categoryId);
-
-    const filter = {
+    let filter = {
       status: true,
       isPublished: true,
-      category: { $in: allCategories },
     };
 
-    if (req.user.role !== "admin") {
-      filter.isPublished = true;
-    } else if (req.query.isPublished !== undefined) {
-      filter.isPublished = req.query.isPublished === "true";
+    if (categoryId && categoryId !== "all") {
+      const descendantIds = await getAllDescendantCategoryIds(categoryId);
+      filter.category = { $in: [categoryId, ...descendantIds] };
     }
 
     if (req.query.subCategory) {
-      filter.category = req.query.subCategory;
+      const subCategory = await Category.findOne({ slug: req.query.subCategory });
+      if (subCategory) {
+        filter.category = subCategory._id;
+      }
     }
 
     if (req.query.level) {
       filter["level.en"] = req.query.level;
     }
 
-    if (req.query.minRating) {
-      filter.rating = { $gte: Number(req.query.minRating) };
+    if (req.query.price) {
+      if (req.query.price === 'free') {
+        filter.price = 0;
+      } else if (req.query.price === 'paid') {
+        filter.price = { $gt: 0 };
+      }
     }
 
-    if (req.query.minPrice || req.query.maxPrice) {
-      filter.price = {};
-      if (req.query.minPrice) filter.price.$gte = Number(req.query.minPrice);
-      if (req.query.maxPrice) filter.price.$lte = Number(req.query.maxPrice);
+    if (req.query.rating) {
+      filter.rating = { $gte: Number(req.query.rating) };
     }
 
-    let sort = { createdAt: -1 };
-    if (req.query.sort === "rating") sort = { rating: -1 };
-    if (req.query.sort === "popular") sort = { enrollmentCount: -1 };
+    // Sorting
+    let sort = {};
+    if (req.query.sort === 'popular') {
+      sort = { enrollmentCount: -1 };
+    } else if (req.query.sort === 'rating') {
+      sort = { rating: -1 };
+    } else if (req.query.sort === 'newest') {
+      sort = { createdAt: -1 };
+    } else if (req.query.sort === 'price_low') {
+      sort = { price: 1 };
+    } else if (req.query.sort === 'price_high') {
+      sort = { price: -1 };
+    } else {
+      sort = { createdAt: -1 };
+    }
 
     const courses = await Course.find(filter)
       .sort(sort)
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .populate([
+        {
+          path: "instructor",
+          select: "rating totalCourses userId",
+          populate: {
+            path: "userId",
+            select: "name email role",
+          },
+        },
+        {
+          path: "category",
+          select: "name slug",
+        },
+        {
+          path: "createdBy",
+          select: "name email role",
+        },
+      ]);
 
     const total = await Course.countDocuments(filter);
 
     res.status(200).json({
-      page,
-      totalPages: Math.ceil(total / limit),
-      totalResults: total,
-      results: courses.length,
       courses,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalCourses: total,
+        hasNextPage: page < Math.ceil(total / limit),
+        hasPrevPage: page > 1,
+      },
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+    console.error("Error in getAllCourses:", error);
+    res.status(500).json({ message: `Server Error: ${error.message}` });
   }
 };
 
@@ -142,31 +185,35 @@ exports.getCourse = async (req, res) => {
   const { courseSlug } = req.params;
 
   try {
-    const filter = {
+    const course = await Course.findOne({
       slug: courseSlug,
       status: true,
       isPublished: true,
-    };
+    }).populate([
+      {
+        path: "instructor",
+        select: "rating totalCourses userId",
+        populate: {
+          path: "userId",
+          select: "name email role profileImage",
+        },
+      },
+      {
+        path: "category",
+        select: "name slug",
+      },
+      {
+        path: "createdBy",
+        select: "name email role",
+      },
+    ]);
 
-    if (req.user?.role === "admin" && req.query.isPublished) {
-      if (req.query.isPublished === "true") {
-        filter.isPublished = true;
-      } else if (req.query.isPublished === "false") {
-        filter.isPublished = false;
-      }
-    }
-
-    const course = await Course.findOne(filter);
     if (!course) return res.status(404).json({ message: "Course Not Found" });
-    let enrollments = null;
-    if (req.user.role === "admin" || course.instructor === req.user._id) {
-      enrollments = await Enrollment.getCourseEnrollments(course._id);
-    }
 
-    res.status(200).json(course, enrollments);
+    res.status(200).json({ course });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: `Server Error ${error.message}` });
+    console.error("Error in getCourse:", error);
+    res.status(500).json({ message: `Server Error: ${error.message}` });
   }
 };
 
@@ -312,6 +359,23 @@ exports.restoreCourse = async (req, res) => {
     await course.save();
 
     res.status(200).json({ message: "Course restored Successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+exports.getAllCoursesNonPublished = async (req, res) => {
+  try {
+    const filter = {
+      status: true,
+      isPublished: false,
+    };
+    const courses = await Course.find(filter);
+    if (courses.length === 0)
+      return res.status(200).json({ message: "No UnPublished Courses" });
+
+    res.status(200).json({ courses });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });

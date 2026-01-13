@@ -4,7 +4,6 @@ const protected = require("../Middleware/jwtMiddleware");
 const restrictTo = require("../Middleware/roleMiddleware");
 const router = express.Router();
 
-router.post("/", protected, restrictTo("admin"), sectionController.addSection);
 
 router.get("/", sectionController.getAllSections);
 
@@ -12,6 +11,9 @@ router.get("/", sectionController.getAllSections);
 //   "/:sectionId",
 //   sectionController.getSection
 // );
+
+// ADMIN
+router.post("/", protected, restrictTo("admin"), sectionController.addSection);
 
 router.patch(
   "/:sectionId/restore",
@@ -21,7 +23,7 @@ router.patch(
 );
 
 router.patch(
-  "/:sectionId/edit",
+  "/:sectionId",
   protected,
   restrictTo("admin"),
   sectionController.editSection

@@ -4,8 +4,8 @@ const path = require("path");
 
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
-const mongoSanitize = require("express-mongo-sanitize");
-const xss = require("xss-clean");
+// const mongoSanitize = require("express-mongo-sanitize");
+// const xss = require("xss-clean");
 
 // ROUTES
 const categoriesRoutes = require("./src/Routes/categoriesRoutes");
@@ -18,9 +18,10 @@ const instructorsRoutes = require("./src/Routes/instructorsRoutes");
 const reviewsRoutes = require("./src/Routes/reviewsRoutes");
 const wishlistRoutes = require("./src/Routes/wishlistRoutes");
 const usersRoutes = require("./src/Routes/usersRoutes");
-const logsRoutes = require("./src/Routes/logsRoutes");
 const authRoutes = require("./src/Routes/authRoutes");
+const publicRoutes = require("./src/Routes/publicRoutes");
 const enrollmentRoutes = require("./src/Routes/enrollmentRoutes");
+const statsRoutes = require("./src/Routes/statesRoute");
 
 const app = express();
 
@@ -40,7 +41,35 @@ app.use(
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      // In development, allow localhost on any port
+      if (process.env.NODE_ENV !== "production") {
+        if (
+          origin.startsWith("http://localhost:") ||
+          origin.startsWith("http://127.0.0.1:")
+        ) {
+          return callback(null, true);
+        }
+      }
+
+      // In production, use CLIENT_URL
+      const allowedOrigins = process.env.CLIENT_URL
+        ? process.env.CLIENT_URL.split(",")
+        : [
+          "http://localhost:5173",
+          "http://localhost:5174",
+          "http://localhost:3000",
+        ];
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
@@ -56,8 +85,8 @@ const authLimiter = rateLimit({
 
 app.use("/api/v1/auth", authLimiter);
 
-app.use(mongoSanitize());
-app.use(xss());
+// app.use(mongoSanitize());
+// app.use(xss());
 
 /* ================= STATIC ================= */
 
@@ -66,23 +95,24 @@ app.use(express.static("public"));
 /* ================= ROUTES ================= */
 
 // AUTH
+app.use("/api/v1", publicRoutes);
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1", logsRoutes);
 
 // PUBLIC
 app.use("/api/v1/categories", categoriesRoutes);
-app.use("/api/v1/user", coursesRoutes);
+app.use("/api/v1", coursesRoutes);
 app.use("/api/v1/:courseSlug/sections", sectionRoutes);
 app.use("/api/v1/:courseSlug/sections/:sectionId/lessons", lessonRoutes);
 app.use("/api/v1/lessons/:lessonId/quiz", quizRoutes);
 app.use("/api/v1/messages", contactRoutes);
 app.use("/api/v1/:courseSlug/reviews", reviewsRoutes);
 app.use("/api/v1/wishlist", wishlistRoutes);
-app.use("/api/v1/courses/:courseId/payments", enrollmentRoutes);
+app.use("/api/v1/courses/:courseId/enroll", enrollmentRoutes);
 
 // ADMIN
 app.use("/api/v1/admin/instructors", instructorsRoutes);
 app.use("/api/v1/admin/users", usersRoutes);
+app.use("/api/v1/admin/stats", statsRoutes);
 
 // ROOT
 app.get("/", (req, res) => {

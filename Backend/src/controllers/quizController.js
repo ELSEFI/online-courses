@@ -8,24 +8,7 @@ exports.getQuiz = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(lessonId)) {
       return res.status(400).json({ message: "Invalid lesson id" });
     }
-
-    let quizFilter = {
-      _id: quizId,
-      lesson: lessonId,
-      isActive: true,
-    };
-
-    if (req.user.role !== "admin" && req.user.role !== "instructor") {
-      quizFilter.isActive = true;
-    } else if (req.query["quiz.isActive"] !== undefined) {
-      quizFilter.isActive = req.query["quiz.isActive"] === "true";
-    }
-
-    const quiz = await Quiz.findOne(quizFilter);
-    if (!quiz)
-      return res.status(404).json({ message: "No Quiz Found For This Lesson" });
-
-    res.status(200).json(quiz);
+    res.status(200).json({ quiz: req.quiz });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });

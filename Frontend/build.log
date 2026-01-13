@@ -1,0 +1,15 @@
+npm warn "info" is being parsed as a normal command line argument.
+npm warn Unknown cli config "--logLevel". This will stop working in the next major version of npm.
+
+> ╪¬╪¡┘ê┘è┘ä ╪º┘ä╪¬╪╡┘à┘è┘à ┘ä┘â┘ê╪»@0.1.0 build
+> vite build info
+
+[36mvite v6.3.5 [32mbuilding for production...[36m[39m
+[32mΓ£ô[39m 0 modules transformed.
+Γ£ù Build failed in 25ms
+error during build:
+Could not resolve entry module "info/index.html".
+    at getRollupError (file:///D:/pv/DB/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at error (file:///D:/pv/DB/node_modules/rollup/dist/es/shared/parseAst.js:397:42)
+    at ModuleLoader.loadEntryModule (file:///D:/pv/DB/node_modules/rollup/dist/es/shared/node-entry.js:21731:20)
+    at async Promise.all (index 0)

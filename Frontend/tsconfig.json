@@ -1,0 +1,210 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "useDefineForClassFields": true,
+        "lib": [
+            "ES2020",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "module": "ESNext",
+        "skipLibCheck": true,
+        /* Bundler mode */
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "react-jsx",
+        /* Linting */
+        "strict": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "noFallthroughCasesInSwitch": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "./src/*"
+            ],
+            "vaul@1.1.2": [
+                "./node_modules/vaul"
+            ],
+            "sonner@2.0.3": [
+                "./node_modules/sonner"
+            ],
+            "recharts@2.15.2": [
+                "./node_modules/recharts"
+            ],
+            "react-resizable-panels@2.1.7": [
+                "./node_modules/react-resizable-panels"
+            ],
+            "react-hook-form@7.55.0": [
+                "./node_modules/react-hook-form"
+            ],
+            "react-day-picker@8.10.1": [
+                "./node_modules/react-day-picker"
+            ],
+            "next-themes@0.4.6": [
+                "./node_modules/next-themes"
+            ],
+            "lucide-react@0.487.0": [
+                "./node_modules/lucide-react"
+            ],
+            "input-otp@1.4.2": [
+                "./node_modules/input-otp"
+            ],
+            "figma:asset/ebe64b79a97a2a781199976361a3a5403e2dd1ad.png": [
+                "./src/assets/ebe64b79a97a2a781199976361a3a5403e2dd1ad.png"
+            ],
+            "figma:asset/e76e0ddaaa5c5b28b1d5e5591617e909b3b24ccc.png": [
+                "./src/assets/e76e0ddaaa5c5b28b1d5e5591617e909b3b24ccc.png"
+            ],
+            "figma:asset/e460223f6f1215c27fbf0f3b9a8bb3d6957782dd.png": [
+                "./src/assets/e460223f6f1215c27fbf0f3b9a8bb3d6957782dd.png"
+            ],
+            "figma:asset/e14924aa12827a29123663bc5d0c7e37562ecb36.png": [
+                "./src/assets/e14924aa12827a29123663bc5d0c7e37562ecb36.png"
+            ],
+            "figma:asset/d2dcfcf202980a93a70e32c9933d02c02902a5fc.png": [
+                "./src/assets/d2dcfcf202980a93a70e32c9933d02c02902a5fc.png"
+            ],
+            "figma:asset/bea99bca2865041df3ac26b9b339b24e61ba8313.png": [
+                "./src/assets/bea99bca2865041df3ac26b9b339b24e61ba8313.png"
+            ],
+            "figma:asset/abf9514ed05dfd544b8a15f8b74e4c60a96534d1.png": [
+                "./src/assets/abf9514ed05dfd544b8a15f8b74e4c60a96534d1.png"
+            ],
+            "figma:asset/8bb6ad24279a44450b38c3fb0c8168706af3c700.png": [
+                "./src/assets/8bb6ad24279a44450b38c3fb0c8168706af3c700.png"
+            ],
+            "figma:asset/80e9dd1af7f9a7371e8d72d0801ffd7a3e1d6f31.png": [
+                "./src/assets/80e9dd1af7f9a7371e8d72d0801ffd7a3e1d6f31.png"
+            ],
+            "figma:asset/72c971a14f4fe2a68bf395529c3d861cbe33ba7a.png": [
+                "./src/assets/72c971a14f4fe2a68bf395529c3d861cbe33ba7a.png"
+            ],
+            "figma:asset/4e345e5e4862612c8af439f0369b109eeeb6db45.png": [
+                "./src/assets/4e345e5e4862612c8af439f0369b109eeeb6db45.png"
+            ],
+            "figma:asset/4052b68a1e7b2e53ff988154a520929af731ce8a.png": [
+                "./src/assets/4052b68a1e7b2e53ff988154a520929af731ce8a.png"
+            ],
+            "figma:asset/328e56d5e52d70944073635318e44d132473e832.png": [
+                "./src/assets/328e56d5e52d70944073635318e44d132473e832.png"
+            ],
+            "figma:asset/32329f7e5ff984311a578929f83ddcf74a23bc31.png": [
+                "./src/assets/32329f7e5ff984311a578929f83ddcf74a23bc31.png"
+            ],
+            "figma:asset/1bc2886aed9056a0b937d9b6dac2d6d756fff2d2.png": [
+                "./src/assets/1bc2886aed9056a0b937d9b6dac2d6d756fff2d2.png"
+            ],
+            "figma:asset/1a56e82b434debd790a5c686bf9f6d0a1fab04a0.png": [
+                "./src/assets/1a56e82b434debd790a5c686bf9f6d0a1fab04a0.png"
+            ],
+            "figma:asset/14226848745ebd09c7f1668bb115736bee727c83.png": [
+                "./src/assets/14226848745ebd09c7f1668bb115736bee727c83.png"
+            ],
+            "figma:asset/13d656b853149532a6de40da48658b3f88d91f73.png": [
+                "./src/assets/13d656b853149532a6de40da48658b3f88d91f73.png"
+            ],
+            "embla-carousel-react@8.6.0": [
+                "./node_modules/embla-carousel-react"
+            ],
+            "cmdk@1.1.1": [
+                "./node_modules/cmdk"
+            ],
+            "class-variance-authority@0.7.1": [
+                "./node_modules/class-variance-authority"
+            ],
+            "@radix-ui/react-tooltip@1.1.8": [
+                "./node_modules/@radix-ui/react-tooltip"
+            ],
+            "@radix-ui/react-toggle@1.1.2": [
+                "./node_modules/@radix-ui/react-toggle"
+            ],
+            "@radix-ui/react-toggle-group@1.1.2": [
+                "./node_modules/@radix-ui/react-toggle-group"
+            ],
+            "@radix-ui/react-tabs@1.1.3": [
+                "./node_modules/@radix-ui/react-tabs"
+            ],
+            "@radix-ui/react-switch@1.1.3": [
+                "./node_modules/@radix-ui/react-switch"
+            ],
+            "@radix-ui/react-slot@1.1.2": [
+                "./node_modules/@radix-ui/react-slot"
+            ],
+            "@radix-ui/react-slider@1.2.3": [
+                "./node_modules/@radix-ui/react-slider"
+            ],
+            "@radix-ui/react-separator@1.1.2": [
+                "./node_modules/@radix-ui/react-separator"
+            ],
+            "@radix-ui/react-select@2.1.6": [
+                "./node_modules/@radix-ui/react-select"
+            ],
+            "@radix-ui/react-scroll-area@1.2.3": [
+                "./node_modules/@radix-ui/react-scroll-area"
+            ],
+            "@radix-ui/react-radio-group@1.2.3": [
+                "./node_modules/@radix-ui/react-radio-group"
+            ],
+            "@radix-ui/react-progress@1.1.2": [
+                "./node_modules/@radix-ui/react-progress"
+            ],
+            "@radix-ui/react-popover@1.1.6": [
+                "./node_modules/@radix-ui/react-popover"
+            ],
+            "@radix-ui/react-navigation-menu@1.2.5": [
+                "./node_modules/@radix-ui/react-navigation-menu"
+            ],
+            "@radix-ui/react-menubar@1.1.6": [
+                "./node_modules/@radix-ui/react-menubar"
+            ],
+            "@radix-ui/react-label@2.1.2": [
+                "./node_modules/@radix-ui/react-label"
+            ],
+            "@radix-ui/react-hover-card@1.1.6": [
+                "./node_modules/@radix-ui/react-hover-card"
+            ],
+            "@radix-ui/react-dropdown-menu@2.1.6": [
+                "./node_modules/@radix-ui/react-dropdown-menu"
+            ],
+            "@radix-ui/react-dialog@1.1.6": [
+                "./node_modules/@radix-ui/react-dialog"
+            ],
+            "@radix-ui/react-context-menu@2.2.6": [
+                "./node_modules/@radix-ui/react-context-menu"
+            ],
+            "@radix-ui/react-collapsible@1.1.3": [
+                "./node_modules/@radix-ui/react-collapsible"
+            ],
+            "@radix-ui/react-checkbox@1.1.4": [
+                "./node_modules/@radix-ui/react-checkbox"
+            ],
+            "@radix-ui/react-avatar@1.1.3": [
+                "./node_modules/@radix-ui/react-avatar"
+            ],
+            "@radix-ui/react-aspect-ratio@1.1.2": [
+                "./node_modules/@radix-ui/react-aspect-ratio"
+            ],
+            "@radix-ui/react-alert-dialog@1.1.6": [
+                "./node_modules/@radix-ui/react-alert-dialog"
+            ],
+            "@radix-ui/react-accordion@1.2.3": [
+                "./node_modules/@radix-ui/react-accordion"
+            ],
+            "@": [
+                "./src"
+            ]
+        }
+    },
+    "include": [
+        "src"
+    ],
+    "references": [
+        {
+            "path": "./tsconfig.node.json"
+        }
+    ]
+}

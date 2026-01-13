@@ -6,6 +6,14 @@ const restrictTo = require("../Middleware/roleMiddleware");
 const { isEnrollment } = require("../Middleware/isEnrollment");
 const router = express.Router();
 
+
+router.get("/", lessonController.getAllLessons);
+
+router.get("/:lessonId", protected, isEnrollment, lessonController.getLesson);
+
+router.patch("/:lessonId/complete", protected, isEnrollment, lessonController.completeLesson);
+
+// ADMIN
 router.post(
   "/",
   protected,
@@ -16,10 +24,6 @@ router.post(
   ]),
   lessonController.addLesson
 );
-
-router.get("/", lessonController.getAllLessons);
-
-router.get("/:lessonId", protected, isEnrollment, lessonController.getLesson);
 
 router.delete(
   "/:lessonId",
@@ -32,7 +36,7 @@ router.patch(
   "/:lessonId/restore",
   protected,
   restrictTo("admin"),
-  lessonController.deleteLesson
+  lessonController.restoreLesson
 );
 
 router.patch(

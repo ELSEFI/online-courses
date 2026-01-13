@@ -22,6 +22,10 @@ router.patch(
 
 router.get("/", instructorController.getAllInstructors);
 
+router.get("/top-instructors-rated", instructorController.getTopRatedInstructors);
+
+router.get("/top-instructors-students", instructorController.getTopStudentsInstructors);
+
 router.post(
   "/add-instructor",
   uploadCvs.single("cvFile"),

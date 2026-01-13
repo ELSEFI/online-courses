@@ -8,6 +8,9 @@ const router = express.Router();
 
 router.get("/:categoryId/courses", coursesController.getAllCourses);
 
+router.get("/courses/:courseSlug", coursesController.getCourse);
+
+// ADMIN
 router.post(
   "/courses",
   protected,
@@ -17,13 +20,19 @@ router.post(
   coursesController.createCourse
 );
 
-router.get("/courses/:courseId", coursesController.getCourse);
 
 router.patch(
   "/courses/:courseId/publish-status",
   protected,
   restrictTo("admin"),
   coursesController.changePublishStatus
+);
+
+router.get(
+  "/courses/unpublished",
+  protected,
+  restrictTo("admin"),
+  coursesController.getAllCoursesNonPublished
 );
 
 router.delete(
@@ -44,6 +53,8 @@ router.patch(
   "/courses/:courseId/update-course",
   protected,
   restrictTo("admin"),
+  uploadImage.single("courseThumbnail"),
+  resize.resizeThumbnail,
   coursesController.updateCourse
 );
 

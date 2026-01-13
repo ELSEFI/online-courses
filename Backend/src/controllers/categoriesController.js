@@ -61,14 +61,22 @@ exports.addCategory = async (req, res) => {
 
 exports.getAllCategories = async (req, res) => {
   try {
-    let includeInactive = null;
-    if (req.user.role === "admin") {
-      includeInactive = req.query.includeInactive === "true";
-    }
-    const categories = await Category.getCategoryTree({ includeInactive });
+    const categories = await Category.getCategoryTree();
     res.status(200).json({ results: categories.length, data: categories });
   } catch (error) {
-    console.error(error);
+    console.error("Categories Error:", error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+exports.getAllUnActiveCategories = async (req, res) => {
+  try {
+    const isActive = false;
+    const categories = await Category.getCategoryTree({ isActive });
+
+    res.status(200).json({ results: categories.length, data: categories });
+  } catch (error) {
+    console.error("Categories Error:", error);
     res.status(500).json({ message: `Server Error ${error.message}` });
   }
 };
@@ -78,18 +86,13 @@ exports.getSubCategories = async (req, res) => {
   try {
     const filter = {
       _id: categoryId,
+      isActive: true,
     };
     const populateOptions = {
       path: "subcategories",
       options: { sort: { order: 1, "name.en": 1 } },
+      match: { isActive: true },
     };
-
-    if (req.user.role === "admin" && req.query.includeInactive === "true") {
-      if (req.query.includeInactive === "true") {
-        populateOptions.match = { isActive: true };
-        filter.isActive = true;
-      }
-    }
 
     const category = await Category.findOne(filter).populate(populateOptions);
     if (!category)

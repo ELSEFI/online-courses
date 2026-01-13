@@ -81,7 +81,7 @@ quizAttemptSchema.index({ user: 1, quiz: 1, lesson: 1 });
 quizAttemptSchema.index({ quiz: 1, obtainedScore: -1 });
 
 /* ================= Hooks ================= */
-quizAttemptSchema.pre("save", function (next) {
+quizAttemptSchema.pre("save", function () {
   if (this.totalScore > 0) {
     this.percentage = Math.round((this.obtainedScore / this.totalScore) * 100);
     if (this.percentage >= 50) {
@@ -90,7 +90,6 @@ quizAttemptSchema.pre("save", function (next) {
       this.passed = false;
     }
   }
-  next();
 });
 
 module.exports = mongoose.model("QuizAttempt", quizAttemptSchema);

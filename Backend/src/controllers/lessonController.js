@@ -102,18 +102,11 @@ exports.addLesson = async (req, res) => {
 exports.getAllLessons = async (req, res) => {
   const { courseSlug, sectionId } = req.params;
   try {
-    const isAdmin = ["admin", "instructor"].includes(req.user.role);
-
     const courseFilter = {
       slug: courseSlug,
       status: true,
+      isPublished: true,
     };
-
-    if (!isAdmin) {
-      courseFilter.isPublished = true;
-    } else if (req.query.isPublished !== undefined) {
-      courseFilter.isPublished = req.query.isPublished === "true";
-    }
 
     const course = await Course.findOne(courseFilter);
     if (!course) {
@@ -123,13 +116,8 @@ exports.getAllLessons = async (req, res) => {
     const sectionFilter = {
       _id: sectionId,
       course: course._id,
+      isActive: true,
     };
-
-    if (!isAdmin) {
-      sectionFilter.isActive = true;
-    } else if (req.query.sectionActive !== undefined) {
-      sectionFilter.isActive = req.query.sectionActive === "true";
-    }
 
     const section = await Section.findOne(sectionFilter);
     if (!section) {
@@ -138,13 +126,8 @@ exports.getAllLessons = async (req, res) => {
 
     let lessonFilter = {
       section: section._id,
+      isActive: true,
     };
-
-    if (!isAdmin) {
-      lessonFilter.isActive = true;
-    } else if (req.query.lessonActive !== undefined) {
-      lessonFilter.isActive = req.query.lessonActive === "true";
-    }
 
     const lessons = await Lesson.find(lessonFilter)
       .select("title order isFree hasQuiz")
@@ -165,18 +148,11 @@ exports.getLesson = async (req, res) => {
   const { courseSlug, sectionId, lessonId } = req.params;
 
   try {
-    const isAdmin = ["admin", "instructor"].includes(req.user.role);
-
     const courseFilter = {
       slug: courseSlug,
       status: true,
+      isPublished: true,
     };
-
-    if (!isAdmin) {
-      courseFilter.isPublished = true;
-    } else if (req.query.isPublished !== undefined) {
-      courseFilter.isPublished = req.query.isPublished === "true";
-    }
 
     const course = await Course.findOne(courseFilter);
     if (!course) {
@@ -186,13 +162,8 @@ exports.getLesson = async (req, res) => {
     const sectionFilter = {
       _id: sectionId,
       course: course._id,
+      isActive: true,
     };
-
-    if (!isAdmin) {
-      sectionFilter.isActive = true;
-    } else if (req.query.sectionActive !== undefined) {
-      sectionFilter.isActive = req.query.sectionActive === "true";
-    }
 
     const section = await Section.findOne(sectionFilter);
     if (!section) {
@@ -202,13 +173,8 @@ exports.getLesson = async (req, res) => {
     const lessonFilter = {
       _id: lessonId,
       section: section._id,
+      isActive: true,
     };
-
-    if (!isAdmin) {
-      lessonFilter.isActive = true;
-    } else if (req.query.lessonActive !== undefined) {
-      lessonFilter.isActive = req.query.lessonActive === "true";
-    }
 
     const lesson = await Lesson.findOne(lessonFilter).populate(
       "quiz",
@@ -406,7 +372,7 @@ exports.completeLesson = async (req, res) => {
       course: course._id,
     });
     await enrollment.completeLesson(lesson._id);
-    rea.status
+    rea.status;
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });

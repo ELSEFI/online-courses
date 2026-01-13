@@ -50,14 +50,6 @@ exports.getAllSections = async (req, res) => {
       isActive: true,
     };
 
-    if (req.user?.role === "admin" && req.query.isActive) {
-      if (req.query.isActive === "true") {
-        filter.isActive = true;
-      } else if (req.query.isActive === "false") {
-        filter.isActive = false;
-      }
-    }
-
     const sections = await Section.find(filter).sort({ order: 1 });
 
     res.status(200).json({

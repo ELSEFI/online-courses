@@ -135,12 +135,11 @@ categorySchema.methods.updateCoursesCount = async function () {
 
 // Static: Get category tree
 categorySchema.statics.getCategoryTree = async function ({
-  includeInactive = false,
+  isActive = true,
 } = {}) {
-  const filter = {};
-  if (!includeInactive) {
-    filter.isActive = true;
-  }
+  const filter = {
+    isActive,
+  };
 
   const categories = await this.find(filter)
     .sort({ order: 1, "name.en": 1 })
@@ -174,6 +173,16 @@ categorySchema.statics.getCategoryTree = async function ({
   tree.forEach(removeId);
 
   return tree;
+};
+
+categorySchema.statics.getAllDescendantIds = async function (categoryId) {
+  const children = await this.find({ parent: categoryId }).select("_id");
+  let ids = children.map((child) => child._id);
+  for (const child of children) {
+    const childIds = await this.getAllDescendantIds(child._id);
+    ids = ids.concat(childIds);
+  }
+  return ids;
 };
 
 module.exports = mongoose.model("Category", categorySchema);

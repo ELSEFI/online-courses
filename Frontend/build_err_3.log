@@ -1,0 +1,36 @@
+
+> تحويل التصميم لكود@0.1.0 build
+> vite build
+
+[36mvite v6.3.5 [32mbuilding for production...[36m[39m
+(node:13076) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/pv/DB/postcss.config.js?t=1767912631020 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\pv\DB\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+transforming...
+Error: Cannot apply unknown utility class `border-border`. Are you using CSS modules or similar and missing `@reference`? https://tailwindcss.com/docs/functions-and-directives#reference-directive
+    at onInvalidCandidate (D:\pv\DB\node_modules\tailwindcss\dist\lib.js:21:1314)
+    at Te (D:\pv\DB\node_modules\tailwindcss\dist\lib.js:16:36652)
+    at D:\pv\DB\node_modules\tailwindcss\dist\lib.js:21:355
+    at Rr (D:\pv\DB\node_modules\tailwindcss\dist\lib.js:3:1718)
+    at _ (D:\pv\DB\node_modules\tailwindcss\dist\lib.js:3:1377)
+    at $e (D:\pv\DB\node_modules\tailwindcss\dist\lib.js:21:172)
+    at un (D:\pv\DB\node_modules\tailwindcss\dist\lib.js:38:294)
+    at async cn (D:\pv\DB\node_modules\tailwindcss\dist\lib.js:38:631)
+    at async Xr (D:\pv\DB\node_modules\@tailwindcss\node\dist\index.js:10:3417)
+    at async I (D:\pv\DB\node_modules\@tailwindcss\postcss\dist\index.js:10:3977)
+[32m✓[39m 4 modules transformed.
+[31m✗[39m Build failed in 941ms
+[31merror during build:
+[31m[vite:css] [postcss] tailwindcss: D:/pv/DB/src/index.css:1:1: Cannot apply unknown utility class `border-border`. Are you using CSS modules or similar and missing `@reference`? https://tailwindcss.com/docs/functions-and-directives#reference-directive[31m
+file: [36mD:/pv/DB/src/index.css:1:0[31m
+    at Input.error (D:\pv\DB\node_modules\postcss\lib\input.js:135:16)
+    at Root.error (D:\pv\DB\node_modules\postcss\lib\node.js:146:32)
+    at Object.Once (D:\pv\DB\node_modules\@tailwindcss\postcss\dist\index.js:10:6911)
+    at async LazyResult.runAsync (D:\pv\DB\node_modules\postcss\lib\lazy-result.js:293:11)
+    at async runPostCSS (file:///D:/pv/DB/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:43824:21)
+    at async compilePostCSS (file:///D:/pv/DB/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:43794:18)
+    at async compileCSS (file:///D:/pv/DB/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:43649:27)
+    at async Object.handler (file:///D:/pv/DB/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42965:11)
+    at async transform (file:///D:/pv/DB/node_modules/rollup/dist/es/shared/node-entry.js:21283:16)
+    at async ModuleLoader.addModuleSource (file:///D:/pv/DB/node_modules/rollup/dist/es/shared/node-entry.js:21497:36)[39m

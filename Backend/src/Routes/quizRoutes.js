@@ -13,7 +13,7 @@ router.get(
   quizController.getGrades
 );
 
-router.get("/", protected, isEnrollment, quizController.getQuiz);
+router.get("/", protected, isEnrollment, isAttempts, quizController.getQuiz);
 
 router.post(
   "/:quizId",

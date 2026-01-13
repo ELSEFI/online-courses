@@ -17,6 +17,6 @@ router.post(
   reviewsController.addReview
 );
 
-router.delete("/reviewId", protected, reviewsController.deleteReview);
+router.delete("/:reviewId", protected, restrictTo("user", "admin"), reviewsController.deleteReview);
 
 module.exports = router;

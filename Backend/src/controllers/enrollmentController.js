@@ -96,3 +96,17 @@ exports.payMobWebhook = async (req, res) => {
     res.sendStatus(500);
   }
 };
+
+exports.getMyEnrollments = async (req, res) => {
+  try {
+    const enrollments = await Enrollment.getUserCourses(req.user._id);
+    res.status(200).json({
+      status: "success",
+      results: enrollments.length,
+      data: enrollments,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+};

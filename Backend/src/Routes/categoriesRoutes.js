@@ -6,8 +6,13 @@ const uploadImage = require("../Middleware/uploadImage");
 const resize = require("../Middleware/resizeImage");
 const router = express.Router();
 
+router.get("/", categoriesController.getAllCategories);
+
+router.get("/:categoryId", categoriesController.getSubCategories);
+
+// ADMIN
 router.post(
-  "/categories/add-category",
+  "/",
   protected,
   restrictTo("admin"),
   uploadImage.single("image"),
@@ -15,9 +20,13 @@ router.post(
   categoriesController.addCategory
 );
 
-router.get("/", categoriesController.getAllCategories);
+router.get(
+  "/unActive",
+  protected,
+  restrictTo("admin"),
+  categoriesController.getAllUnActiveCategories
+);
 
-router.get("/:categoryId", categoriesController.getSubCategories);
 
 router.patch(
   "/:categoryId/disable-category",

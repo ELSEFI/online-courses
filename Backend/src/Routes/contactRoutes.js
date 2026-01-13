@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.post("/", contactController.contactWithUs);
 
+// ADMIN
 router.get(
   "/",
   protected,

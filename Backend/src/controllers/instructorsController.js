@@ -3,6 +3,7 @@ const instructorProfile = require("../models/instructorProfile");
 const User = require("../models/User");
 const { uploadCvToCloudinary } = require("../services/cvUpload");
 const { deleteFromCloudinary } = require("../services/cloudinaryDestroy");
+const Course = require("../models/Course");
 
 exports.beInstructor = async (req, res) => {
   let uploadedCv = null;
@@ -35,7 +36,7 @@ exports.beInstructor = async (req, res) => {
     // upload CV
     uploadedCv = await uploadCvToCloudinary(req.file);
 
-    const existingRequest = await InstructorRequest.findOne({
+    const existingRequest = await instructorRequest.findOne({
       userId: req.user._id,
     });
 
@@ -58,10 +59,10 @@ exports.beInstructor = async (req, res) => {
         await deleteFromCloudinary(existingRequest.cvFile, "raw");
       }
 
-      await InstructorRequest.findByIdAndDelete(existingRequest._id);
+      await instructorRequest.findByIdAndDelete(existingRequest._id);
     }
 
-    const request = await InstructorRequest.create({
+    const request = await instructorRequest.create({
       userId: req.user._id,
       bio: { en: bio_en, ar: bio_ar },
       experienceYears,
@@ -308,3 +309,48 @@ exports.rejectInstructor = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
+
+exports.instructorCourses = async (req, res) => {
+  try {
+    const profile = await instructorProfile.findOne({ userId: req.user._id });
+    if (!profile) return res.status(404).json({ message: "Instructor Profile Not Found" });
+
+    const courses = await Course.find({ instructor: profile._id, status: true }).populate("instructor", "userId");
+    res.status(200).json(courses);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+}
+
+
+exports.getTopRatedInstructors = async (req, res) => {
+  try {
+    const instructors = await instructorProfile.find().sort({ rating: -1 }).limit(5).populate([
+      {
+        path: "userId",
+        select: "name email role",
+      },
+    ]);
+    res.status(200).json(instructors);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+}
+
+exports.getTopStudentsInstructors = async (req, res) => {
+  try {
+    const instructors = await instructorProfile.find().sort({ totalStudents: -1 }).limit(5).populate([
+      {
+        path: "userId",
+        select: "name email role",
+      },
+    ]);
+    res.status(200).json(instructors);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+}

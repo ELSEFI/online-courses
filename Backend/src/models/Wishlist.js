@@ -27,7 +27,7 @@ wishlistSchema.index({ user: 1, course: 1 }, { unique: true });
 wishlistSchema.statics.getUserWishlist = function (userId) {
   return this.find({ user: userId })
     .populate({
-      path: "Course",
+      path: "course",
       populate: [
         { path: "instructor", select: "userId bio jobTitle rating" },
         { path: "category", select: "name" },

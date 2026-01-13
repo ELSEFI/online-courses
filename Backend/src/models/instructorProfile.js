@@ -116,7 +116,10 @@ instructorProfileSchema.methods.calculateRating = async function () {
 instructorProfileSchema.methods.updateStats = async function () {
   const Course = mongoose.model("Course");
   const courses = await Course.find({ instructor: this._id });
+
   this.totalCourses = courses.length;
+  this.totalStudents = courses.reduce((acc, course) => acc + (course.enrollmentCount || 0), 0);
+
   await this.save();
 };
 
