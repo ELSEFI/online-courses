@@ -29,8 +29,15 @@ const sectionSchema = new mongoose.Schema(
 
 sectionSchema.index({ course: 1, order: 1 });
 
+
 sectionSchema.set("toJSON", { virtuals: true });
 sectionSchema.set("toObject", { virtuals: true });
 
+// Virtual populate for lessons
+sectionSchema.virtual('lessons', {
+  ref: 'Lesson',
+  localField: '_id',
+  foreignField: 'section'
+});
 
 module.exports = mongoose.model("Section", sectionSchema);

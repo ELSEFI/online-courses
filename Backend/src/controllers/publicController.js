@@ -134,158 +134,23 @@ exports.deleteMe = async (req, res) => {
   }
 };
 
-exports.getCategoryHomeData = async (req, res) => {
-  const { categoryId } = req.params;
-
-  try {
-    // Get all descendant category IDs to include courses from subcategories
-    const descendantIds = await Category.getAllDescendantIds(categoryId);
-    const categoryIds = [new mongoose.Types.ObjectId(categoryId), ...descendantIds.map(id => new mongoose.Types.ObjectId(id))];
-
-    const data = await Course.aggregate([
-      {
-        $match: {
-          status: true,
-          isPublished: true,
-          category: { $in: categoryIds },
-        }
-      },
-
-      {
-        $facet: {
-          // 1️⃣ Top Rated Courses
-          topRatedCourses: [
-            { $sort: { rating: -1 } },
-            { $limit: 4 },
-            {
-              $lookup: {
-                from: "instructorprofiles",
-                localField: "instructor",
-                foreignField: "_id",
-                as: "instructor"
-              }
-            },
-            { $unwind: "$instructor" },
-            {
-              $lookup: {
-                from: "users",
-                localField: "instructor.userId",
-                foreignField: "_id",
-                as: "instructor.userId"
-              }
-            },
-            { $unwind: "$instructor.userId" },
-            {
-              $project: {
-                "instructor.userId.password": 0,
-                "instructor.userId.verificationCode": 0,
-                "instructor.userId.verificationCodeExpire": 0,
-                "instructor.userId.tokenVersion": 0
-              }
-            }
-          ],
-
-          // 2️⃣ Trending Courses
-          trendingCourses: [
-            { $sort: { enrollmentCount: -1 } },
-            { $limit: 8 },
-            {
-              $lookup: {
-                from: "instructorprofiles",
-                localField: "instructor",
-                foreignField: "_id",
-                as: "instructor"
-              }
-            },
-            { $unwind: "$instructor" },
-            {
-              $lookup: {
-                from: "users",
-                localField: "instructor.userId",
-                foreignField: "_id",
-                as: "instructor.userId"
-              }
-            },
-            { $unwind: "$instructor.userId" },
-            {
-              $project: {
-                "instructor.userId.password": 0,
-                "instructor.userId.verificationCode": 0,
-                "instructor.userId.verificationCodeExpire": 0,
-                "instructor.userId.tokenVersion": 0
-              }
-            }
-          ],
-
-          // 3️⃣ Top Instructors
-          topInstructors: [
-            {
-              $group: {
-                _id: "$instructor",
-                totalStudents: { $sum: "$enrollmentCount" }
-              }
-            },
-            { $sort: { totalStudents: -1 } },
-            { $limit: 4 },
-            {
-              $lookup: {
-                from: "instructorprofiles",
-                localField: "_id",
-                foreignField: "_id",
-                as: "instructor"
-              }
-            },
-            { $unwind: "$instructor" },
-            {
-              $lookup: {
-                from: "users",
-                localField: "instructor.userId",
-                foreignField: "_id",
-                as: "instructor.userId"
-              }
-            },
-            { $unwind: "$instructor.userId" },
-            {
-              $project: {
-                "instructor.userId.password": 0,
-                "instructor.userId.verificationCode": 0,
-                "instructor.userId.verificationCodeExpire": 0,
-                "instructor.userId.tokenVersion": 0
-              }
-            }
-          ]
-        }
-      }
-    ]);
-
-    res.status(200).json({
-      status: "success",
-      data: data[0]
-    });
-
-  } catch (error) {
-    console.error("Error in getCategoryHomeData:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
 exports.getHomeData = async (req, res) => {
   try {
     const { category } = req.query;
     let categoryIds = [];
 
-    // 1. Fetch categories for the filter badges
+    // 1. Fetch ALL root categories for the UI tabs (always needed for layout)
     const categories = await mongoose.model("Category").find({ parent: null, isActive: true }).select('name slug').lean();
 
-    // 2. Determine category filtering
+    // 2. Determine category filtering if a category is provided (ID or Slug)
     if (category) {
-      const Category = mongoose.model("Category");
-      const targetCategory = await Category.findOne({
+      const targetCategory = await mongoose.model("Category").findOne({
         $or: [{ _id: mongoose.isValidObjectId(category) ? category : null }, { slug: category }]
       }).select("_id");
 
       if (targetCategory) {
-        const descendants = await Category.getAllDescendantIds(targetCategory._id);
+        // Get all descendant category IDs to include courses from subcategories
+        const descendants = await mongoose.model("Category").getAllDescendantIds(targetCategory._id);
         categoryIds = [targetCategory._id, ...descendants];
       }
     }
@@ -464,7 +329,7 @@ exports.getHomeData = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("Error in getHomeData Controller:", error);
+    console.error("Error in Unified getHomeData Controller:", error);
     res.status(500).json({
       status: "error",
       message: error.message,

@@ -37,7 +37,7 @@ export default function HomepageRefactored() {
 
     // Consolidated data fetching
     const { data: homeResponse, isLoading } = useGetHomeDataQuery(selectedCategory);
-    const homeData = homeResponse?.data || {};
+    const homeData = homeResponse || {};
 
     if (isLoading) {
         return <div className="min-h-screen flex items-center justify-center bg-white">
@@ -246,9 +246,6 @@ export default function HomepageRefactored() {
                             <h2 className="text-[32px] font-bold text-slate-900 mb-2 leading-tight uppercase tracking-tight">{t('home.top_instructors')}</h2>
                             <p className="text-slate-500 text-lg">Learn from the industry's best and most passionate experts.</p>
                         </div>
-                        <Button variant="ghost" className="mt-6 md:mt-0 font-bold text-[#3DCBB1] hover:text-teal-700 hover:bg-teal-50 transition-all gap-2" onClick={() => navigate('/search')}>
-                            {t('home.meet_all_instructors')} <ChevronRight size={18} className={i18n.language === 'ar' ? 'rotate-180' : ''} />
-                        </Button>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">

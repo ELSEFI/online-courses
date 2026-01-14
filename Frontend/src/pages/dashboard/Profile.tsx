@@ -22,6 +22,11 @@ export default function Profile() {
     const enrolledCount = coursesData?.results || 0;
 
     const renderStats = () => {
+        // Safety check: if user is null/undefined, return empty div
+        if (!user) {
+            return <div className="w-full md:w-auto" />;
+        }
+
         if (user?.role === 'instructor') {
             const stats = user.instructorStats || {};
             return (
@@ -86,6 +91,15 @@ export default function Profile() {
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3DCBB1]"></div>
                 <p className="text-slate-500 font-medium animate-pulse">{t('home.loading')}</p>
+            </div>
+        );
+    }
+
+    // If user is null after loading, show a message (this happens during logout)
+    if (!user) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <p className="text-slate-500 font-medium">{t('home.loading')}</p>
             </div>
         );
     }

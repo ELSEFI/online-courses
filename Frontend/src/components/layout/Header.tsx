@@ -27,6 +27,15 @@ export default function Header() {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [expandedMobileCat, setExpandedMobileCat] = useState<string | null>(null);
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
+    const [searchValue, setSearchValue] = useState("");
+
+    const handleSearch = () => {
+        if (searchValue.trim()) {
+            navigate(`/search?q=${encodeURIComponent(searchValue.trim())}`);
+        } else {
+            navigate('/search');
+        }
+    };
 
     const toggleLanguage = () => {
         const newLang = i18n.language === 'ar' ? 'en' : 'ar';
@@ -107,9 +116,11 @@ export default function Header() {
                         <Input
                             placeholder={t('home.explore_courses')}
                             className={`w-full h-10 rounded-full bg-white border-0 focus-visible:ring-1 focus-visible:ring-teal-500 shadow-sm placeholder:text-slate-400 text-sm ${i18n.language === 'ar' ? 'pr-6 pl-10' : 'pl-6 pr-10'}`}
-                            onKeyDown={(e) => e.key === 'Enter' && navigate('/search')}
+                            value={searchValue}
+                            onChange={(e) => setSearchValue(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                         />
-                        <Search className={`absolute top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 cursor-pointer ${i18n.language === 'ar' ? 'left-3' : 'right-3'}`} onClick={() => navigate('/search')} />
+                        <Search className={`absolute top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 cursor-pointer ${i18n.language === 'ar' ? 'left-3' : 'right-3'}`} onClick={handleSearch} />
                     </div>
                 </div>
 

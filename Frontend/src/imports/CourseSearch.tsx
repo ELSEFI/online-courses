@@ -28,12 +28,52 @@ interface CourseSearchProps { }
 export default function CourseSearch({ }: CourseSearchProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const { i18n } = useTranslation();
+
+    // Sync search query from URL
     const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || "");
-    const [filters, setFilters] = useState({});
+
+    // Filters state
+    const [filters, setFilters] = useState({
+        rating: searchParams.get('rating') || undefined,
+        level: searchParams.get('level') || undefined,
+        price: searchParams.get('price') || undefined,
+        sort: searchParams.get('sort') || 'popular',
+        page: searchParams.get('page') || "1"
+    });
+
+    // Update state when URL changes
+    useEffect(() => {
+        setSearchQuery(searchParams.get('q') || "");
+        setFilters(prev => ({
+            ...prev,
+            rating: searchParams.get('rating') || undefined,
+            level: searchParams.get('level') || undefined,
+            price: searchParams.get('price') || undefined,
+            sort: searchParams.get('sort') || 'popular',
+            page: searchParams.get('page') || "1"
+        }));
+    }, [searchParams]);
 
     // RTK Query hook
-    const { data: courses = [], isLoading } = useSearchCoursesQuery({ query: searchQuery, filters });
+    const { data: searchResponse, isLoading } = useSearchCoursesQuery({
+        query: searchQuery,
+        filters
+    });
+
+    const coursesData = searchResponse?.courses || [];
+    const pagination = searchResponse?.pagination;
+
+    const handleFilterChange = (key: string, value: any) => {
+        const newParams = new URLSearchParams(searchParams);
+        if (value && value !== 'all') {
+            newParams.set(key, value);
+        } else {
+            newParams.delete(key);
+        }
+        setSearchParams(newParams);
+    };
 
 
     return (
@@ -44,19 +84,24 @@ export default function CourseSearch({ }: CourseSearchProps) {
                 <div className="w-full max-w-[1200px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                         <span className="font-bold text-slate-900">Filter</span>
-                        <span>Showing {courses.length} Results</span>
+                        <span>Showing {coursesData.length} Results</span>
                     </div>
 
                     <div className="flex items-center gap-4">
                         <span className="text-sm text-slate-500">Sort by:</span>
-                        <Select defaultValue="popular">
+                        <Select
+                            value={filters.sort}
+                            onValueChange={(val) => handleFilterChange('sort', val)}
+                        >
                             <SelectTrigger className="w-[180px] bg-white border-slate-200">
                                 <SelectValue placeholder="Sort order" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="popular">Most Popular</SelectItem>
                                 <SelectItem value="newest">Newest</SelectItem>
-                                <SelectItem value="rated">Highest Rated</SelectItem>
+                                <SelectItem value="rating">Highest Rated</SelectItem>
+                                <SelectItem value="price_low">Price: Low to High</SelectItem>
+                                <SelectItem value="price_high">Price: High to Low</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -76,14 +121,19 @@ export default function CourseSearch({ }: CourseSearchProps) {
                                 <div className="flex flex-col gap-3 pt-2">
                                     {[5, 4, 3, 2, 1].map((stars) => (
                                         <div key={stars} className="flex items-center gap-3">
-                                            <Checkbox id={`rating-${stars}`} className="rounded-[4px] border-slate-300 data-[state=checked]:bg-teal-500 data-[state=checked]:border-teal-500" />
+                                            <Checkbox
+                                                id={`rating-${stars}`}
+                                                checked={Number(filters.rating) === stars}
+                                                onCheckedChange={(checked) => handleFilterChange('rating', checked ? stars.toString() : undefined)}
+                                                className="rounded-[4px] border-slate-300 data-[state=checked]:bg-teal-500 data-[state=checked]:border-teal-500"
+                                            />
                                             <label htmlFor={`rating-${stars}`} className="flex items-center gap-1 cursor-pointer">
                                                 <div className="flex text-[#ffbd2e]">
                                                     {[...Array(5)].map((_, i) => (
                                                         <Star key={i} size={14} className={i < stars ? "fill-current" : "text-slate-200 fill-current"} />
                                                     ))}
                                                 </div>
-                                                <span className="text-slate-400 text-sm ml-1">{stars} Star</span>
+                                                <span className="text-slate-400 text-sm ml-1">{stars} Star & Up</span>
                                             </label>
                                         </div>
                                     ))}
@@ -97,13 +147,18 @@ export default function CourseSearch({ }: CourseSearchProps) {
                     {/* Duration Filter */}
                     <Accordion type="single" collapsible defaultValue="duration" className="w-full">
                         <AccordionItem value="duration" className="border-b-0">
-                            <AccordionTrigger className="hover:no-underline py-2 text-base font-bold text-slate-900">Video Duration</AccordionTrigger>
+                            <AccordionTrigger className="hover:no-underline py-2 text-base font-bold text-slate-900">Level</AccordionTrigger>
                             <AccordionContent>
                                 <div className="flex flex-col gap-3 pt-2">
-                                    {["0-1 Hour", "1-3 Hours", "3-6 Hours", "6-18 Hours", "18+ Hours"].map((label, i) => (
-                                        <div key={i} className="flex items-center gap-3">
-                                            <Checkbox id={`dur-${i}`} className="rounded-[4px] border-slate-300 data-[state=checked]:bg-teal-500" />
-                                            <label htmlFor={`dur-${i}`} className="text-slate-600 text-sm cursor-pointer">{label}</label>
+                                    {["Beginner", "Intermediate", "Advanced"].map((lvl) => (
+                                        <div key={lvl} className="flex items-center gap-3">
+                                            <Checkbox
+                                                id={`lvl-${lvl}`}
+                                                checked={filters.level === lvl}
+                                                onCheckedChange={(checked) => handleFilterChange('level', checked ? lvl : undefined)}
+                                                className="rounded-[4px] border-slate-300 data-[state=checked]:bg-teal-500"
+                                            />
+                                            <label htmlFor={`lvl-${lvl}`} className="text-slate-600 text-sm cursor-pointer">{lvl}</label>
                                         </div>
                                     ))}
                                 </div>
@@ -119,10 +174,15 @@ export default function CourseSearch({ }: CourseSearchProps) {
                             <AccordionTrigger className="hover:no-underline py-2 text-base font-bold text-slate-900">Category</AccordionTrigger>
                             <AccordionContent>
                                 <div className="flex flex-col gap-3 pt-2">
-                                    {CATEGORIES.map((cat) => (
-                                        <div key={cat.id} className="flex items-center gap-3">
-                                            <Checkbox id={`cat-${cat.id}`} className="rounded-[4px] border-slate-300 data-[state=checked]:bg-teal-500" />
-                                            <label htmlFor={`cat-${cat.id}`} className="text-slate-600 text-sm cursor-pointer">{cat.name}</label>
+                                    {['free', 'paid'].map((p) => (
+                                        <div key={p} className="flex items-center gap-3">
+                                            <Checkbox
+                                                id={`price-${p}`}
+                                                checked={filters.price === p}
+                                                onCheckedChange={(checked) => handleFilterChange('price', checked ? p : undefined)}
+                                                className="rounded-[4px] border-slate-300 data-[state=checked]:bg-teal-500"
+                                            />
+                                            <label htmlFor={`price-${p}`} className="text-slate-600 text-sm cursor-pointer capitalize">{p}</label>
                                         </div>
                                     ))}
                                 </div>
@@ -140,19 +200,23 @@ export default function CourseSearch({ }: CourseSearchProps) {
                         <div className="bg-slate-50 rounded p-10 text-center text-slate-500">Loading results...</div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-16">
-                            {courses.map((course: Course) => (
+                            {coursesData.map((course: any) => (
                                 <div
-                                    key={course.id}
-                                    onClick={() => navigate(`/courses/${course.id}`)}
+                                    key={course._id}
+                                    onClick={() => navigate(`/courses/${course.slug}`)}
                                     className="group bg-white rounded-[16px] overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all cursor-pointer flex flex-col"
                                 >
                                     {/* Image Container */}
                                     <div className="relative h-[180px] bg-slate-200 overflow-hidden">
-                                        <img src={assetMap[course.image] || course.image} alt={course.title} className="w-full h-full object-cover" />
+                                        <img
+                                            src={course.thumbnailUrl || assetMap['course1']}
+                                            alt={course.title.en}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            onError={(e) => { e.currentTarget.src = assetMap['course1']; }}
+                                        />
 
                                         <div className="absolute top-3 left-3 flex gap-2">
-                                            {course.badge && <Badge className={`${course.badgeColor} text-white border-0 text-[10px] px-2`}>{course.badge}</Badge>}
-                                            {course.discount && <Badge className="bg-[#a04ae3] text-white border-0 text-[10px] px-2">{course.discount}</Badge>}
+                                            <Badge className="bg-teal-500 text-white border-0 text-[10px] px-2">{course.level?.en || 'All Levels'}</Badge>
                                         </div>
                                         <div className="absolute top-3 right-3">
                                             <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/40 transition-colors">
@@ -163,11 +227,13 @@ export default function CourseSearch({ }: CourseSearchProps) {
 
                                     {/* Content */}
                                     <div className="p-4 flex flex-col flex-1">
-                                        <h3 className="font-bold text-slate-900 text-base mb-1 line-clamp-2 leading-tight group-hover:text-teal-600 transition-colors">{course.title}</h3>
-                                        <p className="text-xs text-slate-400 mb-3">{course.instructor.name}</p>
+                                        <h3 className="font-bold text-slate-900 text-base mb-1 line-clamp-2 leading-tight group-hover:text-teal-600 transition-colors">
+                                            {course.title[i18n.language] || course.title.en}
+                                        </h3>
+                                        <p className="text-xs text-slate-400 mb-3">{course.instructor?.userId?.name || 'Instructor'}</p>
 
                                         <p className="text-xs text-slate-500 line-clamp-2 mb-4">
-                                            {course.description || "Learn professional skills from top industry experts with this comprehensive course."}
+                                            {course.shortDescription?.[i18n.language] || course.shortDescription?.en || course.description?.[i18n.language] || course.description?.en || "Learn professional skills from top industry experts."}
                                         </p>
 
                                         <div className="mt-auto">
@@ -177,11 +243,13 @@ export default function CourseSearch({ }: CourseSearchProps) {
                                                         <svg key={star} className={`w-3 h-3 ${star <= Math.floor(course.rating || 0) ? 'fill-current' : 'text-slate-200 fill-current'}`} viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                                                     ))}
                                                 </div>
-                                                <span className="text-xs text-slate-400">({course.reviewsCount})</span>
+                                                <span className="text-xs text-slate-400">({course.enrollmentCount})</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <span className="font-bold text-slate-900 text-lg">${course.price}</span>
-                                                <span className="text-xs text-slate-400 line-through">${course.originalPrice}</span>
+                                                {course.discountPrice && (
+                                                    <span className="text-xs text-slate-400 line-through">${course.discountPrice}</span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -191,20 +259,42 @@ export default function CourseSearch({ }: CourseSearchProps) {
                     )}
 
                     {/* Pagination */}
-                    <div className="flex justify-center mb-16">
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" size="icon" className="w-10 h-10 rounded-full border-slate-200 text-slate-400 hover:text-teal-600 hover:border-teal-500">
-                                <ChevronLeft size={20} />
-                            </Button>
-                            <Button variant="outline" className="w-10 h-10 rounded-full bg-teal-500 text-white border-teal-500 hover:bg-teal-600 hover:text-white">1</Button>
-                            <Button variant="outline" className="w-10 h-10 rounded-full border-slate-200 text-slate-600 hover:border-teal-500 hover:text-teal-600">2</Button>
-                            <Button variant="outline" className="w-10 h-10 rounded-full border-slate-200 text-slate-600 hover:border-teal-500 hover:text-teal-600">3</Button>
-                            <span className="text-slate-400">...</span>
-                            <Button variant="outline" size="icon" className="w-10 h-10 rounded-full border-slate-200 text-slate-400 hover:text-teal-600 hover:border-teal-500">
-                                <ChevronRight size={20} />
-                            </Button>
+                    {pagination && pagination.totalPages > 1 && (
+                        <div className="flex justify-center mb-16">
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    disabled={!pagination.hasPrevPage}
+                                    onClick={() => handleFilterChange('page', (pagination.currentPage - 1).toString())}
+                                    className="w-10 h-10 rounded-full border-slate-200 text-slate-400 hover:text-teal-600 hover:border-teal-500"
+                                >
+                                    <ChevronLeft size={20} />
+                                </Button>
+
+                                {[...Array(pagination.totalPages)].map((_, i) => (
+                                    <Button
+                                        key={i}
+                                        variant="outline"
+                                        onClick={() => handleFilterChange('page', (i + 1).toString())}
+                                        className={`w-10 h-10 rounded-full font-bold transition-all ${pagination.currentPage === i + 1 ? 'bg-teal-500 text-white border-teal-500' : 'border-slate-200 text-slate-600 hover:border-teal-500 hover:text-teal-600'}`}
+                                    >
+                                        {i + 1}
+                                    </Button>
+                                ))}
+
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    disabled={!pagination.hasNextPage}
+                                    onClick={() => handleFilterChange('page', (pagination.currentPage + 1).toString())}
+                                    className="w-10 h-10 rounded-full border-slate-200 text-slate-400 hover:text-teal-600 hover:border-teal-500"
+                                >
+                                    <ChevronRight size={20} />
+                                </Button>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Promo Banner */}
                     <div className="w-full bg-[#1e293b] rounded-[16px] p-8 md:p-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 h-auto md:h-[200px]">

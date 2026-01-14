@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 import {
     ShoppingCart,
     Bell,
@@ -19,7 +21,10 @@ import {
     Star,
     CheckCircle2,
     MonitorPlay,
-    Share2
+    Share2,
+    Edit,
+    FileQuestion,
+    Users as UsersIcon
 } from 'lucide-react';
 import {
     Avatar,
@@ -43,17 +48,68 @@ import {
 } from "@/components/ui/accordion";
 
 import { Course, Module, Lesson } from "@/services/api";
-import { useGetCourseDetailsQuery } from "@/store/api/courseApi";
+import { useGetCourseDetailsQuery, useGetCourseSectionsQuery } from "@/store/api/courseApi";
 import assetMap from '../imports/assetMap';
+import SectionAccordionItem from '@/components/course/SectionAccordionItem';
 
 interface CourseDetailsProps { }
 
 export default function CourseDetails({ }: CourseDetailsProps) {
     const { id } = useParams();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
-    const courseId = id || "1";
-    const { data: course, isLoading, isError } = useGetCourseDetailsQuery(courseId);
+    const { user } = useSelector((state: RootState) => state.auth);
+    const courseSlug = id || "";
+    const { data: courseResponse, isLoading, isError } = useGetCourseDetailsQuery(courseSlug);
+    const course = courseResponse?.course;
+
+    // Fetch sections with lessons
+    const { data: sectionsData, isLoading: isSectionsLoading, isError: isSectionsError } = useGetCourseSectionsQuery(courseSlug, {
+        skip: !courseSlug || !course
+    });
+    const sections = sectionsData?.sections || [];
+
+    // Role detection
+    const isAdmin = user?.role === 'admin';
+    const isInstructor = course?.instructor?.userId?._id === user?._id;
+    const canManage = isAdmin || isInstructor;
+
+    // For management view, fetch lesson counts
+    const [sectionLessonCounts, setSectionLessonCounts] = React.useState<Record<string, number>>({});
+    const [totalLessons, setTotalLessons] = React.useState(0);
+
+    React.useEffect(() => {
+        if (canManage && sections.length > 0) {
+            const fetchLessonCounts = async () => {
+                try {
+                    const counts: Record<string, number> = {};
+                    let total = 0;
+
+                    await Promise.all(
+                        sections.map(async (section: any) => {
+                            const response = await fetch(
+                                `http://localhost:5000/api/v1/${courseSlug}/sections/${section._id}/lessons`
+                            );
+                            if (response.ok) {
+                                const data = await response.json();
+                                const count = data.lessons?.length || 0;
+                                counts[section._id] = count;
+                                total += count;
+                            } else {
+                                counts[section._id] = 0;
+                            }
+                        })
+                    );
+
+                    setSectionLessonCounts(counts);
+                    setTotalLessons(total);
+                } catch (error) {
+                    console.error('Error fetching lesson counts:', error);
+                }
+            };
+            fetchLessonCounts();
+        }
+    }, [canManage, sections, courseSlug]);
 
     if (isLoading) {
         return <div className="min-h-screen bg-white flex items-center justify-center">Loading Course Details...</div>;
@@ -73,9 +129,9 @@ export default function CourseDetails({ }: CourseDetailsProps) {
                         <ChevronLeft size={16} /> Back to Courses
                     </Button>
                     <span>/</span>
-                    <span className="text-slate-500">{course.category || "Development"}</span>
+                    <span className="text-slate-500">{course.category?.name?.[i18n.language] || course.category?.name?.en || "Development"}</span>
                     <span>/</span>
-                    <span className="text-slate-900 font-medium truncate max-w-[200px]">{course.title}</span>
+                    <span className="text-slate-900 font-medium truncate max-w-[200px]">{course.title?.[i18n.language] || course.title?.en}</span>
                 </div>
             </div>
 
@@ -87,24 +143,29 @@ export default function CourseDetails({ }: CourseDetailsProps) {
                     {/* Header Section */}
                     <div className="mb-8">
                         <div className="flex items-center gap-2 mb-4">
-                            {course.badge && <Badge className="bg-[#ffbd2e] text-black border-0 hover:bg-[#ffe58f]">{course.badge}</Badge>}
-                            <span className="text-slate-500 text-sm">{course.updatedAt || "Last updated Set 20, 2019"}</span>
+                            <Badge className="bg-[#3dcbb1] text-white border-0">{course.level?.[i18n.language] || course.level?.en || 'All Levels'}</Badge>
+                            <span className="text-slate-500 text-sm">{course.updatedAt ? new Date(course.updatedAt).toLocaleDateString() : "Recently updated"}</span>
                         </div>
 
                         <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 leading-tight">
-                            {course.title}
+                            {course.title?.[i18n.language] || course.title?.en}
                         </h1>
 
                         <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-                            {course.description}
+                            {course.shortDescription?.[i18n.language] || course.shortDescription?.en || course.description?.[i18n.language] || course.description?.en}
                         </p>
 
                         <div className="flex flex-wrap items-center gap-6 text-sm text-slate-500">
                             <div className="flex items-center gap-2">
-                                <img src={assetMap[course.instructor.image] || course.instructor.image} className="w-10 h-10 rounded-full object-cover" alt={course.instructor.name} />
+                                <img
+                                    src={course.instructor?.userId?.profileImageUrl || course.instructor?.userId?.profileImage || "https://github.com/shadcn.png"}
+                                    className="w-10 h-10 rounded-full object-cover"
+                                    alt={course.instructor?.userId?.name}
+                                    onError={(e) => { e.currentTarget.src = "https://github.com/shadcn.png"; }}
+                                />
                                 <div>
-                                    <p className="text-slate-900 font-bold">{course.instructor.name}</p>
-                                    <p className="text-xs">{course.instructor.role}</p>
+                                    <p className="text-slate-900 font-bold">{course.instructor?.userId?.name || 'Instructor'}</p>
+                                    <p className="text-xs">{course.instructor?.userId?.role || 'Expert'}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-1">
@@ -113,12 +174,12 @@ export default function CourseDetails({ }: CourseDetailsProps) {
                                         <Star key={i} size={16} className={i < Math.floor(course.rating) ? "fill-current" : "text-slate-200 fill-current"} />
                                     ))}
                                 </div>
-                                <span className="font-bold text-slate-900 ml-1">{course.rating}</span>
-                                <span className="underline decoration-slate-300 decoration-1 underline-offset-4 ml-1">({course.reviewsCount} reviews)</span>
+                                <span className="font-bold text-slate-900 ml-1">{course.rating?.toFixed(1) || '0.0'}</span>
+                                <span className="underline decoration-slate-300 decoration-1 underline-offset-4 ml-1">({course.totalReviews || course.enrollmentCount || 0} reviews)</span>
                             </div>
                             <div className="flex gap-4">
-                                <span>{course.enrolled || "2,312"} Students</span>
-                                <span>{course.language || "English"}</span>
+                                <span>{course.enrollmentCount || 0} Students</span>
+                                <span>{i18n.language === 'ar' ? 'العربية/English' : 'English/Arabic'}</span>
                             </div>
                         </div>
                     </div>
@@ -138,7 +199,7 @@ export default function CourseDetails({ }: CourseDetailsProps) {
                         <h2 className="text-xl font-bold text-slate-900 mb-4">About Course</h2>
                         <div className="text-slate-600 leading-relaxed rich-text prose prose-slate">
                             <p className="mb-4">
-                                {course.longDescription || course.description}
+                                {course.description?.[i18n.language] || course.description?.en}
                             </p>
                             <p>
                                 Detailed insights into the curriculum will go here. This course covers everything from basic setup to advanced deployment strategies.
@@ -159,40 +220,94 @@ export default function CourseDetails({ }: CourseDetailsProps) {
                         </div>
                     </div>
 
-                    {/* Course Content (Accordion) */}
-                    <div className="mb-12">
-                        <h2 className="text-xl font-bold text-slate-900 mb-6">Course Content</h2>
-                        <Accordion type="single" collapsible defaultValue="module-1" className="w-full border border-slate-200 rounded-lg overflow-hidden">
-                            {(course.modules || []).map((module: Module) => (
-                                <AccordionItem key={module.id} value={module.id} className="border-b last:border-0 bg-slate-50/50">
-                                    <AccordionTrigger className="px-6 py-4 hover:bg-slate-50 hover:no-underline">
-                                        <div className="flex flex-col items-start gap-1 text-left">
-                                            <span className="font-bold text-slate-900 text-base">{module.title}</span>
-                                            <span className="text-xs text-slate-500 font-normal">{module.duration} • {module.lessons.length} Lectures</span>
-                                        </div>
-                                    </AccordionTrigger>
-                                    <AccordionContent className="px-0 pb-0 bg-white border-t border-slate-100">
-                                        <div className="flex flex-col">
-                                            {module.lessons.map((lesson: Lesson) => (
-                                                <div key={lesson.id} className="flex justify-between items-center px-6 py-3 hover:bg-slate-50 group cursor-pointer border-b border-slate-50 last:border-0">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-teal-50 group-hover:text-teal-600 transition-colors">
-                                                            {lesson.isLocked ? <Lock size={14} /> : <PlayCircle size={14} />}
-                                                        </div>
-                                                        <span className="text-slate-700 group-hover:text-teal-600 transition-colors font-medium text-sm">{lesson.title}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-4">
-                                                        {lesson.isPreview && <Badge variant="outline" className="text-teal-600 border-teal-200 text-[10px] hidden sm:inline-flex">Preview</Badge>}
-                                                        <span className="text-slate-400 text-xs text-right min-w-[40px]">{lesson.duration}</span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            ))}
-                        </Accordion>
-                    </div>
+                    {/* Course Content */}
+                    {canManage ? (
+                        // Management View for Admin/Instructor
+                        <div className="mb-12">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-xl font-bold text-slate-900">Manage Course Content</h2>
+                                <Button className="bg-[#3dcbb1] hover:bg-[#34b39d] text-white">
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edit Content
+                                </Button>
+                            </div>
+
+                            {/* Stats Cards */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div className="p-6 bg-teal-50 border border-teal-100 rounded-2xl">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <Layout className="w-5 h-5 text-teal-600" />
+                                        <p className="text-sm text-slate-500 font-bold uppercase">Sections</p>
+                                    </div>
+                                    <p className="text-3xl font-bold text-slate-900">{sections.length}</p>
+                                </div>
+                                <div className="p-6 bg-blue-50 border border-blue-100 rounded-2xl">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <PlayCircle className="w-5 h-5 text-blue-600" />
+                                        <p className="text-sm text-slate-500 font-bold uppercase">Lessons</p>
+                                    </div>
+                                    <p className="text-3xl font-bold text-slate-900">{totalLessons}</p>
+                                </div>
+                                <div className="p-6 bg-orange-50 border border-orange-100 rounded-2xl">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <UsersIcon className="w-5 h-5 text-orange-600" />
+                                        <p className="text-sm text-slate-500 font-bold uppercase">Enrolled</p>
+                                    </div>
+                                    <p className="text-3xl font-bold text-slate-900">{course?.enrollmentCount || 0}</p>
+                                </div>
+                            </div>
+
+                            {/* Content Preview */}
+                            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+                                <h3 className="font-bold text-slate-900 mb-4">Content Overview</h3>
+                                {isSectionsLoading ? (
+                                    <p className="text-slate-500">Loading sections...</p>
+                                ) : sections.length === 0 ? (
+                                    <p className="text-slate-500">No content added yet. Start by adding sections.</p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {sections.map((section: any, idx: number) => (
+                                            <div key={section._id} className="flex items-center justify-between p-3 bg-white rounded-lg">
+                                                <span className="font-medium text-slate-700">
+                                                    {idx + 1}. {section.title[i18n.language] || section.title.en}
+                                                </span>
+                                                <span className="text-sm text-slate-500">
+                                                    {sectionLessonCounts[section._id] ?? 0} lessons
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        // Student View
+                        <div className="mb-12">
+                            <h2 className="text-xl font-bold text-slate-900 mb-6">Course Content</h2>
+
+                            {isSectionsLoading ? (
+                                <div className="bg-slate-50 rounded-lg p-8 text-center">
+                                    <p className="text-slate-500">Loading course content...</p>
+                                </div>
+                            ) : sections.length === 0 ? (
+                                <div className="bg-slate-50 rounded-lg p-8 text-center">
+                                    <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                                    <p className="text-slate-500">No content available yet</p>
+                                </div>
+                            ) : (
+                                <Accordion type="single" collapsible className="w-full border border-slate-200 rounded-lg overflow-hidden">
+                                    {sections.map((section: any, index: number) => (
+                                        <SectionAccordionItem
+                                            key={section._id}
+                                            section={section}
+                                            index={index}
+                                            courseSlug={courseSlug}
+                                        />
+                                    ))}
+                                </Accordion>
+                            )}
+                        </div>
+                    )}
 
                 </div>
 
@@ -202,7 +317,12 @@ export default function CourseDetails({ }: CourseDetailsProps) {
 
                         {/* Video Preview Area */}
                         <div className="relative h-[220px] bg-slate-900 group cursor-pointer group">
-                            <img src={assetMap[course.image] || course.image} className="w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity" alt="Preview" />
+                            <img
+                                src={course.thumbnailUrl || assetMap['course1']}
+                                className="w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity"
+                                alt="Preview"
+                                onError={(e) => { e.currentTarget.src = assetMap['course1']; }}
+                            />
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
@@ -217,9 +337,9 @@ export default function CourseDetails({ }: CourseDetailsProps) {
 
                         <div className="p-8">
                             <div className="flex items-end gap-3 mb-6">
-                                <span className="text-4xl font-bold text-slate-900">${course.price}</span>
-                                <span className="text-lg text-slate-400 line-through mb-1.5">${course.originalPrice}</span>
-                                {course.discount && <Badge className="bg-teal-100 text-teal-700 border-0 mb-2">{course.discount}</Badge>}
+                                <span className="text-4xl font-bold text-slate-900">${course.price || 0}</span>
+                                {course.discountPrice && <span className="text-lg text-slate-400 line-through mb-1.5">${course.discountPrice}</span>}
+                                {course.discountPrice && <Badge className="bg-teal-100 text-teal-700 border-0 mb-2">{Math.round(((course.discountPrice - course.price) / course.discountPrice) * 100)}% OFF</Badge>}
                             </div>
 
                             <div className="flex flex-col gap-3 mb-8">

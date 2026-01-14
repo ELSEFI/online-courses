@@ -4,7 +4,7 @@ const uploadLesson = require("../Middleware/uploadLesson");
 const protected = require("../Middleware/jwtMiddleware");
 const restrictTo = require("../Middleware/roleMiddleware");
 const { isEnrollment } = require("../Middleware/isEnrollment");
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 
 router.get("/", lessonController.getAllLessons);

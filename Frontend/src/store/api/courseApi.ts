@@ -3,39 +3,33 @@ import { Course, FilterOptions, courseService } from '@/services/api';
 
 export const courseApi = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        getTrendingCourses: builder.query<Course[], void>({
-            queryFn: async () => {
-                const data = await courseService.getTrendingCourses();
-                return { data };
-            },
+        getTrendingCourses: builder.query<any, void>({
+            query: () => '/home-data', // Trending and Top Rated are facets of home-data
+            transformResponse: (response: any) => response.data.trendingCourses,
             providesTags: ['Course'],
         }),
-        getStudioCourses: builder.query<Course[], void>({
-            queryFn: async () => {
-                const data = await courseService.getStudioCourses();
-                return { data };
-            },
+        getStudioCourses: builder.query<any, void>({
+            query: () => '/home-data',
+            transformResponse: (response: any) => response.data.topRatedCourses,
             providesTags: ['Course'],
         }),
-        getActiveCourses: builder.query<Course[], void>({
-            queryFn: async () => {
-                const data = await courseService.getActiveCourses();
-                return { data };
-            },
+        getActiveCourses: builder.query<any, void>({
+            query: () => '/my-courses',
             providesTags: ['Course'],
         }),
-        getCourseDetails: builder.query<Course, string>({
-            queryFn: async (id) => {
-                const data = await courseService.getCourseDetails(id);
-                return { data: data || ({} as Course) };
-            },
-            providesTags: (result, error, id) => [{ type: 'Course', id }],
+        getCourseDetails: builder.query<any, string>({
+            query: (slug) => `/courses/${slug}`,
+            providesTags: (result, error, slug) => [{ type: 'Course', id: slug }],
         }),
-        searchCourses: builder.query<Course[], { query: string; filters: FilterOptions }>({
-            queryFn: async ({ query, filters }) => {
-                const data = await courseService.searchCourses(query, filters);
-                return { data };
-            },
+        searchCourses: builder.query<any, { query?: string; filters?: any }>({
+            query: ({ query, filters }) => ({
+                url: '/all/courses',
+                params: {
+                    q: query,
+                    ...filters
+                }
+            }),
+            transformResponse: (response: any) => response,
             providesTags: ['Course'],
         }),
         getMyCourses: builder.query<any, void>({
@@ -61,13 +55,10 @@ export const courseApi = apiSlice.injectEndpoints({
             invalidatesTags: ['Course'],
         }),
         getInstructors: builder.query<any[], void>({
-            queryFn: async () => {
-                const data = await courseService.getInstructors();
-                return { data };
-            },
+            query: () => '/admin/instructors', // From app.use('/api/v1/admin/instructors', instructorsRoutes)
             providesTags: ['User'],
         }),
-        getInstructorCourses: builder.query<Course[], void>({
+        getInstructorCourses: builder.query<any, void>({
             query: () => '/instructor/courses',
             providesTags: ['Course'],
         }),
@@ -76,7 +67,20 @@ export const courseApi = apiSlice.injectEndpoints({
                 url: '/home-data',
                 params: category ? { category } : undefined
             }),
+            transformResponse: (response: any) => response.data,
             providesTags: ['Course'],
+        }),
+        getCourseSections: builder.query<any, string>({
+            query: (courseSlug) => `${courseSlug}/sections`,
+            providesTags: (result, error, courseSlug) => [
+                { type: 'Course', id: courseSlug }
+            ],
+        }),
+        getSectionLessons: builder.query<any, { courseSlug: string; sectionId: string }>({
+            query: ({ courseSlug, sectionId }) => `${courseSlug}/sections/${sectionId}/lessons`,
+            providesTags: (result, error, { courseSlug, sectionId }) => [
+                { type: 'Course', id: `${courseSlug}-${sectionId}` }
+            ],
         }),
     }),
 });
@@ -94,4 +98,6 @@ export const {
     useGetInstructorsQuery,
     useGetInstructorCoursesQuery,
     useGetHomeDataQuery,
+    useGetCourseSectionsQuery,
+    useGetSectionLessonsQuery,
 } = courseApi;

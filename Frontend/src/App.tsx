@@ -6,6 +6,7 @@ import CourseLearning from './imports/CourseLearning';
 import CourseSearch from './imports/CourseSearch';
 
 import MainLayout from './components/layout/MainLayout';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import { BecomeInstructorView, NotificationsView } from './imports/PlaceholderViews';
 
 // Dashboard Pages
@@ -29,17 +30,19 @@ function App() {
       <Toaster position="top-right" richColors />
       <Routes>
         <Route element={<MainLayout />}>
+          {/* Public Routes */}
           <Route path="/" element={<HomepageRefactored />} />
           <Route path="/courses/:id?" element={<CourseDetails />} />
           <Route path="/search" element={<CourseSearch />} />
-          <Route path="/my-courses" element={<MyCourses />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/become-instructor" element={<BecomeInstructorView />} />
-          <Route path="/notifications" element={<NotificationsView />} />
 
-          <Route path="/learning/:id?" element={<CourseLearning />} />
+          {/* Protected Routes */}
+          <Route path="/my-courses" element={<ProtectedRoute><MyCourses /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/become-instructor" element={<ProtectedRoute><BecomeInstructorView /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><NotificationsView /></ProtectedRoute>} />
+          <Route path="/learning/:id?" element={<ProtectedRoute><CourseLearning /></ProtectedRoute>} />
 
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />

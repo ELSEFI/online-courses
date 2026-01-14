@@ -101,6 +101,19 @@ exports.getAllCourses = async (req, res) => {
       filter.category = { $in: [categoryId, ...descendantIds] };
     }
 
+    // 🎯 Textual Search (Query: q)
+    if (req.query.q) {
+      const searchRegex = { $regex: req.query.q, $options: "i" };
+      filter.$or = [
+        { "title.en": searchRegex },
+        { "title.ar": searchRegex },
+        { "description.en": searchRegex },
+        { "description.ar": searchRegex },
+        { "shortDescription.en": searchRegex },
+        { "shortDescription.ar": searchRegex }
+      ];
+    }
+
     if (req.query.subCategory) {
       const subCategory = await Category.findOne({ slug: req.query.subCategory });
       if (subCategory) {

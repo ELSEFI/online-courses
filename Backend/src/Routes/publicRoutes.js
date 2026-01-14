@@ -23,8 +23,6 @@ router.patch(
   authController.updateProfile
 );
 
-router.get("/category/:categoryId", authController.getCategoryHomeData);
-
 // router.get("/users/:userId", authController.getUser);
 
 
