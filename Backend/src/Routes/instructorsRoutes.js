@@ -1,5 +1,7 @@
 const express = require("express");
 const instructorController = require("../controllers/instructorsController");
+const coursesController = require("../controllers/coursesController");
+const { isCourseOwner } = require("../Middleware/isCourseOwner");
 const uploadCvs = require("../Middleware/uploadCvs");
 const protected = require("../Middleware/jwtMiddleware");
 const restrictTo = require("../Middleware/roleMiddleware");
@@ -30,6 +32,14 @@ router.post(
   "/add-instructor",
   uploadCvs.single("cvFile"),
   instructorController.addInstructor
+);
+
+router.patch(
+  "/courses/:courseId/publish-status",
+  protected,
+  restrictTo("instructor"),
+  isCourseOwner,
+  coursesController.changePublishStatus
 );
 
 router.get("/:instructorId", instructorController.getInstructor);

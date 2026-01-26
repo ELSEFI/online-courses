@@ -6,9 +6,10 @@ import { useEffect, useState } from 'react';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
+    requiredRole?: 'user' | 'instructor' | 'admin';
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
     const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
     const location = useLocation();
     const [hasShownToast, setHasShownToast] = useState(false);
@@ -38,6 +39,25 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     if (!isAuthenticated) {
         // Redirect to login while preserving the intended destination
         return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    // Check role if required
+    if (requiredRole && user?.role !== requiredRole) {
+        const currentLang = localStorage.getItem('i18nextLng') || 'en';
+
+        if (currentLang === 'ar') {
+            toast.error('غير مصرح', {
+                description: 'ليس لديك صلاحية للوصول لهذه الصفحة',
+                duration: 3000,
+            });
+        } else {
+            toast.error('Unauthorized', {
+                description: 'You do not have permission to access this page',
+                duration: 3000,
+            });
+        }
+
+        return <Navigate to="/" replace />;
     }
 
     return <>{children}</>;

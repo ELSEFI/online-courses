@@ -26,6 +26,17 @@ import ResetPassword from './pages/auth/ResetPassword';
 import VerifyEmail from './pages/auth/VerifyEmail';
 import ResendVerification from './pages/auth/ResendVerification';
 
+// Admin Pages
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminCourses from './pages/admin/AdminCourses';
+import AdminCategories from './pages/admin/AdminCategories';
+import AdminInstructors from './pages/admin/AdminInstructors';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminRequests from './pages/admin/AdminRequests';
+import AdminMessages from './pages/admin/AdminMessages';
+import CourseContent from './pages/admin/CourseContent';
+
 function App() {
 
   return (
@@ -60,6 +71,18 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/resend-verification" element={<ResendVerification />} />
+        </Route>
+
+        {/* Admin Routes - Separate Layout */}
+        <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminLayout /></ProtectedRoute>}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="courses" element={<AdminCourses />} />
+          <Route path="courses/:courseSlug/content" element={<CourseContent />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="instructors" element={<AdminInstructors />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="requests" element={<AdminRequests />} />
+          <Route path="messages" element={<AdminMessages />} />
         </Route>
       </Routes>
     </>

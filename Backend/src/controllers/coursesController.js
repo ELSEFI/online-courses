@@ -285,7 +285,7 @@ exports.updateCourse = async (req, res) => {
     let oldThumbnail = course.thumbnail;
     // Handle thumbnail
     if (req.file) {
-      updatedThumbnail = await uploadToCloudinary(req.file.buffer, "Courses");
+      updatedThumbnail = await uploadImageToCloudinary(req.file.buffer, "Courses");
       course.thumbnail = updatedThumbnail.public_id;
     }
 
@@ -392,5 +392,59 @@ exports.getAllCoursesNonPublished = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
+// ADMIN: Get all courses (published + unpublished)
+exports.getAllCoursesForAdmin = async (req, res) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 100;
+    const skip = (page - 1) * limit;
+
+    // Get all courses with status: true (not deleted)
+    const filter = { status: true };
+
+    // Sorting by creation date (newest first)
+    const sort = { createdAt: -1 };
+
+    const courses = await Course.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .populate([
+        {
+          path: "instructor",
+          select: "rating totalCourses userId",
+          populate: {
+            path: "userId",
+            select: "name email role",
+          },
+        },
+        {
+          path: "category",
+          select: "name slug",
+        },
+        {
+          path: "createdBy",
+          select: "name email role",
+        },
+      ]);
+
+    const total = await Course.countDocuments(filter);
+
+    res.status(200).json({
+      courses,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalCourses: total,
+        hasNextPage: page < Math.ceil(total / limit),
+        hasPrevPage: page > 1,
+      },
+    });
+  } catch (error) {
+    console.error("Error in getAllCoursesForAdmin:", error);
+    res.status(500).json({ message: `Server Error: ${error.message}` });
   }
 };

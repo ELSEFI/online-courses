@@ -35,6 +35,13 @@ router.get(
   coursesController.getAllCoursesNonPublished
 );
 
+router.get(
+  "/admin/all-courses",
+  protected,
+  restrictTo("admin"),
+  coursesController.getAllCoursesForAdmin
+);
+
 router.delete(
   "/courses/:courseId",
   protected,

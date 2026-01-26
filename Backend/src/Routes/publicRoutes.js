@@ -48,12 +48,4 @@ router.patch(
   coursesController.updateCourse
 );
 
-router.patch(
-  "/courses/:courseId/publish-status",
-  protected,
-  restrictedTo("instructor"),
-  isCourseOwner,
-  coursesController.changePublishStatus
-);
-
 module.exports = router;
