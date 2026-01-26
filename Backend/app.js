@@ -42,35 +42,7 @@ app.use(
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-
-      // In development, allow localhost on any port
-      if (process.env.NODE_ENV !== "production") {
-        if (
-          origin.startsWith("http://localhost:") ||
-          origin.startsWith("http://127.0.0.1:")
-        ) {
-          return callback(null, true);
-        }
-      }
-
-      // In production, use CLIENT_URL
-      const allowedOrigins = process.env.CLIENT_URL
-        ? process.env.CLIENT_URL.split(",")
-        : [
-          "http://localhost:5173",
-          "http://localhost:5174",
-          "http://localhost:3000",
-        ];
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: "*", // Allow all origins for now to fix the issue
     credentials: true,
   })
 );
