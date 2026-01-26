@@ -180,6 +180,7 @@ exports.forgetPassword = async (req, res) => {
       .status(201)
       .json({ message: "Check your email for password reset link" });
     // console.log(realToken);
+    console.log(resetURL);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
