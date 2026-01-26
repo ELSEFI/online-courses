@@ -4,16 +4,23 @@ const protected = require("../Middleware/jwtMiddleware");
 const restrictTo = require("../Middleware/roleMiddleware");
 const { isEnrollment } = require("../Middleware/isEnrollment");
 const { isAttempts } = require("../Middleware/isAttempts");
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 router.get(
-  "/:quizId",
+  "/:quizId/grades",
   protected,
   restrictTo("admin"),
   quizController.getGrades
 );
 
-router.get("/", protected, isEnrollment, isAttempts, quizController.getQuiz);
+router.get(
+  "/:quizId/preview",
+  protected,
+  isEnrollment,
+  quizController.getQuizPreview
+);
+
+router.get("/:quizId", protected, isEnrollment, isAttempts, quizController.getQuiz);
 
 router.post(
   "/:quizId",

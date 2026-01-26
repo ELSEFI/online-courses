@@ -26,7 +26,7 @@ const quizAttemptSchema = new mongoose.Schema(
       {
         questionId: {
           type: mongoose.Schema.Types.ObjectId,
-          required: true,
+          required: false, // Changed to false for backward compatibility
         },
         selectedOptionIndex: {
           type: Number,

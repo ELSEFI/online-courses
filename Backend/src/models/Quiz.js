@@ -18,8 +18,7 @@ const questionSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
-  },
-  { _id: false }
+  }
 );
 
 const quizSchema = new mongoose.Schema(

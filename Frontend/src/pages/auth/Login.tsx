@@ -1,15 +1,22 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Mail, Lock, Chrome, Loader2 } from 'lucide-react';
-import { useLoginMutation } from '@/store/api/authApi';
+import { useLoginMutation, useLoginGoogleMutation } from '@/store/api/authApi';
 import { setCredentials } from '@/store/slices/authSlice';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 // Using a valid asset from the project
 import authImage from "@/assets/c44d9c4405123860b8ed6398ddc0e385f097fea6.png";
+
+// Declare google on window for TypeScript
+declare global {
+    interface Window {
+        google: any;
+    }
+}
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -20,6 +27,28 @@ export default function Login() {
     const isAr = i18n.language === 'ar';
 
     const [login, { isLoading }] = useLoginMutation();
+    const [loginGoogle, { isLoading: isGoogleLoading }] = useLoginGoogleMutation();
+
+    useEffect(() => {
+        // Initialize Google Sign-In
+        if (window.google) {
+            window.google.accounts.id.initialize({
+                client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
+                callback: handleGoogleResponse,
+            });
+        }
+    }, []);
+
+    const handleGoogleResponse = async (response: any) => {
+        try {
+            const result = await loginGoogle({ token: response.credential }).unwrap();
+            dispatch(setCredentials({ user: result.user, token: result.token }));
+            toast.success(result.message || t('auth.login_success'));
+            navigate('/');
+        } catch (err: any) {
+            toast.error(err.data?.message || t('auth.google_login_failed'));
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -29,7 +58,27 @@ export default function Login() {
             toast.success(result.message || t('auth.login_success'));
             navigate('/');
         } catch (err: any) {
-            toast.error(err.data?.message || t('auth.login_failed'));
+            // Handle unverified email specifically
+            const errorMessage = err.data?.message || err.message || t('auth.login_failed');
+
+            // Check if error is about email verification
+            if (errorMessage.toLowerCase().includes('verify') ||
+                errorMessage.toLowerCase().includes('تأكيد') ||
+                errorMessage.toLowerCase().includes('confirm')) {
+                toast.error(errorMessage);
+                // Don't trigger any other errors or redirects
+                return;
+            }
+
+            toast.error(errorMessage);
+        }
+    };
+
+    const handleGoogleLogin = () => {
+        if (window.google) {
+            window.google.accounts.id.prompt(); // Show One Tap dialog
+        } else {
+            toast.error(t('auth.google_not_loaded'));
         }
     };
 
@@ -102,9 +151,18 @@ export default function Login() {
                             </div>
                         </div>
 
-                        <button type="button" className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-xl transition-all duration-300">
-                            <Chrome className="w-5 h-5 text-red-500" />
-                            {t('auth.google_signin')}
+                        <button
+                            type="button"
+                            onClick={handleGoogleLogin}
+                            disabled={isGoogleLoading}
+                            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-xl transition-all duration-300 disabled:opacity-50"
+                        >
+                            {isGoogleLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                                <>
+                                    <Chrome className="w-5 h-5 text-red-500" />
+                                    {t('auth.google_signin')}
+                                </>
+                            )}
                         </button>
                     </form>
 

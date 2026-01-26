@@ -161,8 +161,8 @@ exports.resendVerification = async (req, res) => {
 exports.forgetPassword = async (req, res) => {
   const { email } = req.body;
   try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: "User Not Found!" });
+    const user = await User.findOne({ email, emailVerified: true });
+    if (!user) return res.status(401).json({ message: "User Not Found or Not Verified" });
 
     const realToken = crypto.randomBytes(32).toString("hex");
     user.resetPasswordToken = crypto
@@ -179,7 +179,7 @@ exports.forgetPassword = async (req, res) => {
     res
       .status(201)
       .json({ message: "Check your email for password reset link" });
-    console.log(realToken);
+    // console.log(realToken);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });

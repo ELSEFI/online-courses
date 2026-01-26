@@ -12,7 +12,7 @@ const filesSchema = new mongoose.Schema(
 
 filesSchema.virtual("fileUrl").get(function () {
   if (!this.fileName) return null;
-  return `${process.env.BASE_URL}/files/${this.fileName}`;
+  return `${process.env.BASE_URL}/public/files/${this.fileName}`;
 });
 
 const lessonSchema = new mongoose.Schema(
@@ -56,7 +56,7 @@ lessonSchema.index({ section: 1, order: 1 });
 
 lessonSchema.virtual("videoUrl").get(function () {
   if (!this.video || !this.video.fileName) return null;
-  return `${process.env.BASE_URL}/videos/${this.video.fileName}`;
+  return `${process.env.BASE_URL}/public/videos/${this.video.fileName}`;
 });
 
 lessonSchema.virtual("quiz", {

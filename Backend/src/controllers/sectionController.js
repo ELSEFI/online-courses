@@ -50,7 +50,9 @@ exports.getAllSections = async (req, res) => {
       isActive: true,
     };
 
-    const sections = await Section.find(filter).sort({ order: 1 });
+    const sections = await Section.find(filter)
+      .sort({ order: 1 })
+      .populate("lessons", "title isFree hasQuiz");
 
     res.status(200).json({
       results: sections.length,

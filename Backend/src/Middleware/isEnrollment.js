@@ -7,7 +7,7 @@ exports.isEnrollment = async (req, res, next) => {
     const course = await Course.findOne({ slug: courseSlug });
     if (!course) return res.status(404).json({ message: "Course Not Found" });
 
-    if (req.user.role !== "user") return next();
+    if (req.user.role === "admin" || course.instructor === req.user._id) return next();
 
     const enrollment = await Enrollment.findOne({
       course: course._id,

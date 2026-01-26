@@ -60,12 +60,19 @@ enrollmentSchema.post("save", async function () {
 // Method: Update progress
 enrollmentSchema.methods.updateProgress = async function () {
   const Lesson = mongoose.model("Lesson");
-  const sections = mongoose
-    .model("Section")
-    .find({ course: this.course, isActive: true })
-    .select("_id");
+  const Section = mongoose.model("Section");
+
+  // Fetch all active sections for this course
+  const sections = await Section.find({
+    course: this.course,
+    isActive: true
+  }).select("_id");
+
+  const sectionIds = sections.map((s) => s._id);
+
+  // Count total active lessons in all sections
   const totalLessons = await Lesson.countDocuments({
-    section: { $in: sections.map((s) => s._id) },
+    section: { $in: sectionIds },
     isActive: true,
   });
 

@@ -4,6 +4,9 @@ import HomepageRefactored from './imports/HomepageRefactored';
 import CourseDetails from './imports/CourseDetails';
 import CourseLearning from './imports/CourseLearning';
 import CourseSearch from './imports/CourseSearch';
+import QuizPreview from './pages/quiz/QuizPreview';
+import QuizTake from './pages/quiz/QuizTake';
+import QuizResults from './pages/quiz/QuizResults';
 
 import MainLayout from './components/layout/MainLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -29,6 +32,9 @@ function App() {
     <>
       <Toaster position="top-right" richColors />
       <Routes>
+        {/* Standalone Auth Route - No Layout/Navbar */}
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+
         <Route element={<MainLayout />}>
           {/* Public Routes */}
           <Route path="/" element={<HomepageRefactored />} />
@@ -40,15 +46,18 @@ function App() {
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/profile/:userId" element={<Profile />} />
           <Route path="/become-instructor" element={<ProtectedRoute><BecomeInstructorView /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><NotificationsView /></ProtectedRoute>} />
-          <Route path="/learning/:id?" element={<ProtectedRoute><CourseLearning /></ProtectedRoute>} />
+          <Route path="/learn/:courseSlug" element={<ProtectedRoute><CourseLearning /></ProtectedRoute>} />
+          <Route path="/learn/:courseSlug/quiz/:quizId" element={<ProtectedRoute><QuizPreview /></ProtectedRoute>} />
+          <Route path="/learn/:courseSlug/quiz/:quizId/take" element={<ProtectedRoute><QuizTake /></ProtectedRoute>} />
+          <Route path="/learn/:courseSlug/quiz/:quizId/results/:attemptId" element={<ProtectedRoute><QuizResults /></ProtectedRoute>} />
 
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/resend-verification" element={<ResendVerification />} />
         </Route>

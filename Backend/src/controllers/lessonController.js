@@ -130,7 +130,6 @@ exports.getAllLessons = async (req, res) => {
     };
 
     const lessons = await Lesson.find(lessonFilter)
-      .select("title order isFree hasQuiz")
       .populate("quiz", "title totalScore")
       .sort({ order: 1 });
 

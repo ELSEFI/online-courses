@@ -71,7 +71,7 @@ export default function HomepageRefactored() {
                             </Button>
                             {!isAuthenticated ? (
                                 <Button className="h-[52px] px-8 rounded-[12px] bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-base font-bold shadow-sm transition-all w-full sm:w-auto" onClick={() => navigate('/register')}>
-                                    {t('nav.register')}
+                                    {t('nav.signup')}
                                 </Button>
                             ) : (
                                 <Button className="h-[52px] px-8 rounded-[12px] bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-base font-bold shadow-sm transition-all w-full sm:w-auto" onClick={() => navigate('/profile')}>

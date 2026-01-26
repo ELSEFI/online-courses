@@ -82,6 +82,26 @@ export const courseApi = apiSlice.injectEndpoints({
                 { type: 'Course', id: `${courseSlug}-${sectionId}` }
             ],
         }),
+
+        // Quiz endpoints
+        // Quiz endpoints
+        getQuizPreview: builder.query({
+            query: ({ courseSlug, lessonId, quizId }) =>
+                `${courseSlug}/lessons/${lessonId}/quiz/${quizId}/preview`,
+        }),
+
+        getQuiz: builder.query({
+            query: ({ courseSlug, lessonId, quizId }) =>
+                `${courseSlug}/lessons/${lessonId}/quiz/${quizId}`,
+        }),
+
+        submitQuiz: builder.mutation({
+            query: ({ courseSlug, lessonId, quizId, answers }) => ({
+                url: `${courseSlug}/lessons/${lessonId}/quiz/${quizId}`,
+                method: 'POST',
+                body: answers,
+            }),
+        }),
     }),
 });
 
@@ -100,4 +120,7 @@ export const {
     useGetHomeDataQuery,
     useGetCourseSectionsQuery,
     useGetSectionLessonsQuery,
+    useGetQuizPreviewQuery,
+    useGetQuizQuery,
+    useSubmitQuizMutation,
 } = courseApi;

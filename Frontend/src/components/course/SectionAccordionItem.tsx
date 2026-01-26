@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useGetSectionLessonsQuery } from '@/store/api/courseApi';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { PlayCircle, BookOpen, FileQuestion, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import {
     AccordionContent,
     AccordionItem,
@@ -13,10 +15,13 @@ interface SectionAccordionItemProps {
     section: any;
     index: number;
     courseSlug: string;
+    isEnrolled?: boolean;
+    canManage?: boolean;
 }
 
-export default function SectionAccordionItem({ section, index, courseSlug }: SectionAccordionItemProps) {
-    const { i18n } = useTranslation();
+export default function SectionAccordionItem({ section, index, courseSlug, isEnrolled = false, canManage = false }: SectionAccordionItemProps) {
+    const { i18n, t } = useTranslation();
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
 
     // Only fetch lessons when accordion is opened
@@ -56,39 +61,54 @@ export default function SectionAccordionItem({ section, index, courseSlug }: Sec
                             Loading lessons...
                         </div>
                     ) : lessons.length > 0 ? (
-                        lessons.map((lesson: any, lessonIndex: number) => (
-                            <div
-                                key={lesson._id}
-                                className="flex justify-between items-center px-6 py-3 hover:bg-slate-50 group cursor-pointer border-b border-slate-50 last:border-0"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-teal-50 group-hover:text-teal-600 transition-colors">
-                                        {lesson.hasQuiz ? (
-                                            <FileQuestion size={14} />
-                                        ) : lesson.video ? (
-                                            <PlayCircle size={14} />
-                                        ) : (
-                                            <BookOpen size={14} />
-                                        )}
+                        lessons.map((lesson: any, lessonIndex: number) => {
+                            const isLocked = !canManage && !isEnrolled && !lesson.isFree;
+
+                            return (
+                                <div
+                                    key={lesson._id}
+                                    className={`flex justify-between items-center px-6 py-3 border-b border-slate-50 last:border-0 ${isLocked ? 'opacity-60' : ''
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isLocked
+                                                ? 'bg-slate-200 text-slate-400'
+                                                : 'bg-slate-100 text-slate-400'
+                                            }`}>
+                                            {isLocked ? (
+                                                <Lock size={14} />
+                                            ) : lesson.hasQuiz ? (
+                                                <FileQuestion size={14} />
+                                            ) : lesson.video ? (
+                                                <PlayCircle size={14} />
+                                            ) : (
+                                                <BookOpen size={14} />
+                                            )}
+                                        </div>
+                                        <span className={`text-sm font-medium ${isLocked ? 'text-slate-400' : 'text-slate-700'
+                                            }`}>
+                                            {lessonIndex + 1}. {lesson.title[i18n.language] || lesson.title.en}
+                                        </span>
                                     </div>
-                                    <span className="text-slate-700 group-hover:text-teal-600 transition-colors font-medium text-sm">
-                                        {lessonIndex + 1}. {lesson.title[i18n.language] || lesson.title.en}
-                                    </span>
+                                    <div className="flex items-center gap-4">
+                                        {lesson.isFree && (
+                                            <Badge variant="outline" className="text-teal-600 border-teal-200 text-[10px] hidden sm:inline-flex">
+                                                Free Preview
+                                            </Badge>
+                                        )}
+                                        {lesson.hasQuiz && (
+                                            <Badge variant="outline" className="text-orange-600 border-orange-200 text-[10px] hidden sm:inline-flex">
+                                                Quiz
+                                            </Badge>
+                                        )}
+                                        {isLocked && (
+                                            <Lock size={14} className="text-slate-400" />
+                                        )}
+                                        <span className="text-xs text-slate-500">{lesson.duration || '5:00'}</span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    {lesson.isFree && (
-                                        <Badge variant="outline" className="text-teal-600 border-teal-200 text-[10px] hidden sm:inline-flex">
-                                            Free Preview
-                                        </Badge>
-                                    )}
-                                    {lesson.hasQuiz && (
-                                        <Badge variant="outline" className="text-orange-600 border-orange-200 text-[10px] hidden sm:inline-flex">
-                                            Quiz
-                                        </Badge>
-                                    )}
-                                </div>
-                            </div>
-                        ))
+                            );
+                        })
                     ) : (
                         <div className="px-6 py-4 text-center text-slate-500 text-sm">
                             No lessons in this section yet

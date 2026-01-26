@@ -21,6 +21,19 @@ const baseQueryWithReauth: BaseQueryFn<
     let result = await baseQuery(args, api, extraOptions);
 
     if (result.error && result.error.status === 401) {
+        // Check if this is an unverified email error
+        const errorData: any = result.error.data;
+        const errorMessage = errorData?.message || '';
+
+        // Don't auto-logout for email verification errors
+        if (errorMessage.toLowerCase().includes('verify') ||
+            errorMessage.toLowerCase().includes('تأكيد') ||
+            errorMessage.toLowerCase().includes('confirm') ||
+            errorMessage.toLowerCase().includes('not verified')) {
+            // Just return the error, don't logout
+            return result;
+        }
+
         // Get current language from localStorage (i18n stores it there)
         const currentLang = localStorage.getItem('i18nextLng') || 'en';
 

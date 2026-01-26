@@ -64,7 +64,8 @@
         "roles": {
             "admin": "مسؤول",
             "instructor": "مدرس",
-            "student": "طالب"
+            "student": "طالب",
+            "user": "طالب"
         },
         "my_learning": "تعليمي",
         "my_learning_desc": "أكمل من حيث توقفت واستمر في النمو",

@@ -6,6 +6,10 @@ export const userApi = apiSlice.injectEndpoints({
             query: () => '/me',
             providesTags: ['User'],
         }),
+        getUserProfile: builder.query<any, string>({
+            query: (userId) => `/users/${userId}`,
+            providesTags: (result, error, userId) => [{ type: 'User', id: userId }],
+        }),
         updateProfile: builder.mutation<any, FormData>({
             query: (formData) => ({
                 url: '/update-profile',
@@ -32,6 +36,7 @@ export const userApi = apiSlice.injectEndpoints({
 
 export const {
     useGetMeQuery,
+    useGetUserProfileQuery,
     useUpdateProfileMutation,
     useChangePasswordMutation,
     useDeleteAccountMutation,

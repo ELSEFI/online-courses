@@ -36,6 +36,7 @@ app.post(
 app.use(
   helmet({
     contentSecurityPolicy: false,
+    crossOriginResourcePolicy: false,
   })
 );
 
@@ -85,6 +86,16 @@ const authLimiter = rateLimit({
 
 app.use("/api/v1/auth", authLimiter);
 
+// Serve static files (videos, files) with CORS headers
+app.use("/public", (req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Range");
+  res.header("Access-Control-Expose-Headers", "Content-Length, Content-Range");
+  res.header("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+}, express.static(path.join(__dirname, "public")));
+
 // app.use(mongoSanitize());
 // app.use(xss());
 
@@ -103,7 +114,7 @@ app.use("/api/v1/categories", categoriesRoutes);
 app.use("/api/v1", coursesRoutes);
 app.use("/api/v1/:courseSlug/sections", sectionRoutes);
 app.use("/api/v1/:courseSlug/sections/:sectionId/lessons", lessonRoutes);
-app.use("/api/v1/lessons/:lessonId/quiz", quizRoutes);
+app.use("/api/v1/:courseSlug/lessons/:lessonId/quiz", quizRoutes);
 app.use("/api/v1/messages", contactRoutes);
 app.use("/api/v1/:courseSlug/reviews", reviewsRoutes);
 app.use("/api/v1/wishlist", wishlistRoutes);

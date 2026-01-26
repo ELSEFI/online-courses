@@ -30,7 +30,7 @@ const protected = async (req, res, next) => {
     req.user = user;
     next();
   } catch (err) {
-    console.error("JWT VERIFY ERROR:", err);
+    console.error("JWT VERIFY ERROR:", err.message);
     return res.status(401).json({ message: "Token expired or invalid" });
   }
 };

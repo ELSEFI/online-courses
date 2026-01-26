@@ -7,7 +7,7 @@ const { isEnrollment } = require("../Middleware/isEnrollment");
 const router = express.Router({ mergeParams: true });
 
 
-router.get("/", lessonController.getAllLessons);
+router.get("/", protected, isEnrollment, lessonController.getAllLessons);
 
 router.get("/:lessonId", protected, isEnrollment, lessonController.getLesson);
 

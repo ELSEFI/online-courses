@@ -1,12 +1,35 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Mail, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useForgetPasswordMutation } from '@/store/api/authApi';
+import { toast } from 'sonner';
 
 export default function ForgotPassword() {
+    const [email, setEmail] = useState('');
     const { t, i18n } = useTranslation();
     const isAr = i18n.language === 'ar';
+    const [forgetPassword, { isLoading }] = useForgetPasswordMutation();
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!email) {
+            toast.error(t('auth.email_required'));
+            return;
+        }
+
+        try {
+            const result = await forgetPassword({ email }).unwrap();
+            toast.success(result.message || t('auth.reset_link_sent'));
+            setEmail(''); // Clear the form
+        } catch (err: any) {
+            const errorMessage = err.data?.message || err.message || t('auth.reset_link_failed');
+            toast.error(errorMessage);
+        }
+    };
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6 py-12" dir={isAr ? 'rtl' : 'ltr'}>
             <div className="max-w-md w-full bg-white p-8 sm:p-12 rounded-[32px] shadow-xl shadow-gray-200/50 border border-gray-100">
@@ -20,21 +43,28 @@ export default function ForgotPassword() {
                     </p>
                 </div>
 
-                <form className="space-y-6">
+                <form className="space-y-6" onSubmit={handleSubmit}>
                     <div className="space-y-2">
                         <label className="text-sm font-semibold text-gray-700">{t('auth.email')}</label>
                         <div className="relative">
                             <Mail className={`absolute ${isAr ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400`} />
                             <input
                                 type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 placeholder="name@example.com"
                                 className={`w-full ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#3DCBB1] focus:border-transparent outline-none transition-all`}
                             />
                         </div>
                     </div>
 
-                    <button className="w-full bg-[#3DCBB1] hover:bg-[#34b59d] text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-[#3DCBB1]/20 transition-all duration-300">
-                        {t('auth.send_reset_link')}
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full bg-[#3DCBB1] hover:bg-[#34b59d] text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-[#3DCBB1]/20 transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('auth.send_reset_link')}
                     </button>
                 </form>
 

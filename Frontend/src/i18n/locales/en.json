@@ -5,6 +5,7 @@
         "wishlist": "Wishlist",
         "settings": "Settings",
         "logout": "Logout",
+        "logout_success": "Logged out successfully",
         "notifications": "Notifications",
         "admin_panel": "Admin Panel",
         "instructor_dashboard": "Instructor Dashboard",
@@ -64,7 +65,8 @@
         "roles": {
             "admin": "Admin",
             "instructor": "Instructor",
-            "student": "Student"
+            "student": "Student",
+            "user": "Student"
         },
         "my_learning": "My Learning",
         "my_learning_desc": "Pick up where you left off and keep growing",
@@ -152,11 +154,23 @@
         "enter_code_here": "Enter code here",
         "set_new_password_title": "Set New Password",
         "choose_strong_password": "Choose a strong password to protect your account.",
+        "new_password": "New Password",
+        "confirm_password": "Confirm Password",
         "reset_password_btn": "Reset Password",
         "pass_at_least_8": "At least 8 characters long",
         "pass_upper_lower": "One uppercase & one lowercase letter",
+        "passwords_not_match": "Passwords do not match",
+        "invalid_token": "Invalid or expired reset token",
+        "password_reset_success": "Password reset successfully!",
+        "password_reset_failed": "Failed to reset password",
+        "redirecting_to_login": "This page will close automatically",
         "code_sent_success": "Verification code sent successfully!",
-        "code_sent_failed": "Failed to send code. Please try again."
+        "code_sent_failed": "Failed to send code. Please try again.",
+        "email_required": "Email is required",
+        "reset_link_sent": "Password reset link sent to your email",
+        "reset_link_failed": "Failed to send reset link",
+        "google_login_failed": "Google login failed",
+        "google_not_loaded": "Google Sign-In not loaded. Please refresh the page."
     },
     "footer": {
         "brand_desc": "Great lesson ideas and lesson plans for ESL teachers! Educators can customize lesson plans to best.",

@@ -11,62 +11,106 @@ import {
     FileText,
     MonitorPlay,
     ChevronLeft,
-    CheckCircle
+    CheckCircle,
+    PlayCircle,
+    BookOpen,
+    FileQuestion
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 
-import { Course, Module, Lesson } from "@/services/api";
-import { useGetCourseDetailsQuery } from "@/store/api/courseApi";
+import { useGetCourseDetailsQuery, useGetCourseSectionsQuery, useGetSectionLessonsQuery, useGetQuizPreviewQuery } from '@/store/api/courseApi';
 import assetMap from '../imports/assetMap';
 
-interface CourseLearningProps { }
-
-export default function CourseLearning({ }: CourseLearningProps) {
-    const { id } = useParams();
-    const { t } = useTranslation();
+export default function CourseLearning() {
+    const { courseSlug } = useParams<{ courseSlug: string }>();
+    const { i18n } = useTranslation();
     const navigate = useNavigate();
-    const courseId = id || "1";
-    const [activeTab, setActiveTab] = useState<'Description' | 'Courses' | 'Review'>('Courses');
-    const [expandedModule, setExpandedModule] = useState<string | null>(null);
-    const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
 
-    // RTK Query hook
-    const { data: course, isLoading } = useGetCourseDetailsQuery(courseId);
+    const [expandedSection, setExpandedSection] = useState<string | null>(null);
+    const [activeLesson, setActiveLesson] = useState<any | null>(null);
+    const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
 
-    // Initial state setup when data loads
+    // Fetch course details
+    const { data: courseData, isLoading: isCourseLoading } = useGetCourseDetailsQuery(courseSlug!, {
+        skip: !courseSlug,
+    });
+    const course = courseData?.course;
+
+    // Fetch sections
+    const { data: sectionsData, isLoading: isSectionsLoading } = useGetCourseSectionsQuery(courseSlug!, {
+        skip: !courseSlug,
+    });
+    const sections = sectionsData?.sections || [];
+
+    // Fetch lessons for active section
+    const { data: lessonsData, isLoading: isLessonsLoading } = useGetSectionLessonsQuery(
+        { courseSlug: courseSlug!, sectionId: activeSectionId! },
+        { skip: !courseSlug || !activeSectionId }
+    );
+    const activeLessons = lessonsData?.lessons || [];
+
+    // Auto-expand first section and select first lesson
     useEffect(() => {
-        if (course?.modules && course.modules.length > 0) {
-            if (!expandedModule) setExpandedModule(course.modules[0].id);
-            if (!activeLesson && course.modules[0].lessons.length > 0) {
-                setActiveLesson(course.modules[0].lessons[0]);
-            }
+        if (sections.length > 0 && !expandedSection) {
+            const firstSection = sections[0];
+            setExpandedSection(firstSection._id);
+            setActiveSectionId(firstSection._id);
         }
-    }, [course, expandedModule, activeLesson]);
+    }, [sections, expandedSection]);
 
-    const handleLessonSelect = (lesson: Lesson) => {
-        if (!lesson.isLocked) {
-            setActiveLesson(lesson);
+    // Auto-select first lesson when lessons load
+    useEffect(() => {
+        if (activeLessons.length > 0 && !activeLesson) {
+            setActiveLesson(activeLessons[0]);
+        }
+    }, [activeLessons, activeLesson]);
+
+    const handleSectionToggle = (sectionId: string) => {
+        if (expandedSection === sectionId) {
+            setExpandedSection(null);
+            setActiveSectionId(null);
+        } else {
+            setExpandedSection(sectionId);
+            setActiveSectionId(sectionId);
         }
     };
 
-    if (isLoading) return <div className="flex h-screen items-center justify-center bg-white">Loading Classroom...</div>;
-    if (!course) return <div className="flex h-screen items-center justify-center bg-white">Course not found.</div>;
+    const handleLessonSelect = (lesson: any) => {
+        setActiveLesson(lesson);
+    };
+
+    if (isCourseLoading || isSectionsLoading) {
+        return <div className="flex h-screen items-center justify-center bg-slate-900 text-white">Loading Course...</div>;
+    }
+
+    if (!course) {
+        return <div className="flex h-screen items-center justify-center bg-slate-900 text-white">Course not found.</div>;
+    }
 
     return (
-        <div className="min-h-screen bg-white font-sans text-slate-900 w-full mb-16">
+        <div className="min-h-screen bg-slate-900 font-sans text-white w-full">
             {/* Top Bar */}
-            <header className="bg-slate-900 text-white p-4 flex items-center justify-between sticky top-0 z-50">
+            <header className="bg-slate-950 border-b border-slate-800 p-4 flex items-center justify-between sticky top-0 z-50">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate('/my-courses')} className="text-slate-400 hover:text-white hover:bg-slate-800">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(`/courses/${courseSlug}`)}
+                        className="text-slate-400 hover:text-white hover:bg-slate-800"
+                    >
                         <ChevronLeft />
                     </Button>
                     <div>
-                        <h1 className="font-bold text-lg truncate max-w-[200px] sm:max-w-md">{course.title}</h1>
+                        <h1 className="font-bold text-lg truncate max-w-[200px] sm:max-w-md">
+                            {course.title?.[i18n.language] || course.title?.en}
+                        </h1>
                         <div className="flex items-center gap-2 text-xs text-slate-400">
-                            <span className="flex items-center gap-1"><Clock size={12} /> {course.duration || "45h 20m"}</span>
+                            <span className="flex items-center gap-1">
+                                <Clock size={12} /> {sections.length} sections
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -74,136 +118,222 @@ export default function CourseLearning({ }: CourseLearningProps) {
                     <div className="hidden md:flex flex-col items-end mr-4">
                         <span className="text-xs font-medium text-slate-300 mb-1">Your Progress</span>
                         <div className="w-[150px] flex items-center gap-2">
-                            <Progress value={35} className="h-2 bg-slate-700" />
-                            <span className="text-xs font-bold text-teal-400">35%</span>
+                            <Progress value={0} className="h-2 bg-slate-700" />
+                            <span className="text-xs font-bold text-teal-400">0%</span>
                         </div>
                     </div>
                 </div>
             </header>
 
             {/* Main Content */}
-            <main className="w-full max-w-[1400px] mx-auto p-4 md:p-6 lg:p-8 flex flex-col lg:flex-row gap-8">
+            <main className="flex h-[calc(100vh-73px)]">
 
-                {/* VIDEO PLAYER & TABS (Left) */}
-                <div className="flex-1 flex flex-col gap-6">
-
+                {/* LEFT: Video Player */}
+                <div className="flex-1 flex flex-col bg-black">
                     {/* Video Player Area */}
-                    <div className="w-full aspect-video bg-black rounded-[16px] overflow-hidden relative group shadow-2xl shadow-slate-200">
-                        {/* Mock Video UI */}
+                    <div className="flex-1 relative group bg-black">
                         {activeLesson ? (
-                            <>
-                                <img src={assetMap[course.image] || course.image} className="w-full h-full object-cover opacity-40 blur-sm" alt="Video Background" />
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                                    <h2 className="text-2xl font-bold mb-4 px-4 text-center">{activeLesson.title}</h2>
-                                    <div className="w-20 h-20 bg-teal-500 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-lg shadow-teal-500/30">
-                                        <Play fill="white" size={32} className="ml-1" />
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="flex items-center justify-center h-full text-slate-500">Select a lesson</div>
-                        )}
-                    </div>
-
-                    {/* Tabs */}
-                    <div className="border-b border-slate-200">
-                        <div className="flex gap-8">
-                            {['Courses', 'Description', 'Review'].map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab as any)}
-                                    className={`pb-4 text-sm font-bold transition-all relative ${activeTab === tab
-                                        ? 'text-teal-600 border-b-2 border-teal-600'
-                                        : 'text-slate-400 hover:text-slate-600'
-                                        }`}
+                            activeLesson.hasQuiz ? (
+                                <QuizEntryPoint
+                                    courseSlug={courseSlug!}
+                                    lesson={activeLesson}
+                                    i18n={i18n}
+                                    navigate={navigate}
+                                />
+                            ) : activeLesson.videoUrl ? (
+                                <video
+                                    key={activeLesson._id}
+                                    className="w-full h-full"
+                                    controls
+                                    autoPlay
+                                    controlsList="nodownload"
                                 >
-                                    {tab === 'Courses' ? 'Curriculum' : tab}
-                                </button>
-                            ))}
+                                    <source src={activeLesson.videoUrl} type="video/mp4" />
+                                    Your browser does not support the video tag.
+                                </video>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-full text-white">
+                                    <FileText size={64} className="text-slate-600 mb-4" />
+                                    <h2 className="text-2xl font-bold mb-2">
+                                        {activeLesson.title?.[i18n.language] || activeLesson.title?.en}
+                                    </h2>
+                                    <p className="text-slate-400">
+                                        This lesson has no video content
+                                    </p>
+                                </div>
+                            )
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-slate-500">
+                                Select a lesson to start learning
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Lesson Info Bar */}
+                    {activeLesson && (
+                        <div className="bg-slate-950 border-t border-slate-800 p-4">
+                            <h3 className="font-bold text-white mb-2">
+                                {activeLesson.title?.[i18n.language] || activeLesson.title?.en}
+                            </h3>
+                            <p className="text-sm text-slate-400">
+                                {activeLesson.description?.[i18n.language] || activeLesson.description?.en || 'No description available'}
+                            </p>
                         </div>
-                    </div>
-
-                    {/* Tab Content */}
-                    <div className="min-h-[200px]">
-                        {activeTab === 'Courses' && (
-                            <div className="block lg:hidden">
-                                <p className="text-sm text-slate-500 italic">Curriculum is shown in the sidebar on large screens.</p>
-                            </div>
-                        )}
-                        {activeTab === 'Description' && (
-                            <div className="prose prose-slate max-w-none">
-                                <h3 className="text-xl font-bold mb-4">About this lesson</h3>
-                                <p className="text-slate-600">{activeLesson?.title ? `In this lesson, we will dive deep into ${activeLesson.title}.` : course.description}</p>
-                            </div>
-                        )}
-                        {activeTab === 'Review' && (
-                            <div className="text-slate-500">Student reviews will appear here.</div>
-                        )}
-                    </div>
-
+                    )}
                 </div>
 
-                {/* SIDEBAR CURRICULUM (Right) */}
-                <div className="w-full lg:w-[400px] shrink-0 flex flex-col h-full">
-                    <div className="bg-slate-50 border border-slate-200 rounded-[16px] overflow-hidden flex flex-col max-h-[calc(100vh-140px)] sticky top-24">
-                        <div className="p-4 border-b border-slate-200 bg-white">
-                            <h3 className="font-bold text-slate-900">Course Content</h3>
-                        </div>
+                {/* RIGHT: Course Content Sidebar */}
+                <div className="w-[400px] bg-slate-900 border-l border-slate-800 overflow-y-auto">
+                    <div className="p-4 border-b border-slate-800 bg-slate-950">
+                        <h3 className="font-bold text-white">Course Content</h3>
+                        <p className="text-xs text-slate-400 mt-1">
+                            {sections.length} sections
+                        </p>
+                    </div>
 
-                        <div className="overflow-y-auto p-4 flex flex-col gap-3">
-                            {(course.modules || []).map((module: Module) => (
-                                <div key={module.id} className="border border-slate-200 rounded-[12px] bg-white overflow-hidden">
-                                    <div
-                                        className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors"
-                                        onClick={() => setExpandedModule(expandedModule === module.id ? null : module.id)}
-                                    >
-                                        <div className="flex-1">
-                                            <h4 className="font-bold text-sm text-slate-800 mb-1">{module.title}</h4>
-                                            <div className="flex items-center gap-2 text-xs text-slate-500">
-                                                <span>{module.lessons.length} Lessons</span>
-                                                <span>•</span>
-                                                <span>{module.duration}</span>
-                                            </div>
+                    <div className="p-4 space-y-2">
+                        {sections.map((section: any, index: number) => (
+                            <div key={section._id} className="border border-slate-800 rounded-lg bg-slate-950 overflow-hidden">
+                                <div
+                                    className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-800 transition-colors"
+                                    onClick={() => handleSectionToggle(section._id)}
+                                >
+                                    <div className="flex-1">
+                                        <h4 className="font-bold text-sm text-white mb-1">
+                                            Section {index + 1}: {section.title[i18n.language] || section.title.en}
+                                        </h4>
+                                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                                            <span>{section.lessons?.length || 0} Lessons</span>
                                         </div>
-                                        {expandedModule === module.id ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
                                     </div>
+                                    {expandedSection === section._id ?
+                                        <ChevronUp size={16} className="text-slate-400" /> :
+                                        <ChevronDown size={16} className="text-slate-400" />
+                                    }
+                                </div>
 
-                                    {expandedModule === module.id && (
-                                        <div className="border-t border-slate-100 bg-slate-50/50">
-                                            {module.lessons.map((lesson: Lesson) => (
+                                {expandedSection === section._id && (
+                                    <div className="border-t border-slate-800 bg-slate-900">
+                                        {isLessonsLoading && activeSectionId === section._id ? (
+                                            <div className="p-4 text-center text-slate-500 text-sm">
+                                                Loading lessons...
+                                            </div>
+                                        ) : activeSectionId === section._id && activeLessons.length > 0 ? (
+                                            activeLessons.map((lesson: any, lessonIndex: number) => (
                                                 <div
-                                                    key={lesson.id}
+                                                    key={lesson._id}
                                                     onClick={() => handleLessonSelect(lesson)}
-                                                    className={`p-3 pl-4 flex items-center justify-between cursor-pointer border-l-[3px] transition-all hover:bg-teal-50 ${activeLesson?.id === lesson.id
-                                                        ? 'border-teal-500 bg-teal-50/50'
+                                                    className={`p-3 pl-4 flex items-center justify-between cursor-pointer border-l-[3px] transition-all hover:bg-slate-800 ${activeLesson?._id === lesson._id
+                                                        ? 'border-teal-500 bg-slate-800'
                                                         : 'border-transparent'
-                                                        } ${lesson.isLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                                        }`}
                                                 >
                                                     <div className="flex items-center gap-3">
-                                                        {lesson.isLocked ? (
-                                                            <Lock size={14} className="text-slate-400" />
-                                                        ) : activeLesson?.id === lesson.id ? (
+                                                        {activeLesson?._id === lesson._id ? (
                                                             <div className="w-4 h-4 rounded-full bg-teal-500 flex items-center justify-center">
                                                                 <Play size={8} fill="white" className="text-white ml-0.5" />
                                                             </div>
+                                                        ) : lesson.hasQuiz ? (
+                                                            <FileQuestion size={14} className="text-slate-400" />
+                                                        ) : lesson.video ? (
+                                                            <PlayCircle size={14} className="text-slate-400" />
                                                         ) : (
-                                                            <CheckCircle size={14} className="text-slate-300" />
+                                                            <BookOpen size={14} className="text-slate-400" />
                                                         )}
-                                                        <span className={`text-sm font-medium ${activeLesson?.id === lesson.id ? 'text-teal-700' : 'text-slate-700'}`}>
-                                                            {lesson.title}
+                                                        <span className={`text-sm font-medium ${activeLesson?._id === lesson._id ? 'text-teal-400' : 'text-slate-300'
+                                                            }`}>
+                                                            {lessonIndex + 1}. {lesson.title[i18n.language] || lesson.title.en}
                                                         </span>
                                                     </div>
-                                                    <span className="text-xs text-slate-400">{lesson.duration}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        {lesson.isFree && (
+                                                            <Badge variant="outline" className="text-teal-400 border-teal-600 text-[10px]">
+                                                                Free
+                                                            </Badge>
+                                                        )}
+                                                        <span className="text-xs text-slate-500">{lesson.duration || '5:00'}</span>
+                                                    </div>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
+                                            ))
+                                        ) : (
+                                            <div className="p-4 text-center text-slate-500 text-sm">
+                                                No lessons in this section
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </div>
-            </main>
+            </main >
+        </div >
+    );
+}
+
+// Sub-component to handle quiz entry logic logically
+function QuizEntryPoint({ courseSlug, lesson, i18n, navigate }: { courseSlug: string, lesson: any, i18n: any, navigate: any }) {
+    const quizId = typeof lesson.quiz === 'object' ? lesson.quiz._id : lesson.quiz;
+
+    const { data: quizStatus, isLoading } = useGetQuizPreviewQuery(
+        { courseSlug, lessonId: lesson._id, quizId },
+        { skip: !courseSlug || !lesson._id || !quizId }
+    );
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-white px-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mb-4"></div>
+                <p className="text-slate-400">Checking quiz status...</p>
+            </div>
+        );
+    }
+
+    const attemptsCount = quizStatus?.attempts?.length || 0;
+    const canAttempt = quizStatus?.canAttempt;
+    const latestAttempt = attemptsCount > 0 ? quizStatus.attempts[0] : null;
+
+    let buttonText = "Take Quiz";
+    let statusText = "This lesson includes a quiz to test your knowledge";
+    let Icon = FileQuestion;
+
+    if (attemptsCount > 0) {
+        if (canAttempt) {
+            buttonText = "Retake Quiz";
+            statusText = `You previously scored ${latestAttempt.percentage}%. You have ${quizStatus.remainingAttempts} attempt(s) left.`;
+        } else {
+            buttonText = "View Results";
+            statusText = `You've completed all attempts. Your best score was ${Math.max(...quizStatus.attempts.map((a: any) => a.percentage))}%`;
+            Icon = CheckCircle2;
+        }
+    }
+
+    return (
+        <div className="flex flex-col items-center justify-center h-full text-white px-8">
+            <Icon size={80} className={`${canAttempt || attemptsCount === 0 ? 'text-teal-500' : 'text-blue-500'} mb-6`} />
+            <h2 className="text-3xl font-bold mb-3 text-center">
+                {lesson.title?.[i18n.language] || lesson.title?.en}
+            </h2>
+            <p className="text-slate-400 mb-8 text-center max-w-md italic">
+                {statusText}
+            </p>
+            <Button
+                size="lg"
+                className={`${canAttempt || attemptsCount === 0 ? 'bg-teal-600 hover:bg-teal-700' : 'bg-blue-600 hover:bg-blue-700'} text-white px-8 py-6 text-lg transition-all transform hover:scale-105`}
+                onClick={() => {
+                    const url = `/learn/${courseSlug}/quiz/${quizId}?lessonId=${lesson._id}`;
+                    window.open(url, '_blank');
+                }}
+            >
+                <Icon className="mr-3" size={24} />
+                {buttonText}
+            </Button>
+
+            {attemptsCount > 0 && (
+                <p className="mt-4 text-xs text-slate-500">
+                    Total Attempts: {attemptsCount} / {quizStatus.quiz?.totalAttempts}
+                </p>
+            )}
         </div>
     );
 }

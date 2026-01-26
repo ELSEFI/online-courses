@@ -15,6 +15,50 @@ exports.getQuiz = async (req, res) => {
   }
 };
 
+exports.getQuizPreview = async (req, res) => {
+  const { lessonId, quizId } = req.params;
+  try {
+    if (!mongoose.Types.ObjectId.isValid(lessonId) || !mongoose.Types.ObjectId.isValid(quizId)) {
+      return res.status(400).json({ message: "Invalid lesson or quiz id" });
+    }
+
+    const quiz = await Quiz.findOne({ _id: quizId, lesson: lessonId, isActive: true })
+      .select('title totalScore totalAttempts questions');
+
+    if (!quiz) {
+      return res.status(404).json({ message: "Quiz not found" });
+    }
+
+    // Get user's previous attempts
+    const attempts = await QuizAttempt.find({
+      user: req.user._id,
+      quiz: quizId,
+      lesson: lessonId
+    })
+      .select('obtainedScore totalScore percentage passed submittedAt')
+      .sort({ submittedAt: -1 });
+
+    // Calculate remaining attempts
+    const remainingAttempts = quiz.totalAttempts - attempts.length;
+
+    res.status(200).json({
+      quiz: {
+        _id: quiz._id,
+        title: quiz.title,
+        totalScore: quiz.totalScore,
+        totalAttempts: quiz.totalAttempts,
+        questionsCount: quiz.questions.length,
+      },
+      attempts,
+      remainingAttempts,
+      canAttempt: remainingAttempts > 0
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: `Server Error ${error.message}` });
+  }
+};
+
 exports.getGrades = async (req, res) => {
   const { lessonId, quizId } = req.params;
   try {
@@ -52,19 +96,31 @@ exports.solveQuiz = async (req, res) => {
     let obtainedScore = 0;
     const attemptAnswers = [];
 
-    for (const answer of answers) {
-      const question = quiz.question.id(answers.questionId);
+    for (let i = 0; i < answers.length; i++) {
+      const answer = answers[i];
+      let question;
+
+      // Try searching by ID first
+      if (answer.questionId) {
+        question = quiz.questions.id(answer.questionId);
+      }
+
+      // Fallback to index if ID search failed or questionId is missing
+      if (!question && i < quiz.questions.length) {
+        question = quiz.questions[i];
+      }
+
       if (!question) continue;
 
       const isCorrect =
-        answer.selectedOptionIndex === question.correctAnswerIndex;
+        Number(answer.selectedOptionIndex) === Number(question.correctAnswerIndex);
 
-      const score = isCorrect ? question.score : 0;
+      const score = isCorrect ? (question.score || 1) : 0;
       obtainedScore += score;
 
       attemptAnswers.push({
-        questionId: question._id,
-        selectedOptionIndex: answer.selectedOptionIndex,
+        questionId: question._id || null,
+        selectedOptionIndex: Number(answer.selectedOptionIndex),
         isCorrect,
         score,
       });
