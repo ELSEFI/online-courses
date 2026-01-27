@@ -32,12 +32,31 @@ export default function Login() {
     useEffect(() => {
         // Initialize Google Sign-In
         if (window.google) {
+            const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
+
             window.google.accounts.id.initialize({
-                client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
+                client_id: clientId.trim(),
                 callback: handleGoogleResponse,
+                auto_select: false,
+                cancel_on_tap_outside: true,
+                use_fedcm_tap: true,
+                ux_mode: 'popup',
+                context: 'signin',
             });
+
+            // Render the standard button
+            const googleBtn = document.getElementById('google-signin-button');
+            if (googleBtn) {
+                window.google.accounts.id.renderButton(googleBtn, {
+                    theme: 'outline',
+                    size: 'large',
+                    width: 400, // Valid range is 200-400 (number)
+                    text: 'signin_with',
+                    shape: 'pill',
+                });
+            }
         }
-    }, []);
+    }, [i18n.language]); // Updates button text if language changes
 
     const handleGoogleResponse = async (response: any) => {
         try {
@@ -74,13 +93,7 @@ export default function Login() {
         }
     };
 
-    const handleGoogleLogin = () => {
-        if (window.google) {
-            window.google.accounts.id.prompt(); // Show One Tap dialog
-        } else {
-            toast.error(t('auth.google_not_loaded'));
-        }
-    };
+
 
     return (
         <div className="flex min-h-[calc(100vh-80px)] bg-white font-sans text-gray-900" dir={isAr ? 'rtl' : 'ltr'}>
@@ -150,20 +163,12 @@ export default function Login() {
                                 <span className="bg-white px-2 text-gray-400">{t('auth.or_continue')}</span>
                             </div>
                         </div>
-
-                        <button
-                            type="button"
-                            onClick={handleGoogleLogin}
-                            disabled={isGoogleLoading}
-                            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-xl transition-all duration-300 disabled:opacity-50"
-                        >
-                            {isGoogleLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                                <>
-                                    <Chrome className="w-5 h-5 text-red-500" />
-                                    {t('auth.google_signin')}
-                                </>
-                            )}
-                        </button>
+                        <div id="google-signin-button" className="w-full flex justify-center py-2 min-h-[50px]"></div>
+                        {isGoogleLoading && (
+                            <div className="flex justify-center">
+                                <Loader2 className="w-5 h-5 animate-spin text-[#3DCBB1]" />
+                            </div>
+                        )}
                     </form>
 
                     <p className="text-center text-gray-500">
@@ -188,7 +193,7 @@ export default function Login() {
                     <p className="text-white/80">{t('auth.learn_best_desc')}</p>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
 
