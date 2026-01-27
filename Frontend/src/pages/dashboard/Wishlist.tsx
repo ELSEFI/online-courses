@@ -2,6 +2,8 @@ import React from 'react';
 import { useGetWishlistQuery, useRemoveFromWishlistMutation } from '@/store/api/courseApi';
 import { Heart, Trash2, ShoppingCart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import assetMap from '@/imports/assetMap';
+import { getCourseThumbnail } from '@/utils/imageUtils';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
@@ -66,9 +68,12 @@ export default function Wishlist() {
                                 {/* Image */}
                                 <div className="w-full md:w-64 aspect-video md:aspect-auto md:h-44 rounded-2xl overflow-hidden shrink-0">
                                     <img
-                                        src={`https://res.cloudinary.com/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload/${course.thumbnail}`}
+                                        src={getCourseThumbnail(course.thumbnail, course.thumbnailUrl)}
                                         alt={course.title?.[i18n.language] || course.title?.en}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        onError={(e) => {
+                                            e.currentTarget.src = assetMap['course-placeholder.jpg'];
+                                        }}
                                     />
                                 </div>
 

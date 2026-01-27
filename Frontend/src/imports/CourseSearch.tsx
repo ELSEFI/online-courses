@@ -22,6 +22,7 @@ import { Heart, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Course, Module, Lesson, CATEGORIES } from "@/services/api";
 import { useSearchCoursesQuery } from "@/store/api/courseApi";
 import assetMap from '../imports/assetMap';
+import { getCourseThumbnail } from '@/utils/imageUtils';
 
 interface CourseSearchProps { }
 
@@ -209,7 +210,7 @@ export default function CourseSearch({ }: CourseSearchProps) {
                                     {/* Image Container */}
                                     <div className="relative h-[180px] bg-slate-200 overflow-hidden">
                                         <img
-                                            src={course.thumbnailUrl || assetMap['course1']}
+                                            src={getCourseThumbnail(course.thumbnail, course.thumbnailUrl)}
                                             alt={course.title.en}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             onError={(e) => { e.currentTarget.src = assetMap['course1']; }}

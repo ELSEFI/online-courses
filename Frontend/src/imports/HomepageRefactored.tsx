@@ -28,6 +28,7 @@ import {
 
 // Assets Mapping
 import assetMap from './assetMap';
+import { getCourseThumbnail } from '@/utils/imageUtils';
 
 export default function HomepageRefactored() {
     const { t, i18n } = useTranslation();
@@ -145,7 +146,7 @@ export default function HomepageRefactored() {
                             <div key={course._id} onClick={() => navigate(`/courses/${course.slug}`)} className="bg-white rounded-[24px] shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-slate-100 overflow-hidden cursor-pointer group">
                                 <div className="h-[220px] overflow-hidden relative bg-slate-100">
                                     <img
-                                        src={course.thumbnailUrl || assetMap['course1']}
+                                        src={getCourseThumbnail(course.thumbnail, course.thumbnailUrl)}
                                         alt={course.title.en}
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                         onError={(e) => { e.currentTarget.src = assetMap['course1']; }}
@@ -197,7 +198,7 @@ export default function HomepageRefactored() {
                             <div key={course._id} onClick={() => navigate(`/courses/${course.slug}`)} className="bg-white rounded-[24px] p-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-50 group cursor-pointer">
                                 <div className={`h-[180px] rounded-[18px] bg-slate-100 mb-5 relative overflow-hidden shadow-inner`}>
                                     <img
-                                        src={course.thumbnailUrl || assetMap['course2']}
+                                        src={getCourseThumbnail(course.thumbnail, course.thumbnailUrl)}
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                         onError={(e) => { e.currentTarget.src = assetMap['course2']; }}
                                     />

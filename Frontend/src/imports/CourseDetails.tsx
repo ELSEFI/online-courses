@@ -32,6 +32,7 @@ import {
 import { Course, Module, Lesson } from "@/services/api";
 import { useGetCourseDetailsQuery, useGetCourseSectionsQuery, useGetMyCoursesQuery } from '@/store/api/courseApi';
 import assetMap from '../imports/assetMap';
+import { getCourseThumbnail } from '@/utils/imageUtils';
 import SectionAccordionItem from '@/components/course/SectionAccordionItem';
 
 export default function CourseDetails() {
@@ -329,9 +330,12 @@ export default function CourseDetails() {
                                 {/* Course Thumbnail */}
                                 <div className="relative aspect-video bg-slate-900">
                                     <img
-                                        src={course.thumbnail || assetMap['course-placeholder.jpg']}
+                                        src={getCourseThumbnail(course.thumbnail, course.thumbnailUrl)}
                                         alt={course.title?.en}
                                         className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.currentTarget.src = assetMap['course-placeholder.jpg'];
+                                        }}
                                     />
                                     <div className="absolute inset-0 flex items-center justify-center">
                                         <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center">

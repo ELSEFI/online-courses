@@ -6,6 +6,7 @@ import { useGetMeQuery, useGetUserProfileQuery } from '@/store/api/userApi';
 import { useGetMyCoursesQuery, useGetInstructorCoursesQuery, useGetWishlistQuery, useAddToWishlistMutation, useRemoveFromWishlistMutation } from '@/store/api/courseApi';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { getCourseThumbnail } from '@/utils/imageUtils';
 import { Button } from '@/components/ui/button';
 
 export default function Profile() {
@@ -317,7 +318,14 @@ function CourseCard({ course, t, i18n, wishlistData, onWishlistToggle }: any) {
             )}
 
             <div className="h-44 relative overflow-hidden bg-slate-100">
-                <img src={course.thumbnailUrl || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80"} alt={typeof title === 'string' ? title : ''} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                <img
+                    src={getCourseThumbnail(course.thumbnail, course.thumbnailUrl)}
+                    alt={typeof title === 'string' ? title : ''}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                    onError={(e) => {
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80";
+                    }}
+                />
                 <div className="absolute top-4 right-4">
                     <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase font-mono border ${course.isPublished ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                         {course.isPublished ? t('profile.live') : t('profile.draft')}
