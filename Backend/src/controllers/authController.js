@@ -79,7 +79,12 @@ exports.loginGoogle = async (req, res) => {
 
     let profileImage = googleUser.profileImage;
     if (googleUser.profileImage) {
-      profileImage = await uploadImageToCloudinary(googleUser.profileImage, "profile");
+      try {
+        profileImage = await uploadImageToCloudinary(googleUser.profileImage, "profile");
+      } catch (err) {
+        console.error("Failed to upload Google profile image:", err.message);
+        profileImage = undefined;
+      }
     }
 
     let user = await User.findOne({ email: googleUser.email });
