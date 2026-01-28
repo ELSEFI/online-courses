@@ -12,8 +12,6 @@ router.post("/login", authController.login);
 router.post("/logout", protected, authController.logout);
 
 router.post("/google",
-    uploadImage.single("profileImage"),
-    resize.resizeProfileImage,
     authController.loginGoogle
 );
 

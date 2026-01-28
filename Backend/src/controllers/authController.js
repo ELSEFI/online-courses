@@ -88,7 +88,7 @@ exports.loginGoogle = async (req, res) => {
         name: googleUser.name || googleUser.email.split("@")[0],
         email: googleUser.email,
         googleId: googleUser.googleId,
-        profileImage: profileImage.public_id,
+        profileImage: profileImage ? profileImage.public_id : undefined,
         password: Math.random().toString(36).substring(2, 10),
         emailVerified: true,
       });
