@@ -193,7 +193,7 @@ const AdminCourses = () => {
                                 <tr key={course._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                            {course.title[i18n.language as 'en' | 'ar']}
+                                            {course.title[i18n.language.startsWith('ar') ? 'ar' : 'en'] || course.title.en}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">

@@ -24,8 +24,10 @@ exports.addCategory = async (req, res) => {
     parentsCategory,
     order,
   } = req.body;
+
+  let result = null;
+
   try {
-    let result = null;
     if (req.file) {
       result = await uploadImageToCloudinary(req.file.buffer, "Categories");
     }
@@ -46,7 +48,7 @@ exports.addCategory = async (req, res) => {
       .status(201)
       .json({ message: "Category Created Successfully", category });
   } catch (error) {
-    if (req.file) {
+    if (result) {
       await deleteFromCloudinary(result.public_id);
     }
     if (error.code === 11000) {
@@ -163,6 +165,9 @@ exports.updateCategory = async (req, res) => {
     parentCategory,
     order,
   } = req.body;
+
+  let result = null;
+
   try {
     const category = await Category.findById(categoryId);
     if (!category)
@@ -171,8 +176,10 @@ exports.updateCategory = async (req, res) => {
       });
     let imageId = category.image;
     if (req.file) {
-      await deleteFromCloudinary(category.image);
-      const result = await uploadImageToCloudinary(
+      if (category.image) {
+        await deleteFromCloudinary(category.image);
+      }
+      result = await uploadImageToCloudinary(
         req.file.buffer,
         "Categories"
       );

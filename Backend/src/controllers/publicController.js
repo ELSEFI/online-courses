@@ -95,7 +95,7 @@ exports.updateProfile = async (req, res) => {
 
     if (name) user.name = name;
     if (req.file) {
-      const result = await uploadImageToCloudinary(req.file.buffer, "users");
+      const result = await uploadImageToCloudinary(req.file.buffer, "profile");
 
       user.profileImage = result.public_id;
     }
