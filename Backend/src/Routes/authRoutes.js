@@ -1,5 +1,7 @@
 const express = require("express");
 const authController = require("../controllers/authController");
+const uploadImage = require("../Middleware/uploadImage");
+const resize = require("../Middleware/resizeImage");
 const protected = require("../Middleware/jwtMiddleware");
 const router = express.Router();
 
@@ -9,7 +11,11 @@ router.post("/login", authController.login);
 
 router.post("/logout", protected, authController.logout);
 
-router.post("/google", authController.loginGoogle);
+router.post("/google",
+    uploadImage.single("profileImage"),
+    resize.resizeProfileImage,
+    authController.loginGoogle
+);
 
 router.post("/verify-email", authController.verifyEmail);
 

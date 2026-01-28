@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const { uploadImageToCloudinary } = require("../services/imageUpload")
 const { verifyGoogleToken } = require("../services/googleAuthService");
 const { sendEmail, sendResetPasswordEmail } = require("../services/emailSender");
 
@@ -76,14 +77,20 @@ exports.loginGoogle = async (req, res) => {
     if (!googleUser.email)
       return res.status(400).json({ message: "Invalid Google account data" });
 
+    let profileImage = googleUser.profileImage;
+    if (googleUser.profileImage) {
+      profileImage = await uploadImageToCloudinary(googleUser.profileImage, "profile");
+    }
+
     let user = await User.findOne({ email: googleUser.email });
     if (!user) {
       user = await User.create({
         name: googleUser.name || googleUser.email.split("@")[0],
         email: googleUser.email,
         googleId: googleUser.googleId,
-        profileImage: googleUser.profileImage,
+        profileImage: profileImage.public_id,
         password: Math.random().toString(36).substring(2, 10),
+        emailVerified: true,
       });
     }
     user.password = undefined;
