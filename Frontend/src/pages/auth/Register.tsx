@@ -2,18 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { Mail, Lock, User, Chrome, Loader2 } from 'lucide-react';
-import { useRegisterMutation, useLoginGoogleMutation } from '@/store/api/authApi';
+import { Mail, Lock, User, Loader2 } from 'lucide-react';
+import { useRegisterMutation } from '@/store/api/authApi';
 import { setCredentials } from '@/store/slices/authSlice';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
-// Declare google on window for TypeScript
-declare global {
-    interface Window {
-        google: any;
-    }
-}
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
+import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
 
 // Using a different asset if possible, or same for symmetry
 import authImage from "@/assets/ebe64b79a97a2a781199976361a3a5403e2dd1ad.png";
@@ -27,29 +24,14 @@ export default function Register() {
     const { t, i18n } = useTranslation();
     const isAr = i18n.language === 'ar';
 
+    const { user } = useSelector((state: RootState) => state.auth);
     const [register, { isLoading }] = useRegisterMutation();
-    const [loginGoogle, { isLoading: isGoogleLoading }] = useLoginGoogleMutation();
 
     useEffect(() => {
-        // Initialize Google Sign-In
-        if (window.google) {
-            window.google.accounts.id.initialize({
-                client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
-                callback: handleGoogleResponse,
-            });
-        }
-    }, []);
-
-    const handleGoogleResponse = async (response: any) => {
-        try {
-            const result = await loginGoogle({ token: response.credential }).unwrap();
-            dispatch(setCredentials({ user: result.user, token: result.token }));
-            toast.success(result.message || t('auth.login_success'));
+        if (user) {
             navigate('/');
-        } catch (err: any) {
-            toast.error(err.data?.message || t('auth.google_login_failed'));
         }
-    };
+    }, [user, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -140,34 +122,9 @@ export default function Register() {
                             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('auth.signup_btn')}
                         </button>
 
-                        <div className="relative py-4">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-100"></div>
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-white px-2 text-gray-400">{t('auth.or_signup')}</span>
-                            </div>
+                        <div className="w-full">
+                            <GoogleAuthButton text="signup_with" />
                         </div>
-
-                        <button
-                            type="button"
-                            onClick={() => {
-                                if (window.google) {
-                                    window.google.accounts.id.prompt();
-                                } else {
-                                    toast.error(t('auth.google_not_loaded'));
-                                }
-                            }}
-                            disabled={isGoogleLoading}
-                            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-xl transition-all duration-300 disabled:opacity-50"
-                        >
-                            {isGoogleLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                                <>
-                                    <Chrome className="w-5 h-5 text-red-500" />
-                                    {t('auth.google_signup')}
-                                </>
-                            )}
-                        </button>
                     </form>
 
                     <p className="text-center text-gray-500">

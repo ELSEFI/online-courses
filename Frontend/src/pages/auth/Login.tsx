@@ -2,21 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { Mail, Lock, Chrome, Loader2 } from 'lucide-react';
-import { useLoginMutation, useLoginGoogleMutation } from '@/store/api/authApi';
+import { Mail, Lock, Loader2 } from 'lucide-react';
+import { useLoginMutation } from '@/store/api/authApi';
 import { setCredentials } from '@/store/slices/authSlice';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
+import GoogleAuthButton from '@/components/auth/GoogleAuthButton';
+
 // Using a valid asset from the project
 import authImage from "@/assets/c44d9c4405123860b8ed6398ddc0e385f097fea6.png";
-
-// Declare google on window for TypeScript
-declare global {
-    interface Window {
-        google: any;
-    }
-}
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -26,48 +23,14 @@ export default function Login() {
     const { t, i18n } = useTranslation();
     const isAr = i18n.language === 'ar';
 
+    const { user } = useSelector((state: RootState) => state.auth);
     const [login, { isLoading }] = useLoginMutation();
-    const [loginGoogle, { isLoading: isGoogleLoading }] = useLoginGoogleMutation();
 
     useEffect(() => {
-        // Initialize Google Sign-In
-        if (window.google) {
-            const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
-
-            window.google.accounts.id.initialize({
-                client_id: clientId.trim(),
-                callback: handleGoogleResponse,
-                auto_select: false,
-                cancel_on_tap_outside: true,
-                use_fedcm_tap: true,
-                ux_mode: 'popup',
-                context: 'signin',
-            });
-
-            // Render the standard button
-            const googleBtn = document.getElementById('google-signin-button');
-            if (googleBtn) {
-                window.google.accounts.id.renderButton(googleBtn, {
-                    theme: 'outline',
-                    size: 'large',
-                    width: 400, // Valid range is 200-400 (number)
-                    text: 'signin_with',
-                    shape: 'pill',
-                });
-            }
-        }
-    }, [i18n.language]); // Updates button text if language changes
-
-    const handleGoogleResponse = async (response: any) => {
-        try {
-            const result = await loginGoogle({ token: response.credential }).unwrap();
-            dispatch(setCredentials({ user: result.user, token: result.token }));
-            toast.success(result.message || t('auth.login_success'));
+        if (user) {
             navigate('/');
-        } catch (err: any) {
-            toast.error(err.data?.message || t('auth.google_login_failed'));
         }
-    };
+    }, [user, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -155,20 +118,9 @@ export default function Login() {
                             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('auth.signin_btn')}
                         </button>
 
-                        <div className="relative py-4">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-100"></div>
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-white px-2 text-gray-400">{t('auth.or_continue')}</span>
-                            </div>
+                        <div className="w-full">
+                            <GoogleAuthButton text="signin_with" />
                         </div>
-                        <div id="google-signin-button" className="w-full flex justify-center py-2 min-h-[50px]"></div>
-                        {isGoogleLoading && (
-                            <div className="flex justify-center">
-                                <Loader2 className="w-5 h-5 animate-spin text-[#3DCBB1]" />
-                            </div>
-                        )}
                     </form>
 
                     <p className="text-center text-gray-500">
