@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const cloudinary = require("../config/cloudinaryConfig");
 const instructorProfileSchema = new mongoose.Schema(
   {
     userId: {
@@ -122,8 +123,6 @@ instructorProfileSchema.methods.updateStats = async function () {
 
   await this.save();
 };
-
-const cloudinary = require("../config/cloudinaryConfig");
 
 // Virtual Field For CV URL
 instructorProfileSchema.virtual("cvURL").get(function () {

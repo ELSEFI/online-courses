@@ -144,17 +144,14 @@ exports.getHomeData = async (req, res) => {
     const { category } = req.query;
     let categoryIds = [];
 
-    // 1. Fetch ALL root categories for the UI tabs (always needed for layout)
     const categories = await mongoose.model("Category").find({ parent: null, isActive: true }).select('name slug').lean();
 
-    // 2. Determine category filtering if a category is provided (ID or Slug)
     if (category) {
       const targetCategory = await mongoose.model("Category").findOne({
         $or: [{ _id: mongoose.isValidObjectId(category) ? category : null }, { slug: category }]
       }).select("_id");
 
       if (targetCategory) {
-        // Get all descendant category IDs to include courses from subcategories
         const descendants = await mongoose.model("Category").getAllDescendantIds(targetCategory._id);
         categoryIds = [targetCategory._id, ...descendants];
       }

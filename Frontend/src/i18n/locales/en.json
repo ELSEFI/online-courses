@@ -427,6 +427,10 @@
         "manage_courses_desc": "Manage and organize your courses",
         "no_users_found": "No users found matching your criteria",
         "delete_course": "Delete Course",
-        "delete_course_confirm_desc": "Are you sure you want to delete this course? This action cannot be undone."
+        "delete_course_confirm_desc": "Are you sure you want to delete this course? This action cannot be undone.",
+        "create_regular_user_account": "Create a regular user account",
+        "enter_user_name": "Enter user name",
+        "enter_email_address": "Enter email address",
+        "set_temporary_password": "Set temporary password"
     }
 }

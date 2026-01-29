@@ -159,6 +159,9 @@ categorySchema.statics.getCategoryTree = async function ({
       const parentId = cat.parent.toString();
       if (map[parentId]) {
         map[parentId].subcategories.push(cat);
+      } else {
+        // Parent is either null or was filtered out (e.g. parent is active, child is inactive)
+        tree.push(cat);
       }
     } else {
       tree.push(cat);

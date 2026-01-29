@@ -417,6 +417,10 @@
         "manage_courses_desc": "إدارة وتنظيم دوراتك",
         "no_users_found": "لم يتم العثور على مستخدمين مطابقين لبحثك",
         "delete_course": "حذف الدورة",
-        "delete_course_confirm_desc": "هل أنت متأكد من حذف هذه الدورة؟ لا يمكن التراجع عن هذا الإجراء."
+        "delete_course_confirm_desc": "هل أنت متأكد من حذف هذه الدورة؟ لا يمكن التراجع عن هذا الإجراء.",
+        "create_regular_user_account": "إنشاء حساب مستخدم عادي",
+        "enter_user_name": "أدخل اسم المستخدم",
+        "enter_email_address": "أدخل البريد الإلكتروني",
+        "set_temporary_password": "تعيين كلمة مرور مؤقتة"
     }
 }
