@@ -1,5 +1,5 @@
 const express = require("express");
-const contactController = require("../controllers/contactContrller");
+const contactController = require("../controllers/contactController");
 const protected = require("../Middleware/jwtMiddleware");
 const restrictTo = require("../Middleware/roleMiddleware");
 

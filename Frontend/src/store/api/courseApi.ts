@@ -62,6 +62,10 @@ export const courseApi = apiSlice.injectEndpoints({
             query: () => '/instructor/courses',
             providesTags: ['Course'],
         }),
+        getSpecificInstructorCourses: builder.query<any, string>({
+            query: (instructorId) => `/admin/instructors/${instructorId}/courses`,
+            providesTags: ['Course'],
+        }),
         getHomeData: builder.query<any, string | undefined>({
             query: (category) => ({
                 url: '/home-data',
@@ -117,6 +121,7 @@ export const {
     useRemoveFromWishlistMutation,
     useGetInstructorsQuery,
     useGetInstructorCoursesQuery,
+    useGetSpecificInstructorCoursesQuery,
     useGetHomeDataQuery,
     useGetCourseSectionsQuery,
     useGetSectionLessonsQuery,

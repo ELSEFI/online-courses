@@ -10,6 +10,10 @@ export const userApi = apiSlice.injectEndpoints({
             query: (userId) => `/users/${userId}`,
             providesTags: (result, error, userId) => [{ type: 'User', id: userId }],
         }),
+        getInstructorProfile: builder.query<any, string>({
+            query: (instructorId) => `/admin/instructors/${instructorId}`,
+            providesTags: (result, error, instructorId) => [{ type: 'User', id: instructorId }],
+        }),
         updateProfile: builder.mutation<any, FormData>({
             query: (formData) => ({
                 url: '/update-profile',
@@ -37,6 +41,7 @@ export const userApi = apiSlice.injectEndpoints({
 export const {
     useGetMeQuery,
     useGetUserProfileQuery,
+    useGetInstructorProfileQuery,
     useUpdateProfileMutation,
     useChangePasswordMutation,
     useDeleteAccountMutation,

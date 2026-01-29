@@ -4,6 +4,7 @@ const User = require("../models/User");
 const { uploadCvToCloudinary } = require("../services/cvUpload");
 const { deleteFromCloudinary } = require("../services/cloudinaryDestroy");
 const Course = require("../models/Course");
+const cloudinary = require("../config/cloudinaryConfig");
 
 exports.beInstructor = async (req, res) => {
   let uploadedCv = null;
@@ -101,7 +102,7 @@ exports.getInstructor = async (req, res) => {
   try {
     const instructor = await instructorProfile
       .findById(req.params.instructorId)
-      .populate("userId", "name email profileImage");
+      .populate("userId", "name email profileImage role");
     if (!instructor)
       return res.status(404).json({ message: "Not Instructor With That Id" });
 
@@ -222,12 +223,7 @@ exports.getRequest = async (req, res) => {
 
     if (!request) return res.status(404).json({ message: "Request No Found!" });
     await request.populate("userId", "name email profileImage");
-    res.status(200).json({
-      request: {
-        ...request.toObject(),
-        cvURL: `${req.protocol}://${req.get("host")}/cvs/${request.cvFile}`,
-      },
-    });
+    res.status(200).json({ request });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
@@ -313,7 +309,15 @@ exports.rejectInstructor = async (req, res) => {
 
 exports.instructorCourses = async (req, res) => {
   try {
-    const profile = await instructorProfile.findOne({ userId: req.user._id });
+    const { instructorId } = req.params;
+    let profile;
+
+    if (instructorId) {
+      profile = await instructorProfile.findById(instructorId);
+    } else {
+      profile = await instructorProfile.findOne({ userId: req.user._id });
+    }
+
     if (!profile) return res.status(404).json({ message: "Instructor Profile Not Found" });
 
     const courses = await Course.find({ instructor: profile._id, status: true }).populate("instructor", "userId");

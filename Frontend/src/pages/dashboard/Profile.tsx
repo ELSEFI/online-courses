@@ -2,9 +2,16 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { User, Mail, Shield, BookOpen, Clock, Award, ShieldCheck, Users, Layout, Star, Heart } from 'lucide-react';
-import { useGetMeQuery, useGetUserProfileQuery } from '@/store/api/userApi';
-import { useGetMyCoursesQuery, useGetInstructorCoursesQuery, useGetWishlistQuery, useAddToWishlistMutation, useRemoveFromWishlistMutation } from '@/store/api/courseApi';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useGetMeQuery, useGetUserProfileQuery, useGetInstructorProfileQuery } from '@/store/api/userApi';
+import {
+    useGetMyCoursesQuery,
+    useGetInstructorCoursesQuery,
+    useGetSpecificInstructorCoursesQuery,
+    useGetWishlistQuery,
+    useAddToWishlistMutation,
+    useRemoveFromWishlistMutation
+} from '@/store/api/courseApi';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getCourseThumbnail } from '@/utils/imageUtils';
 import { Button } from '@/components/ui/button';
@@ -12,10 +19,14 @@ import { Button } from '@/components/ui/button';
 export default function Profile() {
     const { userId: paramUserId } = useParams();
     const { user: authUser } = useSelector((state: RootState) => state.auth);
+    const [searchParams] = useSearchParams();
+    const instructorId = searchParams.get('instructorId');
 
     // Fetch data based on context (own profile or public)
     const { data: meData, isLoading: isMeLoading } = useGetMeQuery(undefined, { skip: !!paramUserId });
     const { data: publicData, isLoading: isPublicLoading } = useGetUserProfileQuery(paramUserId!, { skip: !paramUserId });
+    const { data: instructorData, isLoading: isInstructorLoading } = useGetInstructorProfileQuery(instructorId!, { skip: !instructorId });
+    const { data: instructorCoursesData, isLoading: isInstructorCoursesLoadingSpec } = useGetSpecificInstructorCoursesQuery(instructorId!, { skip: !instructorId });
 
     // Common queries
     const { data: enrolledCoursesResponse } = useGetMyCoursesQuery(undefined, { skip: !!paramUserId });
@@ -30,14 +41,40 @@ export default function Profile() {
     const [addToWishlist] = useAddToWishlistMutation();
     const [removeFromWishlist] = useRemoveFromWishlistMutation();
 
-    const user = paramUserId ? publicData?.user : (meData?.user || authUser);
+    // Determine basic user info (public vs own)
+    // Select the base user object
+    let user = paramUserId ? publicData : (meData?.user || authUser);
+
+    // If we have detailed instructor data (from admin view), merge it
+    if (instructorData) {
+        const baseUserInfo = instructorData.userId && typeof instructorData.userId === 'object'
+            ? instructorData.userId
+            : {};
+
+        user = {
+            ...user, // Current base info
+            ...baseUserInfo, // Populated user info (name, email, profileImage, role)
+            ...instructorData, // Instructor details (bio, jobTitle, etc.)
+            // Ensure stats structure matches what renderStats expects
+            instructorStats: {
+                rating: instructorData.rating,
+                studentsCount: instructorData.totalStudents,
+                coursesCount: instructorData.totalCourses,
+            }
+        };
+    }
+
     const isOwnProfile = !paramUserId || paramUserId === authUser?._id;
 
-    const { data: instructorCourses, isLoading: isInstructorCoursesLoading } = useGetInstructorCoursesQuery(undefined, {
+    // Determine which courses to show
+    const { data: myInstructorCourses, isLoading: isMyInstructorCoursesLoading } = useGetInstructorCoursesQuery(undefined, {
         skip: user?.role !== 'instructor' || !isOwnProfile
     });
 
-    const isLoading = isMeLoading || isPublicLoading;
+    const coursesToShow = instructorId ? instructorCoursesData : (isOwnProfile ? myInstructorCourses : user?.courses);
+    const isCoursesLoading = instructorId ? isInstructorCoursesLoadingSpec : (isOwnProfile ? isMyInstructorCoursesLoading : false);
+
+    const isLoading = isMeLoading || isPublicLoading || isInstructorLoading;
 
     if (isLoading) {
         return (
@@ -127,14 +164,14 @@ export default function Profile() {
     }
 
     return (
-        <div className="max-w-6xl mx-auto px-4 py-12" dir={isAr ? 'rtl' : 'ltr'}>
-            <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden mb-12">
-                <div className={`h-48 bg-gradient-to-r ${user?.role === 'admin' ? 'from-indigo-600 to-violet-600' :
+        <div className="max-w-6xl mx-auto px-4 py-6 md:py-12" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="bg-white rounded-[24px] md:rounded-[32px] shadow-sm border border-slate-100 overflow-hidden mb-8 md:mb-12">
+                <div className={`h-40 md:h-48 bg-gradient-to-r ${user?.role === 'admin' ? 'from-indigo-600 to-violet-600' :
                     user?.role === 'instructor' ? 'from-teal-500 to-emerald-600' :
                         'from-[#3DCBB1] to-[#2DA891]'
                     } relative`}>
-                    <div className={`absolute -bottom-16 ${isAr ? 'right-12' : 'left-12'}`}>
-                        <div className="w-32 h-32 rounded-3xl border-4 border-white overflow-hidden bg-white shadow-lg">
+                    <div className={`absolute -bottom-12 md:-bottom-16 ${isAr ? 'right-1/2 translate-x-1/2 md:right-12 md:translate-x-0' : 'left-1/2 -translate-x-1/2 md:left-12 md:translate-x-0'}`}>
+                        <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl md:rounded-3xl border-4 border-white overflow-hidden bg-white shadow-lg">
                             <img
                                 src={user?.profileImageUrl || user?.profileImage || "https://github.com/shadcn.png"}
                                 alt={user?.name}
@@ -144,12 +181,17 @@ export default function Profile() {
                     </div>
                 </div>
 
-                <div className="pt-20 pb-12 px-12">
-                    <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+                <div className="pt-16 md:pt-20 pb-8 md:pb-12 px-6 md:px-12 text-center md:text-start">
+                    <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-8">
                         <div className="flex-1 space-y-6">
                             <div>
-                                <h1 className="text-3xl font-bold text-slate-900">{user?.name}</h1>
-                                <div className="flex flex-wrap items-center gap-2 mt-2">
+                                <h1 className="text-2xl md:text-3xl font-bold text-slate-900">{user?.name}</h1>
+                                {user?.jobTitle && (
+                                    <p className="text-base md:text-lg font-semibold text-[#3DCBB1] mt-1 italic">
+                                        {isAr ? user.jobTitle.ar : user.jobTitle.en}
+                                    </p>
+                                )}
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-4">
                                     <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${user?.role === 'admin' ? 'bg-indigo-100 text-indigo-600' :
                                         user?.role === 'instructor' ? 'bg-teal-100 text-teal-600' :
                                             'bg-slate-100 text-slate-600'
@@ -189,14 +231,28 @@ export default function Profile() {
                         {renderStats()}
                     </div>
                 </div>
+
+                {user?.bio && (
+                    <div className="px-6 md:px-12 pb-8 md:pb-12">
+                        <div className="p-6 md:p-8 bg-slate-50 dark:bg-slate-900/50 rounded-[24px] md:rounded-[32px] border border-slate-100 dark:border-slate-800">
+                            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-center md:justify-start gap-2">
+                                <Layout className="w-4 h-4" />
+                                {t('profile.about_me')}
+                            </h3>
+                            <p className="text-slate-600 dark:text-gray-300 leading-relaxed whitespace-pre-line text-base md:text-lg">
+                                {isAr ? user.bio.ar : user.bio.en}
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* --- TABS --- */}
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-3 md:gap-4 mb-8 overflow-x-auto pb-2 scrollbar-hide">
                 <Button
                     variant={activeTab === 'courses' ? 'default' : 'ghost'}
                     onClick={() => setActiveTab('courses')}
-                    className={`rounded-2xl h-12 px-8 font-bold ${activeTab === 'courses' ? 'bg-[#3DCBB1] hover:bg-[#2DA891]' : 'text-slate-400'}`}
+                    className={`rounded-xl md:rounded-2xl h-10 md:h-12 px-6 md:px-8 font-bold whitespace-nowrap ${activeTab === 'courses' ? 'bg-[#3DCBB1] hover:bg-[#2DA891]' : 'text-slate-400'}`}
                 >
                     <BookOpen className="w-4 h-4 mr-2" />
                     {user?.role === 'instructor' ? t('profile.my_published_courses') : t('nav.my_courses')}
@@ -205,7 +261,7 @@ export default function Profile() {
                     <Button
                         variant={activeTab === 'wishlist' ? 'default' : 'ghost'}
                         onClick={() => setActiveTab('wishlist')}
-                        className={`rounded-2xl h-12 px-8 font-bold ${activeTab === 'wishlist' ? 'bg-[#3DCBB1] hover:bg-[#2DA891]' : 'text-slate-400'}`}
+                        className={`rounded-xl md:rounded-2xl h-10 md:h-12 px-6 md:px-8 font-bold whitespace-nowrap ${activeTab === 'wishlist' ? 'bg-[#3DCBB1] hover:bg-[#2DA891]' : 'text-slate-400'}`}
                     >
                         <Heart className="w-4 h-4 mr-2" />
                         {t('nav.wishlist')}
@@ -218,13 +274,13 @@ export default function Profile() {
                 <div className="space-y-6">
                     {user?.role === 'instructor' ? (
                         <>
-                            {isInstructorCoursesLoading ? (
+                            {isCoursesLoading ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {[1, 2, 3].map(i => <div key={i} className="h-[300px] bg-slate-50 rounded-3xl animate-pulse" />)}
                                 </div>
-                            ) : (instructorCourses?.length > 0 || user.courses?.length > 0) ? (
+                            ) : (coursesToShow?.length > 0) ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {(instructorCourses || user.courses).map((course: any) => (
+                                    {coursesToShow.map((course: any) => (
                                         <CourseCard
                                             key={course._id}
                                             course={course}

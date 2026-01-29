@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-    const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+    const { isAuthenticated, user, isCheckingAuth } = useSelector((state: RootState) => state.auth);
     const location = useLocation();
     const [hasShownToast, setHasShownToast] = useState(false);
 
@@ -22,12 +22,12 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
             // Show language-aware toast
             if (currentLang === 'ar') {
                 toast.error('يجب تسجيل الدخول', {
-                    description: 'من فضلك سجل دخول للوصول لهذه الصفحة',
+                    description: 'محتاج تسجل دخول من جديد للوصول لهذه الصفحة',
                     duration: 3000,
                 });
             } else {
                 toast.error('Authentication Required', {
-                    description: 'Please login to access this page',
+                    description: 'Please login again to access this page',
                     duration: 3000,
                 });
             }
@@ -35,6 +35,14 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
             setHasShownToast(true);
         }
     }, [isAuthenticated, hasShownToast]);
+
+    if (isCheckingAuth) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     if (!isAuthenticated) {
         // Redirect to login while preserving the intended destination
@@ -47,12 +55,12 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
 
         if (currentLang === 'ar') {
             toast.error('غير مصرح', {
-                description: 'ليس لديك صلاحية للوصول لهذه الصفحة',
+                description: 'هذا القسم خاص بالأدمن فقط',
                 duration: 3000,
             });
         } else {
             toast.error('Unauthorized', {
-                description: 'You do not have permission to access this page',
+                description: 'This section is for admins only',
                 duration: 3000,
             });
         }

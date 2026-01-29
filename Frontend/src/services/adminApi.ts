@@ -1,7 +1,31 @@
-// Admin API Service
-// Handles all API calls for admin dashboard
+import { store } from '../store';
+import { logout } from '../store/slices/authSlice';
+import { toast } from 'sonner';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+const handleUnauthorized = () => {
+    store.dispatch(logout());
+
+    // Get current language from localStorage
+    const currentLang = localStorage.getItem('i18nextLng') || 'en';
+
+    if (currentLang === 'ar') {
+        toast.error('جلستك انتهت', {
+            description: 'من فضلك سجل دخول مرة أخرى',
+            duration: 3000,
+        });
+    } else {
+        toast.error('Session Expired', {
+            description: 'Please login again to continue',
+            duration: 3000,
+        });
+    }
+
+    setTimeout(() => {
+        window.location.href = '/login';
+    }, 1000);
+};
 
 const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
@@ -19,6 +43,9 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
     });
 
     if (!response.ok) {
+        if (response.status === 401) {
+            handleUnauthorized();
+        }
         const error = await response.json().catch(() => ({ message: 'Request failed' }));
         throw new Error(error.message || `HTTP ${response.status}`);
     }
@@ -55,6 +82,9 @@ export async function apiFetchFormData<T>(endpoint: string, formData: FormData, 
     });
 
     if (!response.ok) {
+        if (response.status === 401) {
+            handleUnauthorized();
+        }
         const error = await response.json().catch(() => ({ message: 'Request failed' }));
         throw new Error(error.message || `HTTP ${response.status}`);
     }

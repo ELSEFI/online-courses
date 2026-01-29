@@ -8,9 +8,7 @@ import {
     BookOpen,
     MessageSquare,
     FileText,
-    TrendingUp,
-    CheckCircle,
-    Clock
+    TrendingUp
 } from 'lucide-react';
 
 interface Stats {
@@ -26,6 +24,7 @@ interface Stats {
     };
     enrollments: {
         totalEnrollments: number;
+        totalRevenue?: number;
     };
     messages: {
         totalMessages: number;
@@ -50,7 +49,7 @@ const AdminDashboard = () => {
             const data = await getStats();
             setStats(data as Stats);
         } catch (error) {
-            toast.error(t('Failed to load statistics'));
+            toast.error(t('admin.failed_load_stats'));
             console.error(error);
         } finally {
             setLoading(false);
@@ -68,51 +67,51 @@ const AdminDashboard = () => {
     if (!stats) {
         return (
             <div className="text-center py-12">
-                <p className="text-gray-500 dark:text-gray-400">{t('No data available')}</p>
+                <p className="text-gray-500 dark:text-gray-400">{t('admin.no_data')}</p>
             </div>
         );
     }
 
     const statCards = [
         {
-            title: t('Total Users'),
+            title: t('admin.total_users'),
             value: stats.users?.totalUsers || 0,
             icon: Users,
             color: 'bg-blue-500',
             subStats: [
-                { label: t('Students'), value: stats.users?.usersCount || 0 },
-                { label: t('Instructors'), value: stats.users?.instructorsCount || 0 }
+                { label: t('admin.students'), value: stats.users?.usersCount || 0 },
+                { label: t('admin.instructors'), value: stats.users?.instructorsCount || 0 }
             ]
         },
         {
-            title: t('Courses'),
+            title: t('admin.courses'),
             value: stats.courses?.totalCourses || 0,
             icon: BookOpen,
             color: 'bg-green-500',
             subStats: [
-                { label: t('Published'), value: stats.courses?.publishedCourses || 0 },
-                { label: t('Pending'), value: stats.courses?.pendingCourses || 0 }
+                { label: t('admin.published'), value: stats.courses?.publishedCourses || 0 },
+                { label: t('admin.pending'), value: stats.courses?.pendingCourses || 0 }
             ]
         },
         {
-            title: t('Enrollments'),
+            title: t('admin.total_enrollments'),
             value: stats.enrollments?.totalEnrollments || 0,
             icon: TrendingUp,
             color: 'bg-purple-500'
         },
         {
-            title: t('Messages'),
+            title: t('admin.total_messages'),
             value: stats.messages?.totalMessages || 0,
             icon: MessageSquare,
             color: 'bg-yellow-500'
         },
         {
-            title: t('Instructor Requests'),
+            title: t('admin.instructor_requests'),
             value: stats.instructorRequests?.totalRequests || 0,
             icon: FileText,
             color: 'bg-red-500',
             subStats: [
-                { label: t('Pending'), value: stats.instructorRequests?.pendingRequests || 0 }
+                { label: t('admin.pending'), value: stats.instructorRequests?.pendingRequests || 0 }
             ]
         }
     ];
@@ -121,11 +120,11 @@ const AdminDashboard = () => {
         <div className="space-y-6">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {t('Dashboard')}
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                    {t('admin.dashboard')}
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-2">
-                    {t('Overview of your platform statistics')}
+                <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1 md:mt-2">
+                    {t('admin.overview')}
                 </p>
             </div>
 
@@ -170,7 +169,7 @@ const AdminDashboard = () => {
             {/* Quick Actions */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                    {t('Quick Actions')}
+                    {t('admin.quick_actions')}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <a
@@ -178,21 +177,21 @@ const AdminDashboard = () => {
                         className="flex items-center gap-3 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors"
                     >
                         <BookOpen className="w-5 h-5 text-blue-600" />
-                        <span className="font-medium text-gray-900 dark:text-white">{t('Manage Courses')}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{t('admin.manage_courses')}</span>
                     </a>
                     <a
                         href="/admin/requests"
                         className="flex items-center gap-3 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors"
                     >
                         <FileText className="w-5 h-5 text-blue-600" />
-                        <span className="font-medium text-gray-900 dark:text-white">{t('Review Requests')}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{t('admin.review_requests')}</span>
                     </a>
                     <a
                         href="/admin/messages"
                         className="flex items-center gap-3 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors"
                     >
                         <MessageSquare className="w-5 h-5 text-blue-600" />
-                        <span className="font-medium text-gray-900 dark:text-white">{t('View Messages')}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{t('admin.view_messages')}</span>
                     </a>
                 </div>
             </div>

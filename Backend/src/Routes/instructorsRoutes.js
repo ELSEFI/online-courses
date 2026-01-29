@@ -44,6 +44,8 @@ router.patch(
 
 router.get("/:instructorId", instructorController.getInstructor);
 
+router.get("/:instructorId/courses", instructorController.instructorCourses);
+
 router.delete(
   "/:instructorId/remove-instructor",
   instructorController.removeInstructor

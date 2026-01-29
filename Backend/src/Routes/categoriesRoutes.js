@@ -8,6 +8,14 @@ const router = express.Router();
 
 router.get("/", categoriesController.getAllCategories);
 
+// ADMIN
+router.get(
+  "/unActive",
+  protected,
+  restrictTo("admin"),
+  categoriesController.getAllUnActiveCategories
+);
+
 router.get("/:categoryId", categoriesController.getSubCategories);
 
 // ADMIN
@@ -20,12 +28,7 @@ router.post(
   categoriesController.addCategory
 );
 
-router.get(
-  "/unActive",
-  protected,
-  restrictTo("admin"),
-  categoriesController.getAllUnActiveCategories
-);
+
 
 
 router.patch(

@@ -89,7 +89,7 @@ const instructorProfileSchema = new mongoose.Schema(
       },
     },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 // Calculating The Rate and Total Reviews
@@ -122,5 +122,15 @@ instructorProfileSchema.methods.updateStats = async function () {
 
   await this.save();
 };
+
+const cloudinary = require("../config/cloudinaryConfig");
+
+// Virtual Field For CV URL
+instructorProfileSchema.virtual("cvURL").get(function () {
+  if (this.cvFile && this.cvFile !== 'null') {
+    return cloudinary.url(this.cvFile, { resource_type: "raw" });
+  }
+  return null;
+});
 
 module.exports = mongoose.model("InstructorProfile", instructorProfileSchema);

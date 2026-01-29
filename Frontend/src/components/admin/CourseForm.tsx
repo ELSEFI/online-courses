@@ -95,7 +95,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
             setCategories(sorted);
         } catch (error) {
             console.error('Categories Error:', error);
-            toast.error(t('Failed to load categories'));
+            toast.error(t('admin.failed_load_categories'));
         }
     };
 
@@ -113,7 +113,8 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
             setInstructors(sorted);
         } catch (error) {
             console.error('Instructors Error:', error);
-            toast.error(t('Failed to load instructors'));
+            // Use existing key or the one we just ensured exists
+            toast.error(t('admin.failed_fetch_instructors'));
         }
     };
 
@@ -167,7 +168,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {mode === 'create' ? t('Add New Course') : t('Edit Course')}
+                        {mode === 'create' ? t('admin.add_new_course') : t('admin.edit_course')}
                     </h2>
                     <button
                         onClick={onClose}
@@ -183,7 +184,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Title (English)')} *
+                                {t('admin.title_en')} *
                             </label>
                             <input
                                 type="text"
@@ -194,9 +195,9 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                             />
                         </div>
-                        <div>
+                        <div dir="rtl">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Title (Arabic)')} *
+                                {t('admin.title_ar')} *
                             </label>
                             <input
                                 type="text"
@@ -213,7 +214,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Short Description (English)')}
+                                {t('admin.short_desc_en')}
                             </label>
                             <textarea
                                 name="shortDescEn"
@@ -223,9 +224,9 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                             />
                         </div>
-                        <div>
+                        <div dir="rtl">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Short Description (Arabic)')}
+                                {t('admin.short_desc_ar')}
                             </label>
                             <textarea
                                 name="shortDescAr"
@@ -241,7 +242,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Description (English)')} *
+                                {t('admin.desc_en')} *
                             </label>
                             <textarea
                                 name="descEn"
@@ -252,9 +253,9 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                             />
                         </div>
-                        <div>
+                        <div dir="rtl">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Description (Arabic)')} *
+                                {t('admin.desc_ar')} *
                             </label>
                             <textarea
                                 name="descAr"
@@ -271,7 +272,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Requirements (English)')}
+                                {t('admin.requirements_en')}
                             </label>
                             <textarea
                                 name="requirementsEn"
@@ -281,9 +282,9 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                             />
                         </div>
-                        <div>
+                        <div dir="rtl">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Requirements (Arabic)')}
+                                {t('admin.requirements_ar')}
                             </label>
                             <textarea
                                 name="requirementsAr"
@@ -299,7 +300,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Price')} *
+                                {t('admin.price')} *
                             </label>
                             <input
                                 type="number"
@@ -314,7 +315,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Discount Price')}
+                                {t('admin.discount_price')}
                             </label>
                             <input
                                 type="number"
@@ -332,7 +333,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Category')} *
+                                {t('admin.category')} *
                             </label>
                             <select
                                 name="category"
@@ -341,7 +342,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                                 required
                                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                             >
-                                <option value="">{t('Select Category')}</option>
+                                <option value="">{t('admin.select_category')}</option>
                                 {categories.map((cat) => (
                                     <option key={cat._id} value={cat._id}>
                                         {cat.name?.en || cat.name}
@@ -351,7 +352,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Instructor')} *
+                                {t('admin.instructor')} *
                             </label>
                             <select
                                 name="instructorId"
@@ -360,7 +361,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                                 required
                                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                             >
-                                <option value="">{t('Select Instructor')}</option>
+                                <option value="">{t('admin.select_instructor')}</option>
                                 {instructors.map((instructor) => (
                                     <option key={instructor._id} value={instructor._id}>
                                         {instructor.userId?.name || 'Unknown'}
@@ -374,7 +375,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Level (English)')} *
+                                {t('admin.level_en')} *
                             </label>
                             <select
                                 name="levelEn"
@@ -383,16 +384,16 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                                 required
                                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                             >
-                                <option value="">{t('Select Level')}</option>
+                                <option value="">{t('admin.select_level')}</option>
                                 <option value="Beginner">Beginner</option>
                                 <option value="Intermediate">Intermediate</option>
                                 <option value="Advanced">Advanced</option>
                                 <option value="All Levels">All Levels</option>
                             </select>
                         </div>
-                        <div>
+                        <div dir="rtl">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {t('Level (Arabic)')} *
+                                {t('admin.level_ar')} *
                             </label>
                             <select
                                 name="levelAr"
@@ -401,7 +402,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                                 required
                                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                             >
-                                <option value="">{t('Select Level')}</option>
+                                <option value="">{t('admin.select_level')}</option>
                                 <option value="مبتدئ">مبتدئ</option>
                                 <option value="متوسط">متوسط</option>
                                 <option value="متقدم">متقدم</option>
@@ -413,7 +414,7 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                     {/* Thumbnail */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {t('Course Thumbnail')} {mode === 'create' && '*'}
+                            {t('admin.course_thumbnail')} {mode === 'create' && '*'}
                         </label>
                         <input
                             type="file"
@@ -431,14 +432,14 @@ const CourseForm = ({ isOpen, onClose, onSubmit, course, mode }: CourseFormProps
                             onClick={onClose}
                             className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                         >
-                            {t('Cancel')}
+                            {t('admin.cancel')}
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
                             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                            {loading ? t('Saving...') : mode === 'create' ? t('Create Course') : t('Update Course')}
+                            {loading ? t('admin.saving') : mode === 'create' ? t('admin.create_course') : t('admin.update_course')}
                         </button>
                     </div>
                 </form>

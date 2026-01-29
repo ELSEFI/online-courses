@@ -11,6 +11,11 @@ import QuizResults from './pages/quiz/QuizResults';
 import MainLayout from './components/layout/MainLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { BecomeInstructorView, NotificationsView } from './imports/PlaceholderViews';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from './store';
+import { useGetMeQuery } from './store/api/userApi';
+import { setCheckingAuth } from './store/slices/authSlice';
+import { useEffect } from 'react';
 
 // Dashboard Pages
 import Profile from './pages/dashboard/Profile';
@@ -38,6 +43,22 @@ import AdminMessages from './pages/admin/AdminMessages';
 import CourseContent from './pages/admin/CourseContent';
 
 function App() {
+  const { token } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+
+  // Run the getMe query on mount if token exists to verify session
+  const { isFetching } = useGetMeQuery(undefined, {
+    skip: !token,
+    // Ensure it refetches on mount if we're not sure
+    refetchOnMountOrArgChange: true
+  });
+
+  useEffect(() => {
+    // Once fetch is done (either success or error), we stop the global auth check
+    if (!isFetching) {
+      dispatch(setCheckingAuth(false));
+    }
+  }, [isFetching, dispatch]);
 
   return (
     <>

@@ -4,12 +4,14 @@ interface AuthState {
     user: any | null;
     token: string | null;
     isAuthenticated: boolean;
+    isCheckingAuth: boolean;
 }
 
 const initialState: AuthState = {
     user: JSON.parse(localStorage.getItem('user') || 'null'),
     token: localStorage.getItem('token'),
     isAuthenticated: !!localStorage.getItem('token'),
+    isCheckingAuth: !!localStorage.getItem('token'),
 };
 
 const authSlice = createSlice({
@@ -37,10 +39,13 @@ const authSlice = createSlice({
             state.user = { ...state.user, ...action.payload };
             localStorage.setItem('user', JSON.stringify(state.user));
         },
+        setCheckingAuth: (state, action: PayloadAction<boolean>) => {
+            state.isCheckingAuth = action.payload;
+        },
     },
 });
 
-export const { setCredentials, logout, updateUser } = authSlice.actions;
+export const { setCredentials, logout, updateUser, setCheckingAuth } = authSlice.actions;
 
 export default authSlice.reducer;
 

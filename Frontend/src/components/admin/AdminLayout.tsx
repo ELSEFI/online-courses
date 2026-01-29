@@ -12,19 +12,28 @@ import {
     LogOut,
     Home,
     Globe,
-    FolderTree
+    FolderTree,
+    Menu,
+    X
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
 
 const AdminLayout = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useDispatch();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // Close sidebar on route change (mobile)
+    useEffect(() => {
+        setIsSidebarOpen(false);
+    }, [location.pathname]);
 
     const handleLogout = () => {
         dispatch(logout());
-        toast.success(t('Logged out successfully'));
+        toast.success(t('nav.logout_success'));
         navigate('/');
     };
 
@@ -35,13 +44,13 @@ const AdminLayout = () => {
     };
 
     const navItems = [
-        { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
-        { path: '/admin/courses', icon: BookOpen, label: 'Courses' },
-        { path: '/admin/categories', icon: FolderTree, label: 'Categories' },
-        { path: '/admin/instructors', icon: GraduationCap, label: 'Instructors' },
-        { path: '/admin/users', icon: Users, label: 'Users' },
-        { path: '/admin/requests', icon: FileText, label: 'Requests' },
-        { path: '/admin/messages', icon: MessageSquare, label: 'Messages' },
+        { path: '/admin', icon: LayoutDashboard, label: 'admin.dashboard', exact: true },
+        { path: '/admin/courses', icon: BookOpen, label: 'admin.courses' },
+        { path: '/admin/categories', icon: FolderTree, label: 'admin.categories' },
+        { path: '/admin/instructors', icon: GraduationCap, label: 'admin.instructors' },
+        { path: '/admin/users', icon: Users, label: 'admin.users' },
+        { path: '/admin/requests', icon: FileText, label: 'admin.requests' },
+        { path: '/admin/messages', icon: MessageSquare, label: 'admin.messages' },
     ];
 
     const isActive = (path: string, exact = false) => {
@@ -52,18 +61,55 @@ const AdminLayout = () => {
     };
 
     return (
-        <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
+            {/* Mobile Header */}
+            <header className="md:hidden fixed top-0 w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-4 z-40">
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                    {t('admin.admin_panel')}
+                </h1>
+                <button
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
+                >
+                    <Menu className="w-6 h-6" />
+                </button>
+            </header>
+
+            {/* Sidebar Overlay (Mobile) */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-50 md:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-                {/* Logo */}
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <aside
+                className={`
+                    fixed inset-y-0 z-50 w-72 bg-white dark:bg-gray-800 
+                    flex flex-col transform transition-transform duration-300 ease-in-out
+                    md:relative md:translate-x-0 md:flex w-64
+                    ${i18n.language.startsWith('ar')
+                        ? `right-0 border-l border-gray-200 dark:border-gray-700 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`
+                        : `left-0 border-r border-gray-200 dark:border-gray-700 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
+                    }
+                `}
+            >
+                {/* Logo & Close (Mobile) */}
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {t('Admin Panel')}
+                        {t('admin.admin_panel')}
                     </h1>
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.path, item.exact);
@@ -72,9 +118,9 @@ const AdminLayout = () => {
                             <Link
                                 key={item.path}
                                 to={item.path}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${active
-                                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${active
+                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                                     }`}
                             >
                                 <Icon className="w-5 h-5" />
@@ -85,18 +131,18 @@ const AdminLayout = () => {
                 </nav>
 
                 {/* Footer Actions */}
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2 mb-safe">
                     <button
-                        onClick={() => navigate('/')}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => window.open('/', '_blank')}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                         <Home className="w-5 h-5" />
-                        <span className="font-medium">{t('Back to Site')}</span>
+                        <span className="font-medium">{t('admin.back_to_site')}</span>
                     </button>
 
                     <button
                         onClick={toggleLanguage}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                         <Globe className="w-5 h-5" />
                         <span className="font-medium">{i18n.language === 'en' ? 'العربية' : 'English'}</span>
@@ -104,17 +150,17 @@ const AdminLayout = () => {
 
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
                     >
                         <LogOut className="w-5 h-5" />
-                        <span className="font-medium">{t('Logout')}</span>
+                        <span className="font-medium">{t('admin.logout')}</span>
                     </button>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto">
-                <div className="p-8">
+            <main className="flex-1 overflow-y-auto pt-16 md:pt-0">
+                <div className="p-4 md:p-8 max-w-7xl mx-auto">
                     <Outlet />
                 </div>
             </main>

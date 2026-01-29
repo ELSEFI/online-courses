@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Upload } from 'lucide-react';
 
 interface LessonFormProps {
@@ -18,6 +19,7 @@ export default function LessonForm({
     initialData,
     isLoading = false,
 }: LessonFormProps) {
+    const { t } = useTranslation();
     const [formData, setFormData] = useState({
         titleEn: '',
         titleAr: '',
@@ -97,7 +99,7 @@ export default function LessonForm({
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {mode === 'create' ? 'Add New Lesson' : 'Edit Lesson'}
+                        {mode === 'create' ? t('admin.add_new_lesson') : t('admin.edit_lesson_title')}
                     </h2>
                     <button
                         onClick={onClose}
@@ -113,7 +115,7 @@ export default function LessonForm({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Title (English) <span className="text-red-500">*</span>
+                                {t('admin.title_en')} <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -125,7 +127,7 @@ export default function LessonForm({
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Title (Arabic) <span className="text-red-500">*</span>
+                                {t('admin.title_ar')} <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -142,7 +144,7 @@ export default function LessonForm({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Order
+                                {t('admin.order')}
                             </label>
                             <input
                                 type="number"
@@ -161,7 +163,7 @@ export default function LessonForm({
                                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                 />
                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Free Lesson
+                                    {t('admin.free_lesson')}
                                 </span>
                             </label>
                             <label className="flex items-center gap-2">
@@ -172,7 +174,7 @@ export default function LessonForm({
                                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                 />
                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Has Video
+                                    {t('admin.has_video')}
                                 </span>
                             </label>
                             <label className="flex items-center gap-2">
@@ -183,7 +185,7 @@ export default function LessonForm({
                                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                 />
                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Has Quiz
+                                    {t('admin.has_quiz')}
                                 </span>
                             </label>
                         </div>
@@ -193,7 +195,7 @@ export default function LessonForm({
                     {formData.hasVideo && mode === 'create' && (
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Video File <span className="text-red-500">*</span>
+                                {t('admin.video_file')} <span className="text-red-500">*</span>
                             </label>
                             <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6">
                                 <input
@@ -210,7 +212,7 @@ export default function LessonForm({
                                 >
                                     <Upload className="w-12 h-12 text-gray-400 mb-2" />
                                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                                        {videoFile ? videoFile.name : 'Click to upload video'}
+                                        {videoFile ? videoFile.name : t('admin.click_upload_video')}
                                     </span>
                                     {videoFile && (
                                         <span className="text-xs text-gray-500 mt-1">
@@ -225,7 +227,7 @@ export default function LessonForm({
                     {/* File Attachments */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Attachments (PDF, ZIP)
+                            {t('admin.attachments')}
                         </label>
                         <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6">
                             <input
@@ -243,8 +245,8 @@ export default function LessonForm({
                                 <Upload className="w-12 h-12 text-gray-400 mb-2" />
                                 <span className="text-sm text-gray-600 dark:text-gray-400">
                                     {attachmentFiles.length > 0
-                                        ? `${attachmentFiles.length} file(s) selected`
-                                        : 'Click to upload files'}
+                                        ? `${attachmentFiles.length} ${t('admin.files_selected')}`
+                                        : t('admin.click_upload_files')}
                                 </span>
                                 {attachmentFiles.length > 0 && (
                                     <div className="mt-2 text-xs text-gray-500 space-y-1">
@@ -267,14 +269,14 @@ export default function LessonForm({
                             className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                             disabled={isLoading}
                         >
-                            Cancel
+                            {t('admin.cancel')}
                         </button>
                         <button
                             type="submit"
                             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Saving...' : mode === 'create' ? 'Create Lesson' : 'Update Lesson'}
+                            {isLoading ? t('admin.saving') : mode === 'create' ? t('admin.create_lesson_btn') : t('admin.update_lesson_btn')}
                         </button>
                     </div>
                 </form>

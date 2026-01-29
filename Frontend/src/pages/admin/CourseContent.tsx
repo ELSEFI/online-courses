@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Plus, Loader } from 'lucide-react';
 import { toast } from 'sonner';
 import SectionCard from '../../components/admin/SectionCard';
 import SectionForm from '../../components/admin/SectionForm';
 import LessonForm from '../../components/admin/LessonForm';
+import ConfirmModal from '../../components/admin/ConfirmModal';
 import {
     Section,
     Lesson,
@@ -21,6 +23,7 @@ import {
 export default function CourseContent() {
     const { courseSlug } = useParams<{ courseSlug: string }>();
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const [sections, setSections] = useState<Section[]>([]);
     const [loading, setLoading] = useState(true);
@@ -37,6 +40,13 @@ export default function CourseContent() {
     const [selectedLesson, setSelectedLesson] = useState<Lesson | undefined>();
     const [selectedSectionId, setSelectedSectionId] = useState<string>('');
 
+    // Delete Confirmation State
+    const [deleteConfig, setDeleteConfig] = useState<{
+        type: 'section' | 'lesson';
+        sectionId: string;
+        lessonId?: string;
+    } | null>(null);
+
     // Fetch sections
     const fetchSections = async () => {
         if (!courseSlug) return;
@@ -47,7 +57,7 @@ export default function CourseContent() {
             setSections(response.sections || []);
         } catch (error: any) {
             console.error('Error fetching sections:', error);
-            toast.error(error.message || 'Failed to load sections');
+            toast.error(error.message || t('admin.failed_load_sections'));
         } finally {
             setLoading(false);
         }
@@ -77,31 +87,36 @@ export default function CourseContent() {
             setSaving(true);
             if (sectionMode === 'create') {
                 await createSection(courseSlug, data);
-                toast.success('Section created successfully');
+                toast.success(t('admin.section_created'));
             } else if (selectedSection) {
                 await updateSection(courseSlug, selectedSection._id, data);
-                toast.success('Section updated successfully');
+                toast.success(t('admin.section_updated'));
             }
             setIsSectionModalOpen(false);
             fetchSections();
         } catch (error: any) {
             console.error('Error saving section:', error);
-            toast.error(error.message || 'Failed to save section');
+            toast.error(error.message || t('admin.failed_save_section'));
         } finally {
             setSaving(false);
         }
     };
 
-    const handleDeleteSection = async (sectionId: string) => {
-        if (!courseSlug) return;
+    const confirmDeleteSection = (sectionId: string) => {
+        setDeleteConfig({ type: 'section', sectionId });
+    };
+
+    const handleDeleteSection = async () => {
+        if (!courseSlug || !deleteConfig || deleteConfig.type !== 'section') return;
 
         try {
-            await deleteSection(courseSlug, sectionId);
-            toast.success('Section deleted successfully');
+            await deleteSection(courseSlug, deleteConfig.sectionId);
+            toast.success(t('admin.section_deleted'));
             fetchSections();
+            setDeleteConfig(null);
         } catch (error: any) {
             console.error('Error deleting section:', error);
-            toast.error(error.message || 'Failed to delete section');
+            toast.error(error.message || t('admin.failed_delete_section'));
         }
     };
 
@@ -127,31 +142,36 @@ export default function CourseContent() {
             setSaving(true);
             if (lessonMode === 'create') {
                 await createLesson(courseSlug, selectedSectionId, formData);
-                toast.success('Lesson created successfully');
+                toast.success(t('admin.lesson_created'));
             } else if (selectedLesson) {
                 await updateLesson(courseSlug, selectedSectionId, selectedLesson._id, formData);
-                toast.success('Lesson updated successfully');
+                toast.success(t('admin.lesson_updated'));
             }
             setIsLessonModalOpen(false);
             fetchSections();
         } catch (error: any) {
             console.error('Error saving lesson:', error);
-            toast.error(error.message || 'Failed to save lesson');
+            toast.error(error.message || t('admin.failed_save_lesson'));
         } finally {
             setSaving(false);
         }
     };
 
-    const handleDeleteLesson = async (sectionId: string, lessonId: string) => {
-        if (!courseSlug) return;
+    const confirmDeleteLesson = (sectionId: string, lessonId: string) => {
+        setDeleteConfig({ type: 'lesson', sectionId, lessonId });
+    };
+
+    const handleDeleteLesson = async () => {
+        if (!courseSlug || !deleteConfig || deleteConfig.type !== 'lesson' || !deleteConfig.lessonId) return;
 
         try {
-            await deleteLesson(courseSlug, sectionId, lessonId);
-            toast.success('Lesson deleted successfully');
+            await deleteLesson(courseSlug, deleteConfig.sectionId, deleteConfig.lessonId);
+            toast.success(t('admin.lesson_deleted'));
             fetchSections();
+            setDeleteConfig(null);
         } catch (error: any) {
             console.error('Error deleting lesson:', error);
-            toast.error(error.message || 'Failed to delete lesson');
+            toast.error(error.message || t('admin.failed_delete_lesson'));
         }
     };
 
@@ -173,16 +193,16 @@ export default function CourseContent() {
                         className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
                     >
                         <ArrowLeft size={20} />
-                        <span>Back to Courses</span>
+                        <span>{t('admin.back_to_courses')}</span>
                     </button>
 
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                                Course Content
+                                {t('admin.course_content')}
                             </h1>
                             <p className="text-gray-600 dark:text-gray-400 mt-1">
-                                Manage sections and lessons for {courseSlug}
+                                {t('admin.manage_content_desc')}
                             </p>
                         </div>
 
@@ -191,7 +211,7 @@ export default function CourseContent() {
                             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                         >
                             <Plus size={20} />
-                            Add Section
+                            {t('admin.add_section')}
                         </button>
                     </div>
                 </div>
@@ -204,22 +224,22 @@ export default function CourseContent() {
                                 key={section._id}
                                 section={section}
                                 onEditSection={handleEditSection}
-                                onDeleteSection={handleDeleteSection}
+                                onDeleteSection={confirmDeleteSection}
                                 onAddLesson={handleAddLesson}
                                 onEditLesson={handleEditLesson}
-                                onDeleteLesson={handleDeleteLesson}
+                                onDeleteLesson={confirmDeleteLesson}
                             />
                         ))
                     ) : (
                         <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                             <p className="text-gray-500 dark:text-gray-400 mb-4">
-                                No sections yet. Create your first section to get started.
+                                {t('admin.no_sections')}
                             </p>
                             <button
                                 onClick={handleCreateSection}
                                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                             >
-                                Create First Section
+                                {t('admin.create_first_section')}
                             </button>
                         </div>
                     )}
@@ -255,6 +275,17 @@ export default function CourseContent() {
                 mode={lessonMode}
                 initialData={selectedLesson}
                 isLoading={saving}
+            />
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!deleteConfig}
+                onClose={() => setDeleteConfig(null)}
+                onConfirm={deleteConfig?.type === 'section' ? handleDeleteSection : handleDeleteLesson}
+                title={deleteConfig?.type === 'section' ? t('admin.delete_section') : t('admin.delete_lesson')}
+                message={deleteConfig?.type === 'section' ? t('admin.delete_section_confirm') : t('admin.delete_lesson_confirm')}
+                confirmText={t('admin.delete')}
+                variant="danger"
             />
         </div>
     );

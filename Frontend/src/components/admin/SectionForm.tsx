@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { SectionData } from '../../services/courseContentApi';
 
@@ -19,6 +20,7 @@ export default function SectionForm({
     initialData,
     isLoading = false,
 }: SectionFormProps) {
+    const { t } = useTranslation();
     const [formData, setFormData] = useState<SectionData>({
         titleEn: '',
         titleAr: '',
@@ -60,7 +62,7 @@ export default function SectionForm({
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {mode === 'create' ? 'Add New Section' : 'Edit Section'}
+                        {mode === 'create' ? t('admin.add_new_section') : t('admin.edit_section_title')}
                     </h2>
                     <button
                         onClick={onClose}
@@ -76,7 +78,7 @@ export default function SectionForm({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Title (English) <span className="text-red-500">*</span>
+                                {t('admin.title_en')} <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -88,7 +90,7 @@ export default function SectionForm({
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Title (Arabic) <span className="text-red-500">*</span>
+                                {t('admin.title_ar')} <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
@@ -105,7 +107,7 @@ export default function SectionForm({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Description (English) <span className="text-red-500">*</span>
+                                {t('admin.description_en')} <span className="text-red-500">*</span>
                             </label>
                             <textarea
                                 value={formData.descriptionEn}
@@ -117,7 +119,7 @@ export default function SectionForm({
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Description (Arabic) <span className="text-red-500">*</span>
+                                {t('admin.description_ar')} <span className="text-red-500">*</span>
                             </label>
                             <textarea
                                 value={formData.descriptionAr}
@@ -133,7 +135,7 @@ export default function SectionForm({
                     {/* Order Field */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Order
+                            {t('admin.order')}
                         </label>
                         <input
                             type="number"
@@ -143,7 +145,7 @@ export default function SectionForm({
                             min="0"
                         />
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            Sections will be displayed in ascending order
+                            {t('admin.order_help_text')}
                         </p>
                     </div>
 
@@ -155,14 +157,14 @@ export default function SectionForm({
                             className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                             disabled={isLoading}
                         >
-                            Cancel
+                            {t('admin.cancel')}
                         </button>
                         <button
                             type="submit"
                             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Saving...' : mode === 'create' ? 'Create Section' : 'Update Section'}
+                            {isLoading ? t('admin.saving') : mode === 'create' ? t('admin.create_section_btn') : t('admin.update_section_btn')}
                         </button>
                     </div>
                 </form>

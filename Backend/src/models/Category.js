@@ -76,11 +76,12 @@ categorySchema.virtual("subcategories", {
   foreignField: "parent",
 });
 
-// Virtual for courses
-categorySchema.virtual("courses", {
+// Virtual for courses count
+categorySchema.virtual("totalCourses", {
   ref: "Course",
   localField: "_id",
   foreignField: "category",
+  count: true,
 });
 
 categorySchema.virtual("imageUrl").get(function () {
@@ -142,8 +143,8 @@ categorySchema.statics.getCategoryTree = async function ({
   };
 
   const categories = await this.find(filter)
-    .sort({ order: 1, "name.en": 1 })
-    .lean({ virtuals: true });
+    .populate("totalCourses")
+    .sort({ order: 1, "name.en": 1 });
 
   const map = {};
   categories.forEach((cat) => {
